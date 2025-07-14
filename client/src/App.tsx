@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { useAuth } from "@/hooks/useAuth";
+import OnboardingRouter from "@/components/OnboardingRouter";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -16,19 +17,20 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  // Simplify completely - just show all routes
   return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/home" component={Home} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/personal-style" component={PersonalStyle} />
-      <Route path="/personal-style-diagnosis" component={PersonalStyleDiagnosis} />
-      <Route path="/digital-wardrobe" component={DigitalWardrobe} />
-      <Route path="/outfit-builder" component={OutfitBuilder} />
-      <Route path="/landing" component={Landing} />
-      <Route component={NotFound} />
-    </Switch>
+    <OnboardingRouter>
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route path="/home" component={Home} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/personal-style" component={PersonalStyle} />
+        <Route path="/personal-style-diagnosis" component={PersonalStyleDiagnosis} />
+        <Route path="/digital-wardrobe" component={DigitalWardrobe} />
+        <Route path="/outfit-builder" component={OutfitBuilder} />
+        <Route path="/landing" component={Landing} />
+        <Route component={NotFound} />
+      </Switch>
+    </OnboardingRouter>
   );
 }
 

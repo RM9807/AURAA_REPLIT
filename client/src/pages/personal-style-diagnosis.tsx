@@ -690,9 +690,15 @@ export default function PersonalStyleDiagnosis() {
                 onClick={() => setLocation('/dashboard')}
                 className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-8 py-3 text-lg"
               >
-                View Full Dashboard
+                Continue to Dashboard
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
+            </div>
+            
+            <div className="max-w-2xl mx-auto text-center pt-4">
+              <p className="text-slate-600 dark:text-slate-400">
+                Your style profile is now complete! Choose your next step: start digitizing your wardrobe or explore outfit combinations.
+              </p>
             </div>
           </div>
         )}

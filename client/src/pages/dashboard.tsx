@@ -43,7 +43,10 @@ export default function Dashboard() {
     queryKey: ['/api/users', userId, 'recommendations'],
   });
 
-  // Remove loading state - just show dashboard immediately
+  // Check if user is new or existing
+  const isNewUser = !profile || !profile.bodyType || !profile.dailyActivity;
+  const hasWardrobe = wardrobe && wardrobe.length > 0;
+  const hasOutfits = outfits && outfits.length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-slate-50">
@@ -57,9 +60,11 @@ export default function Dashboard() {
               <img src="/auraa-logo.png" alt="AURAA" className="h-10 w-10" />
               <div>
                 <h1 className="text-2xl font-bold text-white">
-                  Welcome back, {user?.firstName || 'User'}!
+                  {isNewUser ? 'Welcome to AURAA!' : `Welcome back, ${user?.firstName || 'User'}!`}
                 </h1>
-                <p className="text-white/80">Your personal style dashboard</p>
+                <p className="text-white/80">
+                  {isNewUser ? 'Complete your style journey' : 'Your personal style dashboard'}
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -159,6 +164,9 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Additional content for existing users only */}
+        {!isNewUser && (
+          <>
         {/* Shop Smart Card */}
         <Card 
           className="bg-gradient-to-br from-slate-900 to-slate-800 border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 cursor-pointer group mb-8"
@@ -273,6 +281,8 @@ export default function Dashboard() {
             </Card>
           )}
         </div>
+          </>
+        )}
 
       </div>
     </div>
