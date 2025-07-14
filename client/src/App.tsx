@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
+import PersonalStyle from "@/pages/personal-style";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import NotFound from "@/pages/not-found";
 
@@ -29,6 +30,7 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/personal-style" component={PersonalStyle} />
           <Route path="/landing" component={Landing} />
         </>
       )}

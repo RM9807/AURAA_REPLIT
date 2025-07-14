@@ -11,6 +11,7 @@ import AIOutfitAssistant from "@/components/features/AIOutfitAssistant";
 import ARWardrobeOrganizer from "@/components/features/ARWardrobeOrganizer";
 import MoodBoardSharing from "@/components/features/MoodBoardSharing";
 import WeeklyFashionInsights from "@/components/features/WeeklyFashionInsights";
+import ProfileDiagnosis from "@/components/features/ProfileDiagnosis";
 
 export default function Dashboard() {
   const userId = 1; // In a real app, this would come from auth context
@@ -129,6 +130,9 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Profile Diagnosis for Existing Users */}
+        <ProfileDiagnosis />
 
         <Tabs defaultValue="ai-features" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
