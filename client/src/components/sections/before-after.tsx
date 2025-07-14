@@ -47,8 +47,8 @@ export default function BeforeAfter() {
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 text-center relative">
               <h3 className="text-2xl font-bold text-navy mb-6">With AURAA</h3>
               <img 
-                src="https://images.unsplash.com/photo-1503449377594-32dd9ac4467c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400"
-                alt="Modern organized closet with curated outfits"
+                src="/images/auraa-outfit.png"
+                alt="Curated outfit flatlay with hat, pink shirt, jeans, shoes, bag and sunglasses"
                 className="rounded-xl w-full h-64 object-cover mb-4 floating"
               />
               <ul className="text-left space-y-3 text-navy">
