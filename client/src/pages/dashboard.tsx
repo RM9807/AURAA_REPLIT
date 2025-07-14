@@ -40,16 +40,7 @@ export default function Dashboard() {
     queryKey: ['/api/users', userId, 'recommendations'],
   });
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gradient-purple-pink mx-auto"></div>
-          <p className="mt-4 text-slate">Loading your style dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  // Remove loading state - just show dashboard immediately
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-slate-50">

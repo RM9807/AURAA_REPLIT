@@ -14,38 +14,15 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  console.log('Router state:', { isAuthenticated, isLoading });
-
-  // Reduce loading timeout
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Simplify completely - just show all routes
   return (
     <Switch>
-      {!isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/home" component={Home} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Dashboard} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/personal-style" component={PersonalStyle} />
-          <Route path="/digital-wardrobe" component={DigitalWardrobe} />
-          <Route path="/landing" component={Landing} />
-        </>
-      )}
+      <Route path="/" component={Landing} />
+      <Route path="/home" component={Home} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/personal-style" component={PersonalStyle} />
+      <Route path="/digital-wardrobe" component={DigitalWardrobe} />
+      <Route path="/landing" component={Landing} />
       <Route component={NotFound} />
     </Switch>
   );
