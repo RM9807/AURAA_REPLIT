@@ -10,6 +10,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import PersonalStyle from "@/pages/personal-style";
 import DigitalWardrobe from "@/pages/digital-wardrobe";
+import OutfitBuilder from "@/pages/outfit-builder";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import NotFound from "@/pages/not-found";
 
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/personal-style" component={PersonalStyle} />
       <Route path="/digital-wardrobe" component={DigitalWardrobe} />
+      <Route path="/outfit-builder" component={OutfitBuilder} />
       <Route path="/landing" component={Landing} />
       <Route component={NotFound} />
     </Switch>

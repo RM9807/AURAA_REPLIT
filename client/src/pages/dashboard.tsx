@@ -117,7 +117,7 @@ export default function Dashboard() {
                   className="text-purple-400 hover:text-purple-300"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setActiveTab("outfits");
+                    setLocation('/outfit-builder');
                   }}
                 >
                   Build Outfit →
