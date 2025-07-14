@@ -23,7 +23,7 @@ import {
   type InsertOutfitSuggestion,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -84,8 +84,10 @@ export class DatabaseStorage implements IStorage {
 
   // User profile methods
   async getUserProfile(userId: number): Promise<UserProfile | undefined> {
-    const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
-    return profile || undefined;
+    const profiles = await db.select().from(userProfiles)
+      .where(eq(userProfiles.userId, userId));
+    // Return the most recent profile (highest id)
+    return profiles.length > 0 ? profiles[profiles.length - 1] : undefined;
   }
 
   async createUserProfile(profile: InsertUserProfile): Promise<UserProfile> {
