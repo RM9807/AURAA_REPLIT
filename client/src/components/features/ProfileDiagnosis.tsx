@@ -185,36 +185,7 @@ export default function ProfileDiagnosis() {
           </div>
         )}
 
-        {/* Refresh Recommendations */}
-        <div className="space-y-4">
-          <h5 className="font-medium text-slate-800">Profile Recommendations</h5>
-          
-          {!isProfileFresh && (
-            <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 text-amber-600 mt-0.5" />
-                <div className="flex-1">
-                  <h6 className="font-medium text-amber-800">Seasonal Style Refresh Suggested</h6>
-                  <p className="text-sm text-amber-700 mt-1">
-                    Your profile is {profileAge} days old. Fashion preferences and lifestyle can change. 
-                    A refresh ensures your AI recommendations stay accurate.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
-          <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-            <h6 className="font-medium text-blue-800 mb-2">When to Consider Refreshing:</h6>
-            <ul className="text-sm text-blue-700 space-y-1">
-              <li>• Lifestyle changes (new job, moving, life events)</li>
-              <li>• Physical changes (weight, fitness, aging)</li>
-              <li>• Style evolution (new inspirations, preferences)</li>
-              <li>• Seasonal wardrobe updates</li>
-              <li>• Every 3-6 months for optimal accuracy</li>
-            </ul>
-          </div>
-        </div>
 
         {/* Action Buttons */}
         <div className="flex gap-3">
