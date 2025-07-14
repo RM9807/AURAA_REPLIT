@@ -215,9 +215,7 @@ export default function OutfitBuilder() {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold">A</span>
-            </div>
+            <img src="/auraa-logo.png" alt="AURAA" className="h-10 w-10" />
             <div>
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">Outfit Ideas</h1>
               <p className="text-sm text-slate-600 dark:text-slate-400">AI-powered daily outfit planning</p>
@@ -347,12 +345,12 @@ export default function OutfitBuilder() {
             </CardContent>
           </Card>
 
-          {/* Step 2 & 3: AI-Generated Outfits */}
+          {/* Step 2 & 3: AURAA Outfit Suggestions */}
           {currentOutfits.length > 0 && (
             <div className="space-y-6">
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                  Your AI-Generated Outfits
+                  Your AURAA Outfit Suggestions
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400">
                   Combinations from your curated digital wardrobe
