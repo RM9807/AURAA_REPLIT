@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import ProfileDiagnosis from "@/components/features/ProfileDiagnosis";
 export default function Dashboard() {
   const userId = 1; // In a real app, this would come from auth context
   const [activeTab, setActiveTab] = useState("wardrobe");
+  const [, setLocation] = useLocation();
 
   const { data: user } = useQuery({
     queryKey: ['/api/users', userId],
@@ -75,14 +77,21 @@ export default function Dashboard() {
           {/* Digital Wardrobe Card */}
           <Card 
             className="bg-gradient-to-br from-slate-900 to-slate-800 border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300 cursor-pointer group"
-            onClick={() => setActiveTab("wardrobe")}
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center">
                   <Scan className="h-6 w-6 text-cyan-400" />
                 </div>
-                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-cyan-400 hover:text-cyan-300"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLocation('/digital-wardrobe');
+                  }}
+                >
                   Explore Now →
                 </Button>
               </div>
@@ -96,14 +105,21 @@ export default function Dashboard() {
           {/* Outfit Generator & Planner Card */}
           <Card 
             className="bg-gradient-to-br from-slate-900 to-slate-800 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 cursor-pointer group"
-            onClick={() => setActiveTab("outfits")}
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
                   <Image className="h-6 w-6 text-purple-400" />
                 </div>
-                <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-purple-400 hover:text-purple-300"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveTab("outfits");
+                  }}
+                >
                   Build Outfit →
                 </Button>
               </div>
