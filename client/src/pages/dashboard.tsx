@@ -18,6 +18,7 @@ export default function Dashboard() {
 
   const { data: user } = useQuery({
     queryKey: ['/api/users', userId],
+    retry: false,
   });
 
   const { data: profile } = useQuery({
@@ -54,7 +55,7 @@ export default function Dashboard() {
               <img src="/auraa-logo.png" alt="AURAA" className="h-10 w-10" />
               <div>
                 <h1 className="text-2xl font-bold text-white">
-                  Welcome back, {user.firstName}!
+                  Welcome back, {user?.firstName || 'User'}!
                 </h1>
                 <p className="text-white/80">Your personal style dashboard</p>
               </div>
