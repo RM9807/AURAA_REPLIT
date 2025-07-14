@@ -51,7 +51,10 @@ export default function Navigation() {
             >
               FAQ
             </button>
-            <Button className="px-6 py-2 bg-gradient-blue-teal text-white rounded-lg hover:scale-105 transition-transform">
+            <Button 
+              onClick={() => window.location.href = '/api/login'}
+              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-teal-500 text-white rounded-lg hover:scale-105 transition-transform"
+            >
               Get Started
             </Button>
           </div>
