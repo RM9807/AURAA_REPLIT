@@ -6,7 +6,7 @@ import HowItWorks from "@/components/sections/how-it-works";
 import BeforeAfter from "@/components/sections/before-after";
 import Stats from "@/components/sections/stats";
 import FAQ from "@/components/sections/faq";
-import UserDashboard from "@/components/sections/user-dashboard";
+
 import FinalCTA from "@/components/sections/final-cta";
 import Footer from "@/components/sections/footer";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
@@ -39,7 +39,6 @@ export default function Landing() {
       <BeforeAfter />
       <Stats />
       <FAQ />
-      <UserDashboard />
       <FinalCTA />
       <Footer />
     </div>
