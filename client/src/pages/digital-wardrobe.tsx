@@ -195,16 +195,16 @@ export default function DigitalWardrobe() {
         "Classic style that works with your aesthetic"
       ],
       alter: [
-        "Could be hemmed for better proportions",
-        "Consider tailoring for a more flattering fit",
-        "Would benefit from minor adjustments",
-        "Good piece but needs small modifications"
+        "Hem pants for better length and fit",
+        "Tailor shoulders for more flattering silhouette", 
+        "Adjust waist for improved proportions",
+        "Shorten sleeves to proper length"
       ],
       donate: [
-        "Color doesn't complement your skin tone",
-        "Style doesn't align with your profile",
-        "Poor fit that can't be easily altered",
-        "Rarely worn and not your style preference"
+        "This color washes out your skin tone",
+        "The cut of this jacket doesn't flatter your shoulder line",
+        "Style completely misaligned with your new aesthetic",
+        "Poor quality fabric that doesn't match your standards"
       ]
     };
 
@@ -231,11 +231,11 @@ export default function DigitalWardrobe() {
   };
 
   const stepsConfig = [
-    { number: 1, title: "Upload & Inventory", description: "Add your wardrobe items" },
-    { number: 2, title: "AI Analysis", description: "Analyzing with your style profile" },
-    { number: 3, title: "Declutter Recommendations", description: "AI-driven suggestions" },
-    { number: 4, title: "Review Decisions", description: "Confirm your choices" },
-    { number: 5, title: "Updated Closet", description: "Your curated wardrobe" }
+    { number: 1, title: "Upload Existing Items", description: "Digital Closet Upload & Inventory" },
+    { number: 2, title: "AI Analyzes Items", description: "Cross-reference with Style Profile" },
+    { number: 3, title: "Declutter Suggestions", description: "Keep, Alter, Donate piles" },
+    { number: 4, title: "Review & Confirm", description: "Override AI suggestions" },
+    { number: 5, title: "Updated Digital Closet", description: "Wardrobe Gap Map" }
   ];
 
   const keepItems = wardrobe?.filter(item => item.aiAnalysis?.recommendation === 'keep' || declutterDecisions[item.id] === 'keep') || [];
@@ -298,15 +298,39 @@ export default function DigitalWardrobe() {
       </div>
 
       <div className="container mx-auto px-6 py-8">
+        {/* Welcome Prompt */}
+        {currentStep === 1 && wardrobe && wardrobe.length === 0 && (
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <div className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 rounded-2xl p-8 border border-violet-200 dark:border-violet-800">
+              <Sparkles className="h-16 w-16 text-violet-500 mx-auto mb-6" />
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+                Ready to Transform Your Wardrobe?
+              </h2>
+              <p className="text-lg text-slate-600 dark:text-slate-400 mb-6">
+                Begin digitizing your wardrobe for personalized insights. Upload photos of your existing clothing items, and our AI will help you create a curated, organized closet that moves beyond chaotic physical storage.
+              </p>
+              <div className="flex justify-center">
+                <Button 
+                  onClick={() => {}} 
+                  className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Start Uploading Items
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Step 1: Upload & Inventory */}
         {currentStep === 1 && (
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                Upload Your Wardrobe Items to Begin Your Digital Closet Transformation
+                Begin digitizing your wardrobe for personalized insights
               </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-                Start by photographing and cataloging your clothing items. Our AI will analyze each piece to help you build the perfect wardrobe.
+              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+                Upload photos of each clothing item in your closet. Add details like category, color, pattern, material, brand, and season. Our intuitive interface makes it easy to create a comprehensive, accessible inventory that moves beyond chaotic physical closets.
               </p>
             </div>
 
@@ -537,10 +561,10 @@ export default function DigitalWardrobe() {
                 <Sparkles className="h-12 w-12 text-white animate-pulse" />
               </div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                Analyzing Your Wardrobe with Your Personal AURA Style Profile
+                AURAA's AI Cross-References Each Item with Your Style Profile
               </h2>
               <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">
-                Our AI is examining each item's color harmony, style alignment, and fit compatibility with your unique profile.
+                Our AI analyzes each uploaded item against your AURAA Style Profile, examining color palette harmony, body shape fit, and personal style DNA alignment to provide personalized recommendations.
               </p>
             </div>
 
@@ -589,10 +613,10 @@ export default function DigitalWardrobe() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                AI-Driven Declutter Recommendations
+                Organized Declutter Suggestions
               </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400">
-                Based on your style profile, here's how to optimize your wardrobe
+              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-4xl mx-auto">
+                AURAA has organized your wardrobe into three categories. Each item includes a "Why This Doesn't Work" explanation for items that should be altered or donated, addressing the challenge of getting rid of 90% of your closet with specific, reasoned recommendations.
               </p>
             </div>
 
@@ -602,10 +626,10 @@ export default function DigitalWardrobe() {
                 <CardHeader className="bg-green-50 dark:bg-green-900/20">
                   <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
                     <CheckCircle className="h-5 w-5" />
-                    Keep ({keepItems.length})
+                    "Keep" Pile ({keepItems.length})
                   </CardTitle>
                   <CardDescription className="text-green-600 dark:text-green-500">
-                    Perfect matches for your style
+                    Items perfectly aligned with your style profile
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
@@ -632,10 +656,10 @@ export default function DigitalWardrobe() {
                 <CardHeader className="bg-yellow-50 dark:bg-yellow-900/20">
                   <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
                     <Scissors className="h-5 w-5" />
-                    Consider Altering ({alterItems.length})
+                    "Consider Altering" Pile ({alterItems.length})
                   </CardTitle>
                   <CardDescription className="text-yellow-600 dark:text-yellow-500">
-                    Great pieces that need adjustments
+                    Good style match but could be improved with minor alterations
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
@@ -662,10 +686,10 @@ export default function DigitalWardrobe() {
                 <CardHeader className="bg-red-50 dark:bg-red-900/20">
                   <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
                     <Archive className="h-5 w-5" />
-                    Consider Donating ({donateItems.length})
+                    "Consider Donating/Selling" Pile ({donateItems.length})
                   </CardTitle>
                   <CardDescription className="text-red-600 dark:text-red-500">
-                    Items that don't align with your style
+                    Poor color match, unflattering fit, or misaligned with new style
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
@@ -705,10 +729,10 @@ export default function DigitalWardrobe() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                Review & Confirm Your Declutter Decisions
+                Review & Confirm Declutter Decisions
               </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400">
-                You can override any AI suggestions by selecting different options for each item
+              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+                Users can override AI suggestions by clicking "Keep anyway", mark items for tailoring, or add them to a "discarded" list. Make your final decisions for each wardrobe item.
               </p>
             </div>
 
@@ -781,10 +805,10 @@ export default function DigitalWardrobe() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                Your Curated Digital Wardrobe
+                Updated Digital Closet Inventory
               </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400">
-                Congratulations! Your wardrobe is now optimized for your personal style
+              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-4xl mx-auto">
+                The digital closet is updated, providing a clean, curated view of your current, optimal wardrobe. See the "Wardrobe Gap Map" that highlights missing core items or over-represented categories to guide future purchases.
               </p>
             </div>
 
@@ -794,10 +818,10 @@ export default function DigitalWardrobe() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Star className="h-5 w-5 text-violet-500" />
-                    Your Curated Collection
+                    Clean, Curated Digital Closet
                   </CardTitle>
                   <CardDescription>
-                    {keepItems.length} perfectly aligned items
+                    {keepItems.length} current, optimal wardrobe items
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 max-h-96 overflow-y-auto">
