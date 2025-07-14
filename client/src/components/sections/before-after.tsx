@@ -17,8 +17,8 @@ export default function BeforeAfter() {
             <div className="bg-gray-100 rounded-2xl p-8 text-center">
               <h3 className="text-2xl font-bold text-slate mb-6">Before AURAA</h3>
               <img 
-                src="https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400"
-                alt="Cluttered disorganized closet"
+                src="/images/messy-closet.png"
+                alt="Frustrated woman sitting with messy clothing scattered around her living room"
                 className="rounded-xl w-full h-64 object-cover mb-4"
               />
               <ul className="text-left space-y-3 text-slate">
