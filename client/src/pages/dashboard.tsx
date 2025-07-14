@@ -177,7 +177,6 @@ export default function Dashboard() {
 
         {/* Content based on active tab */}
         <div className="mt-6">
-          {activeTab === "wardrobe" && <WardrobeDigitizer />}
           {activeTab === "outfits" && <OutfitCombinationAI />}
           {activeTab === "shop" && (
             <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-orange-500/30">
@@ -212,6 +211,27 @@ export default function Dashboard() {
                       Get Notified When Ready
                     </Button>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {activeTab === "wardrobe" && (
+            <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-cyan-500/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Scan className="h-5 w-5 text-cyan-400" />
+                  Digital Wardrobe - Coming Soon
+                </CardTitle>
+                <CardDescription className="text-slate-300">
+                  Advanced wardrobe management and organization system
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <p className="text-slate-400 mb-4">Enhanced wardrobe features are under development</p>
+                  <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
+                    Get Notified When Ready
+                  </Button>
                 </div>
               </CardContent>
             </Card>
