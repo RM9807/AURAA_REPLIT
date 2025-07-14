@@ -8,12 +8,13 @@ import { Progress } from "@/components/ui/progress";
 import { Heart, TrendingUp, Shirt, Sparkles, Target, BarChart3, Palette, Wand2, Scan, Image, Calendar, Settings } from "lucide-react";
 import AuthenticatedNav from "@/components/ui/nav-authenticated";
 
+import WardrobeDigitizer from "@/components/features/WardrobeDigitizer";
 import OutfitCombinationAI from "@/components/features/OutfitCombinationAI";
 import ProfileDiagnosis from "@/components/features/ProfileDiagnosis";
 
 export default function Dashboard() {
   const userId = 1; // In a real app, this would come from auth context
-  const [activeTab, setActiveTab] = useState("outfits");
+  const [activeTab, setActiveTab] = useState("wardrobe");
 
   const { data: user } = useQuery({
     queryKey: ['/api/users', userId],
@@ -78,7 +79,28 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Main Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Digital Wardrobe Card */}
+          <Card 
+            className="bg-gradient-to-br from-slate-900 to-slate-800 border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300 cursor-pointer group"
+            onClick={() => setActiveTab("wardrobe")}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center">
+                  <Scan className="h-6 w-6 text-cyan-400" />
+                </div>
+                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300">
+                  Explore Now →
+                </Button>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Digital Wardrobe</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Digitize your closet with AI-powered organization and smart recommendations
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Outfit Generator & Planner Card */}
           <Card 
             className="bg-gradient-to-br from-slate-900 to-slate-800 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 cursor-pointer group"
@@ -155,6 +177,7 @@ export default function Dashboard() {
 
         {/* Content based on active tab */}
         <div className="mt-6">
+          {activeTab === "wardrobe" && <WardrobeDigitizer />}
           {activeTab === "outfits" && <OutfitCombinationAI />}
           {activeTab === "shop" && (
             <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-orange-500/30">
