@@ -124,6 +124,11 @@ export const outfitSuggestions = pgTable("outfit_suggestions", {
   confidenceScore: integer("confidence_score"), // 0-100
   reasoning: text("reasoning"),
   isAccepted: boolean("is_accepted").default(false),
+  // Weather parameters
+  temperature: integer("temperature"),
+  windSpeed: integer("wind_speed"),
+  humidity: integer("humidity"),
+  precipitation: integer("precipitation"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
