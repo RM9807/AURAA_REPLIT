@@ -1,285 +1,183 @@
-import React, { useState, useEffect } from 'react';
-import Breadcrumb from '@/components/ui/Breadcrumb';
+import { useState, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import { 
-  ArrowRight, 
-  ArrowLeft, 
-  Camera, 
-  Upload,
-  X,
-  Plus,
-  Check,
-  AlertCircle,
-  Info,
-  Sparkles,
-  Shirt,
-  Search,
-  Filter,
-  Grid3X3,
-  List,
-  ChevronLeft,
-  ChevronRight,
-  ThumbsUp,
-  ThumbsDown,
-  Scissors,
+  Upload, 
+  Scan, 
+  CheckCircle, 
+  XCircle, 
+  Heart,
+  Trash2,
+  Edit,
+  Camera,
+  ArrowLeft,
+  ArrowRight,
+  Star,
+  AlertTriangle,
   ShoppingBag,
-  Target,
-  TrendingUp,
-  Package
-} from 'lucide-react';
-
-interface WardrobeTransformationProps {
-  userName?: string;
-  userGender?: string;
-  onComplete?: (wardrobeData: any) => void;
-  onBack?: () => void;
-}
+  Plus,
+  ChevronRight,
+  Sparkles,
+  Palette,
+  Scissors,
+  Archive,
+  Check,
+  X,
+  RotateCcw,
+  FileImage,
+  Loader2
+} from "lucide-react";
 
 interface WardrobeItem {
-  id: string;
-  image_url: string;
+  id: number;
+  userId: number;
+  itemName: string;
   category: string;
+  color: string;
   pattern?: string;
   material?: string;
   brand?: string;
   season?: string;
   notes?: string;
-  ai_suggestion?: 'keep' | 'alter' | 'discard';
-  ai_reason?: string;
-  user_decision?: 'keep' | 'alter' | 'discard';
-  created_at: string;
-  isExisting?: boolean;
-  isNew?: boolean;
+  imageUrl?: string;
+  aiAnalysis?: {
+    styleAlignment: number;
+    colorMatch: number;
+    fitAssessment: string;
+    recommendation: 'keep' | 'alter' | 'donate';
+    reason: string;
+  };
+  favorite: boolean;
+  wearCount: number;
+  lastWorn?: string;
+  tags?: string[];
+  createdAt: string;
 }
 
-interface GapMapItem {
-  item: string;
-  reason: string;
-  priority: 'high' | 'medium' | 'low';
-}
-
-interface WellStockedCategory {
+interface UploadFormData {
+  itemName: string;
   category: string;
-  count: number;
-  status: 'perfect' | 'consider-reducing' | 'well-stocked';
-  message: string;
+  color: string;
+  pattern: string;
+  material: string;
+  brand: string;
+  season: string;
+  notes: string;
+  imageFile: File | null;
 }
 
-const WardrobeTransformation: React.FC<WardrobeTransformationProps> = ({ 
-  userName = "there", 
-  userGender = "",
-  onComplete,
-  onBack 
-}) => {
-  const [currentView, setCurrentView] = useState<'existing-inventory' | 'new-upload' | 'ai-analysis' | 'declutter-decisions' | 'gap-map' | 'final-inventory'>('existing-inventory');
-  const [existingItems, setExistingItems] = useState<WardrobeItem[]>([]);
-  const [newItems, setNewItems] = useState<WardrobeItem[]>([]);
-  const [allItems, setAllItems] = useState<WardrobeItem[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+export default function DigitalWardrobe() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Multi-step state management
+  const [currentStep, setCurrentStep] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [gapMapItems, setGapMapItems] = useState<GapMapItem[]>([]);
-  const [wellStockedCategories, setWellStockedCategories] = useState<WellStockedCategory[]>([]);
+  
+  // Upload state
+  const [uploadedItems, setUploadedItems] = useState<UploadFormData[]>([]);
+  const [currentUpload, setCurrentUpload] = useState<UploadFormData>({
+    itemName: "",
+    category: "",
+    color: "",
+    pattern: "",
+    material: "",
+    brand: "",
+    season: "",
+    notes: "",
+    imageFile: null,
+  });
 
-  // Breadcrumb navigation items
-  const getBreadcrumbItems = () => {
-    const items = [
-      { 
-        label: 'Home', 
-        onClick: () => {
-          window.location.href = '/';
-        }
-      },
-      { 
-        label: 'Dashboard', 
-        onClick: () => {
-          window.location.href = '/dashboard';
-        }
-      }
-    ];
+  // Declutter state
+  const [declutterDecisions, setDeclutterDecisions] = useState<{[key: number]: 'keep' | 'alter' | 'donate'}>({});
 
-    switch (currentView) {
-      case 'existing-inventory':
-        items.push({ label: 'Wardrobe Inventory', isActive: true });
-        break;
-      case 'new-upload':
-        items.push({ 
-          label: 'Wardrobe Inventory', 
-          onClick: () => setCurrentView('existing-inventory')
-        });
-        items.push({ label: 'Upload New Items', isActive: true });
-        break;
-      case 'ai-analysis':
-        items.push({ 
-          label: 'Wardrobe Inventory', 
-          onClick: () => setCurrentView('existing-inventory')
-        });
-        items.push({ label: 'AI Analysis', isActive: true });
-        break;
-      case 'declutter-decisions':
-        items.push({ 
-          label: 'Wardrobe Inventory', 
-          onClick: () => setCurrentView('existing-inventory')
-        });
-        items.push({ label: 'Declutter Decisions', isActive: true });
-        break;
-      case 'gap-map':
-        items.push({ 
-          label: 'Wardrobe Inventory', 
-          onClick: () => setCurrentView('existing-inventory')
-        });
-        items.push({ label: 'Wardrobe Gap Map', isActive: true });
-        break;
-      case 'final-inventory':
-        items.push({ 
-          label: 'Wardrobe Inventory', 
-          onClick: () => setCurrentView('existing-inventory')
-        });
-        items.push({ label: 'Complete Wardrobe', isActive: true });
-        break;
-      default:
-        items.push({ label: 'Wardrobe Transformation', isActive: true });
-        break;
+  const userId = user?.id || 1;
+
+  // Fetch wardrobe data
+  const { data: wardrobe, isLoading: wardrobeLoading } = useQuery({
+    queryKey: ['/api/users', userId, 'wardrobe'],
+  });
+
+  // Upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: async (data: UploadFormData) => {
+      const formDataToSend = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (key === 'imageFile' && value) {
+          formDataToSend.append('image', value);
+        } else if (value) {
+          formDataToSend.append(key, value.toString());
+        }
+      });
+
+      await apiRequest(`/api/users/${userId}/wardrobe`, {
+        method: 'POST',
+        body: formDataToSend,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'wardrobe'] });
+      setCurrentUpload({
+        itemName: "",
+        category: "",
+        color: "",
+        pattern: "",
+        material: "",
+        brand: "",
+        season: "",
+        notes: "",
+        imageFile: null,
+      });
+    },
+  });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setCurrentUpload({ ...currentUpload, imageFile: file });
     }
-
-    return items;
   };
 
-  // Load existing wardrobe items (mock data for now)
-  useEffect(() => {
-    const mockExistingItems: WardrobeItem[] = [
-      {
-        id: 'existing-1',
-        image_url: 'https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=400&h=600&fit=crop',
-        category: 'tops',
-        pattern: 'solid',
-        material: 'cotton',
-        brand: 'Zara',
-        season: 'all-season',
-        notes: 'Favorite white shirt',
-        created_at: '2024-01-15',
-        isExisting: true
-      },
-      {
-        id: 'existing-2',
-        image_url: 'https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?auto=compress&cs=tinysrgb&w=400&h=600&fit=crop',
-        category: 'outerwear',
-        pattern: 'solid',
-        material: 'wool',
-        brand: 'H&M',
-        season: 'winter',
-        notes: 'Black blazer for work',
-        created_at: '2024-01-10',
-        isExisting: true
-      },
-      {
-        id: 'existing-3',
-        image_url: 'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=400&h=600&fit=crop',
-        category: 'dresses',
-        pattern: 'solid',
-        material: 'polyester',
-        brand: 'Mango',
-        season: 'summer',
-        notes: 'Navy dress for events',
-        created_at: '2024-01-05',
-        isExisting: true
-      },
-      {
-        id: 'existing-4',
-        image_url: 'https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=400&h=600&fit=crop',
-        category: 'bottoms',
-        pattern: 'solid',
-        material: 'denim',
-        brand: 'Levi\'s',
-        season: 'all-season',
-        notes: 'Classic blue jeans',
-        created_at: '2024-01-01',
-        isExisting: true
-      },
-      {
-        id: 'existing-5',
-        image_url: 'https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?auto=compress&cs=tinysrgb&w=400&h=600&fit=crop',
-        category: 'shoes',
-        pattern: 'solid',
-        material: 'leather',
-        brand: 'Nike',
-        season: 'all-season',
-        notes: 'White sneakers',
-        created_at: '2023-12-20',
-        isExisting: true
-      },
-      {
-        id: 'existing-6',
-        image_url: 'https://images.pexels.com/photos/1040945/pexels-photo-1040945.jpeg?auto=compress&cs=tinysrgb&w=400&h=600&fit=crop',
-        category: 'accessories',
-        pattern: 'solid',
-        material: 'leather',
-        brand: 'Coach',
-        season: 'all-season',
-        notes: 'Black handbag',
-        created_at: '2023-12-15',
-        isExisting: true
-      }
-    ];
-
-    setExistingItems(mockExistingItems);
-    setAllItems(mockExistingItems);
-  }, []);
-
-  const categories = ['all', 'tops', 'bottoms', 'outerwear', 'dresses', 'shoes', 'accessories'];
-
-  const handleFileUpload = (files: FileList | null) => {
-    if (!files) return;
+  const handleAddItem = () => {
+    if (!currentUpload.itemName || !currentUpload.category || !currentUpload.color) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in at least the item name, category, and color.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    const newFiles = Array.from(files);
-    setUploadedFiles(prev => [...prev, ...newFiles]);
-    
-    // Create wardrobe items from uploaded files
-    const newWardrobeItems: WardrobeItem[] = newFiles.map((file, index) => ({
-      id: `new-${Date.now()}-${index}`,
-      image_url: URL.createObjectURL(file),
-      category: 'tops', // Default category
-      created_at: new Date().toISOString(),
-      isNew: true
-    }));
-    
-    setNewItems(prev => [...prev, ...newWardrobeItems]);
+    uploadMutation.mutate(currentUpload);
+    setUploadedItems([...uploadedItems, currentUpload]);
   };
 
-  const updateItemDetails = (itemId: string, updates: Partial<WardrobeItem>) => {
-    setNewItems(prev => prev.map(item => 
-      item.id === itemId ? { ...item, ...updates } : item
-    ));
-  };
-
-  const removeNewItem = (itemId: string) => {
-    setNewItems(prev => prev.filter(item => item.id !== itemId));
-    setUploadedFiles(prev => prev.filter((_, index) => `new-${Date.now()}-${index}` !== itemId));
-  };
-
-  const startAIAnalysis = () => {
-    setCurrentView('ai-analysis');
+  const handleAnalyzeWardrobe = async () => {
     setIsAnalyzing(true);
     setAnalysisProgress(0);
     
-    // Simulate AI analysis progress
+    // Simulate AI analysis with progress
     const interval = setInterval(() => {
       setAnalysisProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
           setIsAnalyzing(false);
-          
-          // Add AI suggestions to new items
-          const itemsWithSuggestions = newItems.map(item => ({
-            ...item,
-            ai_suggestion: ['keep', 'alter', 'discard'][Math.floor(Math.random() * 3)] as 'keep' | 'alter' | 'discard',
-            ai_reason: getRandomReason()
-          }));
-          
-          setNewItems(itemsWithSuggestions);
-          setCurrentView('declutter-decisions');
+          setCurrentStep(3);
           return 100;
         }
         return prev + 10;
@@ -287,938 +185,691 @@ const WardrobeTransformation: React.FC<WardrobeTransformationProps> = ({
     }, 300);
   };
 
-  const getRandomReason = () => {
-    const reasons = [
-      "This item complements your existing wardrobe perfectly",
-      "Consider altering the fit for a more flattering silhouette",
-      "This piece doesn't align with your style profile",
-      "Great quality item that will last for years",
-      "Similar items in your wardrobe make this redundant",
-      "Perfect for your lifestyle and occasions"
-    ];
-    return reasons[Math.floor(Math.random() * reasons.length)];
+  const generateMockAnalysis = (item: WardrobeItem) => {
+    const recommendations = ['keep', 'alter', 'donate'] as const;
+    const reasons = {
+      keep: [
+        "Perfect color match for your skin tone",
+        "Excellent fit and style alignment",
+        "High-quality piece that complements your wardrobe",
+        "Classic style that works with your aesthetic"
+      ],
+      alter: [
+        "Could be hemmed for better proportions",
+        "Consider tailoring for a more flattering fit",
+        "Would benefit from minor adjustments",
+        "Good piece but needs small modifications"
+      ],
+      donate: [
+        "Color doesn't complement your skin tone",
+        "Style doesn't align with your profile",
+        "Poor fit that can't be easily altered",
+        "Rarely worn and not your style preference"
+      ]
+    };
+
+    const recommendation = recommendations[Math.floor(Math.random() * recommendations.length)];
+    return {
+      styleAlignment: Math.floor(Math.random() * 100),
+      colorMatch: Math.floor(Math.random() * 100),
+      fitAssessment: "Good",
+      recommendation,
+      reason: reasons[recommendation][Math.floor(Math.random() * reasons[recommendation].length)]
+    };
   };
 
-  const handleUserDecision = (itemId: string, decision: 'keep' | 'alter' | 'discard') => {
-    setNewItems(prev => prev.map(item => 
-      item.id === itemId ? { ...item, user_decision: decision } : item
-    ));
+  const handleDeclutterDecision = (itemId: number, decision: 'keep' | 'alter' | 'donate') => {
+    setDeclutterDecisions(prev => ({ ...prev, [itemId]: decision }));
   };
 
-  const proceedToGapMap = () => {
-    // Generate gap map recommendations
-    const mockGapMap: GapMapItem[] = [
-      {
-        item: "Classic White Button-Down Shirt",
-        reason: "Essential versatile piece missing from your wardrobe",
-        priority: 'high'
-      },
-      {
-        item: "Well-Fitted Blazer",
-        reason: "Perfect for professional and smart-casual occasions",
-        priority: 'high'
-      },
-      {
-        item: "Quality Leather Bag",
-        reason: "Elevates any outfit and provides functionality",
-        priority: 'medium'
-      },
-      {
-        item: "Comfortable Versatile Shoes",
-        reason: "All-day comfort for various occasions",
-        priority: 'medium'
-      },
-      {
-        item: "Versatile Outerwear Piece",
-        reason: "Weather-appropriate layering option",
-        priority: 'low'
-      }
-    ];
-
-    const mockWellStocked: WellStockedCategory[] = [
-      {
-        category: "Casual Tops",
-        count: 8,
-        status: 'perfect',
-        message: "Perfect amount"
-      },
-      {
-        category: "Shoes",
-        count: 12,
-        status: 'consider-reducing',
-        message: "Consider reducing"
-      },
-      {
-        category: "Dresses",
-        count: 6,
-        status: 'well-stocked',
-        message: "Well stocked"
-      },
-      {
-        category: "Accessories",
-        count: 4,
-        status: 'perfect',
-        message: "Good variety"
-      }
-    ];
-
-    setGapMapItems(mockGapMap);
-    setWellStockedCategories(mockWellStocked);
-    setCurrentView('gap-map');
+  const handleConfirmDeclutter = () => {
+    toast({
+      title: "Declutter Decisions Saved",
+      description: "Your wardrobe has been updated based on your decisions.",
+    });
+    setCurrentStep(5);
   };
 
-  const proceedToFinalInventory = () => {
-    // Combine existing items with kept/altered new items
-    const keptNewItems = newItems.filter(item => 
-      item.user_decision === 'keep' || item.user_decision === 'alter'
-    );
-    
-    setAllItems([...existingItems, ...keptNewItems]);
-    setCurrentView('final-inventory');
-  };
+  const stepsConfig = [
+    { number: 1, title: "Upload & Inventory", description: "Add your wardrobe items" },
+    { number: 2, title: "AI Analysis", description: "Analyzing with your style profile" },
+    { number: 3, title: "Declutter Recommendations", description: "AI-driven suggestions" },
+    { number: 4, title: "Review Decisions", description: "Confirm your choices" },
+    { number: 5, title: "Updated Closet", description: "Your curated wardrobe" }
+  ];
 
-  const getFilteredItems = (items: WardrobeItem[]) => {
-    let filtered = items;
-    
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(item => item.category === selectedCategory);
-    }
-    
-    if (searchTerm) {
-      filtered = filtered.filter(item => 
-        item.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.material?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.notes?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    return filtered;
-  };
-
-  const getSuggestionColor = (suggestion: string) => {
-    switch (suggestion) {
-      case 'keep': return 'text-green-600 bg-green-100';
-      case 'alter': return 'text-yellow-600 bg-yellow-100';
-      case 'discard': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getSuggestionIcon = (suggestion: string) => {
-    switch (suggestion) {
-      case 'keep': return ThumbsUp;
-      case 'alter': return Scissors;
-      case 'discard': return ThumbsDown;
-      default: return Info;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'low': return 'text-green-600 bg-green-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'perfect': return 'text-green-600 bg-green-100';
-      case 'well-stocked': return 'text-blue-600 bg-blue-100';
-      case 'consider-reducing': return 'text-orange-600 bg-orange-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  // Wardrobe Item Card Component
-  const WardrobeItemCard = ({ item, showDecisions = false }: { item: WardrobeItem; showDecisions?: boolean }) => (
-    <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${viewMode === 'list' ? 'p-8' : 'p-6'}`}>
-      {/* Item Image */}
-      <div className={`relative ${viewMode === 'list' ? 'aspect-[3/4] mb-8' : 'aspect-square mb-6'} bg-gray-200 rounded-2xl overflow-hidden group`}>
-        <img 
-          src={item.image_url} 
-          alt={`${item.category} item`}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-        
-        {/* Item Type Badge */}
-        <div className="absolute top-4 left-4">
-          {item.isExisting && (
-            <span className="px-3 py-1 bg-blue-600 text-white rounded-full font-inter text-xs font-medium">
-              Existing
-            </span>
-          )}
-          {item.isNew && (
-            <span className="px-3 py-1 bg-green-600 text-white rounded-full font-inter text-xs font-medium">
-              New
-            </span>
-          )}
-        </div>
-
-        {/* AI Suggestion Badge */}
-        {item.ai_suggestion && (
-          <div className="absolute top-4 right-4">
-            <span className={`px-3 py-1 rounded-full font-inter text-xs font-medium ${getSuggestionColor(item.ai_suggestion)}`}>
-              {item.ai_suggestion.charAt(0).toUpperCase() + item.ai_suggestion.slice(1)}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Item Details */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h3 className={`font-poppins font-bold text-gray-900 mb-1 capitalize ${viewMode === 'list' ? 'text-2xl' : 'text-lg'}`}>
-              {item.category}
-            </h3>
-            {item.brand && (
-              <p className="font-inter text-gray-600 text-sm">
-                {item.brand}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Item Properties */}
-        <div className="space-y-2 mb-4">
-          {item.material && (
-            <div className="flex items-center gap-2">
-              <span className="font-inter text-xs text-gray-500">Material:</span>
-              <span className="font-inter text-sm text-gray-700 capitalize">{item.material}</span>
-            </div>
-          )}
-          {item.season && (
-            <div className="flex items-center gap-2">
-              <span className="font-inter text-xs text-gray-500">Season:</span>
-              <span className="font-inter text-sm text-gray-700 capitalize">{item.season}</span>
-            </div>
-          )}
-          {item.pattern && (
-            <div className="flex items-center gap-2">
-              <span className="font-inter text-xs text-gray-500">Pattern:</span>
-              <span className="font-inter text-sm text-gray-700 capitalize">{item.pattern}</span>
-            </div>
-          )}
-        </div>
-
-        {/* AI Reason */}
-        {item.ai_reason && (
-          <div className="bg-gray-50 rounded-xl p-4 mb-4">
-            <p className="font-inter text-sm text-gray-600">
-              <span className="font-semibold">AI Analysis:</span> {item.ai_reason}
-            </p>
-          </div>
-        )}
-
-        {/* Notes */}
-        {item.notes && (
-          <div className="mb-4">
-            <p className="font-inter text-sm text-gray-600">
-              <span className="font-semibold">Notes:</span> {item.notes}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Decision Buttons */}
-      {showDecisions && item.ai_suggestion && (
-        <div className="grid grid-cols-3 gap-2">
-          {['keep', 'alter', 'discard'].map((decision) => {
-            const Icon = getSuggestionIcon(decision);
-            const isSelected = item.user_decision === decision;
-            
-            return (
-              <button
-                key={decision}
-                onClick={() => handleUserDecision(item.id, decision as 'keep' | 'alter' | 'discard')}
-                className={`flex items-center justify-center gap-2 px-3 py-3 rounded-2xl transition-all duration-200 font-inter font-medium text-sm ${
-                  isSelected 
-                    ? getSuggestionColor(decision)
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="capitalize">{decision}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+  const keepItems = wardrobe?.filter(item => item.aiAnalysis?.recommendation === 'keep' || declutterDecisions[item.id] === 'keep') || [];
+  const alterItems = wardrobe?.filter(item => item.aiAnalysis?.recommendation === 'alter' || declutterDecisions[item.id] === 'alter') || [];
+  const donateItems = wardrobe?.filter(item => item.aiAnalysis?.recommendation === 'donate' || declutterDecisions[item.id] === 'donate') || [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Logo Header */}
-      <div className="bg-white/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-center">
-            <img 
-              src="/new footer.png" 
-              alt="AURAA Logo" 
-              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 object-contain"
-            />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+      {/* AURAA Logo Header */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLocation('/dashboard')}
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+              <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-lg">A</span>
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">AURAA Digital Wardrobe</h1>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Breadcrumb Navigation */}
-      <div className="py-4">
-        <Breadcrumb items={getBreadcrumbItems()} />
-      </div>
-
-      {/* Existing Inventory View */}
-      {currentView === 'existing-inventory' && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="font-poppins font-bold text-4xl sm:text-5xl text-gray-900 mb-6">
-              Your Wardrobe Inventory
-            </h1>
-            <p className="font-inter text-xl text-gray-600 max-w-3xl mx-auto">
-              Here's your current digital wardrobe. Ready to add more items for decluttering?
-            </p>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-8">
-            <div className="flex flex-col lg:flex-row gap-4">
-              {/* Search */}
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search your wardrobe..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-2xl font-inter focus:outline-none focus:border-gray-900 transition-colors duration-200"
-                />
+      {/* Progress Steps */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex items-center justify-center space-x-4 md:space-x-8">
+            {stepsConfig.map((step, index) => (
+              <div key={step.number} className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className={`
+                    w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all
+                    ${currentStep >= step.number 
+                      ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white' 
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                    }
+                  `}>
+                    {currentStep > step.number ? <Check className="h-5 w-5" /> : step.number}
+                  </div>
+                  <div className="mt-2 text-center">
+                    <p className="text-xs font-medium text-slate-900 dark:text-white">{step.title}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 hidden md:block">{step.description}</p>
+                  </div>
+                </div>
+                {index < stepsConfig.length - 1 && (
+                  <ChevronRight className="h-5 w-5 text-slate-400 mx-2 md:mx-4 mt-[-24px]" />
+                )}
               </div>
-
-              {/* Category Filter */}
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-3 border border-gray-200 rounded-2xl font-inter focus:outline-none focus:border-gray-900 transition-colors duration-200"
-              >
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
-
-              {/* View Mode */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-3 rounded-xl transition-colors duration-200 ${
-                    viewMode === 'grid' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <Grid3X3 className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-3 rounded-xl transition-colors duration-200 ${
-                    viewMode === 'list' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <List className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Inventory Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-              <div className="font-poppins font-bold text-3xl text-gray-900 mb-2">
-                {existingItems.length}
-              </div>
-              <p className="font-inter text-gray-600">Total Items</p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-              <div className="font-poppins font-bold text-3xl text-blue-600 mb-2">
-                {existingItems.filter(item => item.category === 'tops').length}
-              </div>
-              <p className="font-inter text-gray-600">Tops</p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-              <div className="font-poppins font-bold text-3xl text-green-600 mb-2">
-                {existingItems.filter(item => item.category === 'bottoms').length}
-              </div>
-              <p className="font-inter text-gray-600">Bottoms</p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-              <div className="font-poppins font-bold text-3xl text-purple-600 mb-2">
-                {existingItems.filter(item => item.category === 'outerwear').length}
-              </div>
-              <p className="font-inter text-gray-600">Outerwear</p>
-            </div>
-          </div>
-
-          {/* Items Grid */}
-          <div className={`grid gap-8 mb-12 ${
-            viewMode === 'grid' 
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-              : 'grid-cols-1'
-          }`}>
-            {getFilteredItems(existingItems).map((item) => (
-              <WardrobeItemCard key={item.id} item={item} />
             ))}
           </div>
+        </div>
+      </div>
 
-          {/* Declutter Prompt */}
-          <div className="text-center mb-12">
-            <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100 max-w-2xl mx-auto">
-              <Sparkles className="w-16 h-16 mx-auto mb-6 text-gray-900" />
-              <h2 className="font-poppins font-bold text-3xl text-gray-900 mb-6">
-                Ready to Declutter More?
+      <div className="container mx-auto px-6 py-8">
+        {/* Step 1: Upload & Inventory */}
+        {currentStep === 1 && (
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+                Upload Your Wardrobe Items to Begin Your Digital Closet Transformation
               </h2>
-              <p className="font-inter text-lg text-gray-600 mb-8">
-                Do you want to add new items to your wardrobe for AI-powered decluttering analysis?
-              </p>
-              
-              <button
-                onClick={() => setCurrentView('new-upload')}
-                className="bg-gray-900 text-white font-inter font-semibold px-8 py-4 rounded-2xl transition-all duration-200 hover:bg-gray-800 inline-flex items-center gap-3 text-lg"
-              >
-                <Plus className="w-6 h-6" />
-                Yes, Add New Items to Declutter
-              </button>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => window.location.href = '/dashboard'}
-              className="flex items-center gap-3 px-6 py-4 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-inter font-medium"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back to Dashboard
-            </button>
-
-            <button
-              onClick={() => window.location.href = '/dashboard'}
-              className="bg-gray-100 text-gray-700 font-inter font-semibold px-8 py-4 rounded-2xl transition-all duration-200 hover:bg-gray-200 inline-flex items-center gap-3"
-            >
-              Skip Declutter for Now
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* New Items Upload View */}
-      {currentView === 'new-upload' && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="font-poppins font-bold text-4xl sm:text-5xl text-gray-900 mb-6">
-              Add New Items to Declutter
-            </h1>
-            <p className="font-inter text-xl text-gray-600 max-w-3xl mx-auto">
-              Upload photos of new clothing items to get AI-powered decluttering recommendations
-            </p>
-          </div>
-
-          {/* Important Notice */}
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
-            <div className="flex items-center gap-3">
-              <Info className="w-6 h-6 text-blue-600 flex-shrink-0" />
-              <div>
-                <h3 className="font-poppins font-bold text-blue-900 mb-2">
-                  Only New Items Will Be Analyzed
-                </h3>
-                <p className="font-inter text-blue-700">
-                  This declutter session will only analyze the new items you upload here. 
-                  Your existing wardrobe items will remain unchanged.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Upload Zone */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors duration-200 mb-8">
-            <div className="text-center">
-              <Upload className="w-16 h-16 mx-auto mb-6 text-gray-400" />
-              <h3 className="font-poppins font-bold text-2xl text-gray-900 mb-4">
-                Upload Clothing Photos
-              </h3>
-              <p className="font-inter text-gray-600 mb-6">
-                Drag and drop images here, or click to select files
-              </p>
-              
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={(e) => handleFileUpload(e.target.files)}
-                className="hidden"
-                id="file-upload"
-              />
-              <label
-                htmlFor="file-upload"
-                className="bg-gray-900 text-white font-inter font-semibold px-8 py-4 rounded-2xl cursor-pointer hover:bg-gray-800 transition-colors duration-200 inline-flex items-center gap-3"
-              >
-                <Camera className="w-5 h-5" />
-                Choose Files
-              </label>
-              
-              <p className="font-inter text-sm text-gray-500 mt-4">
-                Supports JPG, PNG, HEIC. Max 10MB per file.
+              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                Start by photographing and cataloging your clothing items. Our AI will analyze each piece to help you build the perfect wardrobe.
               </p>
             </div>
-          </div>
 
-          {/* Uploaded Items */}
-          {newItems.length > 0 && (
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Upload Interface */}
+              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Camera className="h-5 w-5 text-violet-500" />
+                    Add New Item
+                  </CardTitle>
+                  <CardDescription>Upload a photo and add item details</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Photo Upload */}
+                  <div className="space-y-4">
+                    <Label className="text-slate-900 dark:text-white">Item Photo</Label>
+                    <div 
+                      className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center cursor-pointer hover:border-violet-400 transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {currentUpload.imageFile ? (
+                        <div className="space-y-2">
+                          <FileImage className="h-12 w-12 text-violet-500 mx-auto" />
+                          <p className="text-sm text-slate-900 dark:text-white font-medium">{currentUpload.imageFile.name}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400">Click to change</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Upload className="h-12 w-12 text-slate-400 mx-auto" />
+                          <p className="text-slate-600 dark:text-slate-400">Click to upload or drag and drop</p>
+                          <p className="text-xs text-slate-500">PNG, JPG up to 10MB</p>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {/* Item Details */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="itemName" className="text-slate-900 dark:text-white">Item Name *</Label>
+                      <Input
+                        id="itemName"
+                        value={currentUpload.itemName}
+                        onChange={(e) => setCurrentUpload({ ...currentUpload, itemName: e.target.value })}
+                        placeholder="e.g., Blue Denim Jacket"
+                        className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="category" className="text-slate-900 dark:text-white">Category *</Label>
+                      <Select value={currentUpload.category} onValueChange={(value) => setCurrentUpload({ ...currentUpload, category: value })}>
+                        <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="tops">Tops</SelectItem>
+                          <SelectItem value="bottoms">Bottoms</SelectItem>
+                          <SelectItem value="dresses">Dresses</SelectItem>
+                          <SelectItem value="outerwear">Outerwear</SelectItem>
+                          <SelectItem value="shoes">Shoes</SelectItem>
+                          <SelectItem value="accessories">Accessories</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="color" className="text-slate-900 dark:text-white">Color *</Label>
+                      <Input
+                        id="color"
+                        value={currentUpload.color}
+                        onChange={(e) => setCurrentUpload({ ...currentUpload, color: e.target.value })}
+                        placeholder="e.g., Navy Blue"
+                        className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="brand" className="text-slate-900 dark:text-white">Brand</Label>
+                      <Input
+                        id="brand"
+                        value={currentUpload.brand}
+                        onChange={(e) => setCurrentUpload({ ...currentUpload, brand: e.target.value })}
+                        placeholder="e.g., Levi's"
+                        className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="material" className="text-slate-900 dark:text-white">Material</Label>
+                      <Input
+                        id="material"
+                        value={currentUpload.material}
+                        onChange={(e) => setCurrentUpload({ ...currentUpload, material: e.target.value })}
+                        placeholder="e.g., Cotton"
+                        className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="season" className="text-slate-900 dark:text-white">Season</Label>
+                      <Select value={currentUpload.season} onValueChange={(value) => setCurrentUpload({ ...currentUpload, season: value })}>
+                        <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600">
+                          <SelectValue placeholder="Select season" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="spring">Spring</SelectItem>
+                          <SelectItem value="summer">Summer</SelectItem>
+                          <SelectItem value="fall">Fall</SelectItem>
+                          <SelectItem value="winter">Winter</SelectItem>
+                          <SelectItem value="all-season">All Season</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="notes" className="text-slate-900 dark:text-white">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={currentUpload.notes}
+                      onChange={(e) => setCurrentUpload({ ...currentUpload, notes: e.target.value })}
+                      placeholder="Any additional notes about this item..."
+                      className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
+                      rows={3}
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleAddItem}
+                    disabled={uploadMutation.isPending}
+                    className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
+                  >
+                    {uploadMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Adding Item...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add to Wardrobe
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Current Wardrobe */}
+              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Scan className="h-5 w-5 text-violet-500" />
+                    Your Current Wardrobe
+                  </CardTitle>
+                  <CardDescription>
+                    {wardrobe?.length || 0} items uploaded • Ready for AI analysis
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {wardrobeLoading ? (
+                    <div className="text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-violet-500 mx-auto mb-4" />
+                      <p className="text-slate-600 dark:text-slate-400">Loading wardrobe...</p>
+                    </div>
+                  ) : wardrobe && wardrobe.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                        {wardrobe.slice(0, 8).map((item: WardrobeItem) => (
+                          <div key={item.id} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3">
+                            <div className="aspect-square bg-slate-200 dark:bg-slate-700 rounded-md mb-2 flex items-center justify-center">
+                              <span className="text-2xl">👕</span>
+                            </div>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{item.itemName}</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400">{item.category}</p>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {wardrobe.length >= 3 && (
+                        <Button
+                          onClick={() => setCurrentStep(2)}
+                          className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
+                        >
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Start AI Analysis ({wardrobe.length} items)
+                        </Button>
+                      )}
+                      
+                      {wardrobe.length < 3 && (
+                        <div className="text-center py-4">
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                            Add at least 3 items to start AI analysis
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {3 - wardrobe.length} more items needed
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                      <p className="text-slate-600 dark:text-slate-400 mb-2">No items uploaded yet</p>
+                      <p className="text-sm text-slate-500">Start by adding your first wardrobe item</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: AI Analysis */}
+        {currentStep === 2 && (
+          <div className="max-w-2xl mx-auto text-center">
             <div className="mb-8">
-              <h3 className="font-poppins font-bold text-2xl text-gray-900 mb-6">
-                New Items ({newItems.length})
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {newItems.map((item) => (
-                  <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-                    <div className="relative aspect-square mb-4 bg-gray-200 rounded-xl overflow-hidden">
-                      <img 
-                        src={item.image_url} 
-                        alt="New wardrobe item"
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        onClick={() => removeNewItem(item.id)}
-                        className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                    
-                    {/* Item Details Form */}
-                    <div className="space-y-3">
-                      <select
-                        value={item.category}
-                        onChange={(e) => updateItemDetails(item.id, { category: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-xl font-inter text-sm focus:outline-none focus:border-gray-900"
-                      >
-                        <option value="tops">Tops</option>
-                        <option value="bottoms">Bottoms</option>
-                        <option value="outerwear">Outerwear</option>
-                        <option value="dresses">Dresses</option>
-                        <option value="shoes">Shoes</option>
-                        <option value="accessories">Accessories</option>
-                      </select>
-                      
-                      <input
-                        type="text"
-                        placeholder="Brand (optional)"
-                        value={item.brand || ''}
-                        onChange={(e) => updateItemDetails(item.id, { brand: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-xl font-inter text-sm focus:outline-none focus:border-gray-900"
-                      />
-                      
-                      <input
-                        type="text"
-                        placeholder="Material (optional)"
-                        value={item.material || ''}
-                        onChange={(e) => updateItemDetails(item.id, { material: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-xl font-inter text-sm focus:outline-none focus:border-gray-900"
-                      />
-                      
-                      <textarea
-                        placeholder="Notes (optional)"
-                        value={item.notes || ''}
-                        onChange={(e) => updateItemDetails(item.id, { notes: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-xl font-inter text-sm focus:outline-none focus:border-gray-900 resize-none"
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-                ))}
+              <div className="w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="h-12 w-12 text-white animate-pulse" />
               </div>
-
-              <div className="text-center">
-                <button
-                  onClick={startAIAnalysis}
-                  disabled={newItems.length === 0}
-                  className="bg-gray-900 text-white font-inter font-semibold px-8 py-4 rounded-2xl transition-all duration-200 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed inline-flex items-center gap-3"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  Start AI Declutter Analysis
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setCurrentView('existing-inventory')}
-              className="flex items-center gap-3 px-6 py-4 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-inter font-medium"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back to Inventory
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* AI Analysis View */}
-      {currentView === 'ai-analysis' && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100">
-              <Sparkles className="w-16 h-16 mx-auto mb-6 text-gray-900 animate-pulse" />
-              <h1 className="font-poppins font-bold text-4xl text-gray-900 mb-6">
-                AI is Analyzing Your Items...
-              </h1>
-              <p className="font-inter text-xl text-gray-600 mb-8">
-                Our AI is carefully examining each item to provide personalized decluttering recommendations
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+                Analyzing Your Wardrobe with Your Personal AURA Style Profile
+              </h2>
+              <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">
+                Our AI is examining each item's color harmony, style alignment, and fit compatibility with your unique profile.
               </p>
-              
-              <div className="bg-gray-100 rounded-2xl p-8 mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-inter text-gray-700">Analysis Progress</span>
-                  <span className="font-inter font-semibold text-gray-900">{analysisProgress}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="bg-gray-900 h-3 rounded-full transition-all duration-300 ease-out"
-                    style={{ width: `${analysisProgress}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-                <div className="space-y-2">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto">
-                    <Target className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <p className="font-inter text-sm text-gray-600">Style Alignment</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto">
-                    <TrendingUp className="w-6 h-6 text-green-600" />
-                  </div>
-                  <p className="font-inter text-sm text-gray-600">Quality Assessment</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto">
-                    <Package className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <p className="font-inter text-sm text-gray-600">Wardrobe Fit</p>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Declutter Decisions View */}
-      {currentView === 'declutter-decisions' && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center mb-12">
-            <h1 className="font-poppins font-bold text-4xl sm:text-5xl text-gray-900 mb-6">
-              AI Declutter Recommendations
-            </h1>
-            <p className="font-inter text-xl text-gray-600 max-w-3xl mx-auto">
-              Review our AI-powered recommendations for each item. You can agree or override any suggestion.
-            </p>
-          </div>
-
-          {/* Items with Decisions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 mb-12">
-            {newItems.map((item) => (
-              <WardrobeItemCard key={item.id} item={item} showDecisions={true} />
-            ))}
-          </div>
-
-          {/* Progress Check */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-poppins font-bold text-xl text-gray-900 mb-2">
-                  Decision Progress
-                </h3>
-                <p className="font-inter text-gray-600">
-                  {newItems.filter(item => item.user_decision).length} of {newItems.length} items decided
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="font-poppins font-bold text-2xl text-gray-900">
-                  {Math.round((newItems.filter(item => item.user_decision).length / newItems.length) * 100)}%
-                </div>
-                <p className="font-inter text-sm text-gray-600">Complete</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setCurrentView('new-upload')}
-              className="flex items-center gap-3 px-6 py-4 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-inter font-medium"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back to Upload
-            </button>
-
-            <button
-              onClick={proceedToGapMap}
-              disabled={newItems.filter(item => item.user_decision).length === 0}
-              className="bg-gray-900 text-white font-inter font-semibold px-8 py-4 rounded-2xl transition-all duration-200 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed inline-flex items-center gap-3"
-            >
-              Continue to Gap Analysis
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Gap Map View */}
-      {currentView === 'gap-map' && (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center mb-12">
-            <h1 className="font-poppins font-bold text-4xl sm:text-5xl text-gray-900 mb-6">
-              Your Wardrobe Gap Map
-            </h1>
-            <p className="font-inter text-xl text-gray-600 max-w-3xl mx-auto">
-              Based on your declutter decisions, here's what's missing and what you have plenty of
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* Missing Items */}
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                  <Target className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h2 className="font-poppins font-bold text-2xl text-gray-900">
-                    Wardrobe Gaps
-                  </h2>
-                  <p className="font-inter text-gray-600">Items to consider purchasing</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {gapMapItems.map((gap, index) => (
-                  <div key={index} className="border border-gray-200 rounded-2xl p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-inter font-semibold text-gray-900">
-                        {gap.item}
-                      </h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(gap.priority)}`}>
-                        {gap.priority}
-                      </span>
+            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <CardContent className="p-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600 dark:text-slate-400">Analysis Progress</span>
+                      <span className="text-slate-900 dark:text-white font-medium">{analysisProgress}%</span>
                     </div>
-                    <p className="font-inter text-sm text-gray-600">
-                      {gap.reason}
-                    </p>
+                    <Progress value={analysisProgress} className="h-3" />
                   </div>
-                ))}
-              </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Palette className="h-5 w-5 text-violet-500" />
+                      <span className="text-slate-900 dark:text-white">Color harmony analysis</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Sparkles className="h-5 w-5 text-violet-500" />
+                      <span className="text-slate-900 dark:text-white">Style alignment scoring</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Scissors className="h-5 w-5 text-violet-500" />
+                      <span className="text-slate-900 dark:text-white">Fit assessment</span>
+                    </div>
+                  </div>
+
+                  {!isAnalyzing && analysisProgress === 0 && (
+                    <Button
+                      onClick={handleAnalyzeWardrobe}
+                      className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
+                    >
+                      Begin Analysis
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Step 3: Declutter Recommendations */}
+        {currentStep === 3 && (
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+                AI-Driven Declutter Recommendations
+              </h2>
+              <p className="text-lg text-slate-600 dark:text-slate-400">
+                Based on your style profile, here's how to optimize your wardrobe
+              </p>
             </div>
 
-            {/* Well-Stocked Categories */}
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <Check className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <h2 className="font-poppins font-bold text-2xl text-gray-900">
-                    Well-Stocked Areas
-                  </h2>
-                  <p className="font-inter text-gray-600">Categories you have covered</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {wellStockedCategories.map((category, index) => (
-                  <div key={index} className="border border-gray-200 rounded-2xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-inter font-semibold text-gray-900">
-                        {category.category}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <span className="font-inter font-bold text-lg text-gray-900">
-                          {category.count}
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(category.status)}`}>
-                          {category.message}
-                        </span>
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* Keep Items */}
+              <Card className="bg-white dark:bg-slate-900 border-green-200 dark:border-green-800">
+                <CardHeader className="bg-green-50 dark:bg-green-900/20">
+                  <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                    <CheckCircle className="h-5 w-5" />
+                    Keep ({keepItems.length})
+                  </CardTitle>
+                  <CardDescription className="text-green-600 dark:text-green-500">
+                    Perfect matches for your style
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
+                  {keepItems.map((item: WardrobeItem) => (
+                    <div key={item.id} className="bg-green-50 dark:bg-green-900/10 rounded-lg p-3">
+                      <div className="flex gap-3">
+                        <div className="w-12 h-12 bg-green-200 dark:bg-green-800 rounded-md flex items-center justify-center flex-shrink-0">
+                          <span className="text-lg">👕</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-900 dark:text-white text-sm">{item.itemName}</p>
+                          <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                            {item.aiAnalysis?.reason || generateMockAnalysis(item).reason}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Alter Items */}
+              <Card className="bg-white dark:bg-slate-900 border-yellow-200 dark:border-yellow-800">
+                <CardHeader className="bg-yellow-50 dark:bg-yellow-900/20">
+                  <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
+                    <Scissors className="h-5 w-5" />
+                    Consider Altering ({alterItems.length})
+                  </CardTitle>
+                  <CardDescription className="text-yellow-600 dark:text-yellow-500">
+                    Great pieces that need adjustments
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
+                  {alterItems.map((item: WardrobeItem) => (
+                    <div key={item.id} className="bg-yellow-50 dark:bg-yellow-900/10 rounded-lg p-3">
+                      <div className="flex gap-3">
+                        <div className="w-12 h-12 bg-yellow-200 dark:bg-yellow-800 rounded-md flex items-center justify-center flex-shrink-0">
+                          <span className="text-lg">👕</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-900 dark:text-white text-sm">{item.itemName}</p>
+                          <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                            {item.aiAnalysis?.reason || generateMockAnalysis(item).reason}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Donate Items */}
+              <Card className="bg-white dark:bg-slate-900 border-red-200 dark:border-red-800">
+                <CardHeader className="bg-red-50 dark:bg-red-900/20">
+                  <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                    <Archive className="h-5 w-5" />
+                    Consider Donating ({donateItems.length})
+                  </CardTitle>
+                  <CardDescription className="text-red-600 dark:text-red-500">
+                    Items that don't align with your style
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
+                  {donateItems.map((item: WardrobeItem) => (
+                    <div key={item.id} className="bg-red-50 dark:bg-red-900/10 rounded-lg p-3">
+                      <div className="flex gap-3">
+                        <div className="w-12 h-12 bg-red-200 dark:bg-red-800 rounded-md flex items-center justify-center flex-shrink-0">
+                          <span className="text-lg">👕</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-900 dark:text-white text-sm">{item.itemName}</p>
+                          <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                            {item.aiAnalysis?.reason || generateMockAnalysis(item).reason}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             </div>
-          </div>
 
-          {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setCurrentView('declutter-decisions')}
-              className="flex items-center gap-3 px-6 py-4 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-inter font-medium"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back to Decisions
-            </button>
-
-            <button
-              onClick={proceedToFinalInventory}
-              className="bg-gray-900 text-white font-inter font-semibold px-8 py-4 rounded-2xl transition-all duration-200 hover:bg-gray-800 inline-flex items-center gap-3"
-            >
-              Complete Transformation
-              <Check className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Final Inventory View */}
-      {currentView === 'final-inventory' && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="font-poppins font-bold text-4xl sm:text-5xl text-gray-900 mb-6">
-              Your Complete Wardrobe
-            </h1>
-            <p className="font-inter text-xl text-gray-600 max-w-3xl mx-auto">
-              Here's your updated wardrobe after the decluttering process
-            </p>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-8">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search your wardrobe..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-2xl font-inter focus:outline-none focus:border-gray-900 transition-colors duration-200"
-                />
-              </div>
-
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-3 border border-gray-200 rounded-2xl font-inter focus:outline-none focus:border-gray-900 transition-colors duration-200"
+            <div className="text-center mt-8">
+              <Button
+                onClick={() => setCurrentStep(4)}
+                className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8"
               >
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-3 rounded-xl transition-colors duration-200 ${
-                    viewMode === 'grid' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <Grid3X3 className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-3 rounded-xl transition-colors duration-200 ${
-                    viewMode === 'list' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <List className="w-5 h-5" />
-                </button>
-              </div>
+                Review & Confirm Decisions
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
             </div>
           </div>
+        )}
 
-          {/* Final Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-              <div className="font-poppins font-bold text-3xl text-gray-900 mb-2">
-                {allItems.length}
-              </div>
-              <p className="font-inter text-gray-600">Total Items</p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-              <div className="font-poppins font-bold text-3xl text-green-600 mb-2">
-                {newItems.filter(item => item.user_decision === 'keep').length}
-              </div>
-              <p className="font-inter text-gray-600">Items Kept</p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-              <div className="font-poppins font-bold text-3xl text-yellow-600 mb-2">
-                {newItems.filter(item => item.user_decision === 'alter').length}
-              </div>
-              <p className="font-inter text-gray-600">Items to Alter</p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-              <div className="font-poppins font-bold text-3xl text-red-600 mb-2">
-                {newItems.filter(item => item.user_decision === 'discard').length}
-              </div>
-              <p className="font-inter text-gray-600">Items Discarded</p>
-            </div>
-          </div>
-
-          {/* Items Grid */}
-          <div className={`grid gap-8 mb-12 ${
-            viewMode === 'grid' 
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-              : 'grid-cols-1'
-          }`}>
-            {getFilteredItems(allItems).map((item) => (
-              <WardrobeItemCard key={item.id} item={item} />
-            ))}
-          </div>
-
-          {/* Completion Message */}
-          <div className="text-center mb-12">
-            <div className="bg-green-50 border border-green-200 rounded-3xl p-12 max-w-2xl mx-auto">
-              <Check className="w-16 h-16 mx-auto mb-6 text-green-600" />
-              <h2 className="font-poppins font-bold text-3xl text-gray-900 mb-6">
-                Wardrobe Transformation Complete!
+        {/* Step 4: Review Decisions */}
+        {currentStep === 4 && (
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+                Review & Confirm Your Declutter Decisions
               </h2>
-              <p className="font-inter text-lg text-gray-600 mb-8">
-                Your digital wardrobe has been updated with your declutter decisions. 
-                You now have a curated collection that aligns with your style profile.
+              <p className="text-lg text-slate-600 dark:text-slate-400">
+                You can override any AI suggestions by selecting different options for each item
               </p>
             </div>
-          </div>
 
-          {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setCurrentView('gap-map')}
-              className="flex items-center gap-3 px-6 py-4 text-gray-600 hover:text-gray-900 transition-colors duration-200 font-inter font-medium"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Back to Gap Map
-            </button>
+            <div className="space-y-4">
+              {wardrobe?.map((item: WardrobeItem) => {
+                const analysis = item.aiAnalysis || generateMockAnalysis(item);
+                const currentDecision = declutterDecisions[item.id] || analysis.recommendation;
+                
+                return (
+                  <Card key={item.id} className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-2xl">👕</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-slate-900 dark:text-white">{item.itemName}</h3>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{item.category} • {item.color}</p>
+                          <p className="text-sm text-slate-700 dark:text-slate-300">{analysis.reason}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant={currentDecision === 'keep' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handleDeclutterDecision(item.id, 'keep')}
+                            className={currentDecision === 'keep' ? 'bg-green-500 hover:bg-green-600 text-white' : ''}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Keep
+                          </Button>
+                          <Button
+                            variant={currentDecision === 'alter' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handleDeclutterDecision(item.id, 'alter')}
+                            className={currentDecision === 'alter' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : ''}
+                          >
+                            <Scissors className="h-4 w-4 mr-1" />
+                            Alter
+                          </Button>
+                          <Button
+                            variant={currentDecision === 'donate' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handleDeclutterDecision(item.id, 'donate')}
+                            className={currentDecision === 'donate' ? 'bg-red-500 hover:bg-red-600 text-white' : ''}
+                          >
+                            <Archive className="h-4 w-4 mr-1" />
+                            Donate
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
 
-            <button
-              onClick={() => window.location.href = '/dashboard'}
-              className="bg-gray-900 text-white font-inter font-semibold px-8 py-4 rounded-2xl transition-all duration-200 hover:bg-gray-800 inline-flex items-center gap-3"
-            >
-              Complete Wardrobe Transformation
-              <Check className="w-5 h-5" />
-            </button>
+            <div className="text-center mt-8">
+              <Button
+                onClick={handleConfirmDeclutter}
+                className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8"
+              >
+                Confirm Decisions & Update Wardrobe
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Step 5: Updated Closet */}
+        {currentStep === 5 && (
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+                Your Curated Digital Wardrobe
+              </h2>
+              <p className="text-lg text-slate-600 dark:text-slate-400">
+                Congratulations! Your wardrobe is now optimized for your personal style
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Curated Wardrobe */}
+              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-violet-500" />
+                    Your Curated Collection
+                  </CardTitle>
+                  <CardDescription>
+                    {keepItems.length} perfectly aligned items
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 max-h-96 overflow-y-auto">
+                  {keepItems.map((item: WardrobeItem) => (
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                      <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-md flex items-center justify-center">
+                        <span className="text-lg">👕</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-slate-900 dark:text-white">{item.itemName}</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">{item.category} • {item.color}</p>
+                      </div>
+                      <Star className="h-4 w-4 text-yellow-500" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Wardrobe Gap Map */}
+              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingBag className="h-5 w-5 text-violet-500" />
+                    Wardrobe Gap Analysis
+                  </CardTitle>
+                  <CardDescription>
+                    Smart suggestions for future purchases
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">Missing Core Items</h4>
+                      <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
+                        <li>• Classic white button-down shirt</li>
+                        <li>• Well-fitted blazer in neutral tone</li>
+                        <li>• Quality leather boots</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                      <h4 className="font-medium text-orange-900 dark:text-orange-300 mb-2">Over-represented</h4>
+                      <ul className="text-sm text-orange-700 dark:text-orange-400 space-y-1">
+                        <li>• 5 casual t-shirts (consider variety)</li>
+                        <li>• 3 similar jeans (diversify styles)</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <Button className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white">
+                    <ShoppingBag className="h-4 w-4 mr-2" />
+                    Get Shopping Recommendations
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="text-center mt-8">
+              <Button
+                onClick={() => setLocation('/dashboard')}
+                variant="outline"
+                className="mr-4"
+              >
+                Return to Dashboard
+              </Button>
+              <Button className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white">
+                Share Your Curated Wardrobe
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
-};
-
-export default WardrobeTransformation;
+}
