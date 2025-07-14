@@ -1,0 +1,90 @@
+# AURAA - Personal AI Stylist Landing Page
+
+## Overview
+
+This is a React-based landing page for AURAA, a personal AI stylist application. The project features a modern, responsive design with smooth animations, parallax effects, and interactive components showcasing the AI-powered fashion and styling platform.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **Styling**: Tailwind CSS with custom CSS variables for theming
+- **Component Library**: Radix UI primitives with shadcn/ui component system
+- **Routing**: Wouter for lightweight client-side routing
+- **State Management**: React Query (TanStack Query) for server state management
+- **Build Tool**: Vite for fast development and optimized builds
+
+### Backend Architecture
+- **Framework**: Express.js with TypeScript
+- **Database**: PostgreSQL with Drizzle ORM
+- **Database Provider**: Neon Database (serverless PostgreSQL)
+- **API Style**: RESTful API with `/api` prefix
+- **Development**: Hot module replacement with Vite integration
+
+## Key Components
+
+### Frontend Components
+- **Landing Page Sections**: Hero, Features, How It Works, Before/After, Stats, FAQ, Final CTA, Footer
+- **UI Components**: Comprehensive set of accessible components from shadcn/ui
+- **Custom Hooks**: Parallax effects, scroll reveal animations, counter animations, mobile detection
+- **Navigation**: Smooth scrolling navigation with blur effects on scroll
+
+### Backend Components
+- **Storage Interface**: Abstracted storage layer with in-memory implementation
+- **Route Registration**: Centralized route management system
+- **Middleware**: Request logging, JSON parsing, error handling
+- **Development Tools**: Custom Vite integration for SSR-like development experience
+
+### Database Schema
+- **Users Table**: Basic user structure with id, username, and password fields
+- **Validation**: Zod schemas for type-safe data validation
+- **Migrations**: Drizzle-kit for database schema management
+
+## Data Flow
+
+1. **Client Requests**: Frontend makes API calls to `/api` endpoints
+2. **Route Handling**: Express routes process requests and interact with storage layer
+3. **Data Storage**: Storage interface abstracts database operations
+4. **Response**: JSON responses sent back to client
+5. **State Management**: React Query manages server state, caching, and synchronization
+
+## External Dependencies
+
+### Core Dependencies
+- **@neondatabase/serverless**: Serverless PostgreSQL driver
+- **@tanstack/react-query**: Server state management
+- **drizzle-orm & drizzle-zod**: Type-safe ORM and validation
+- **@radix-ui/***: Accessible component primitives
+- **tailwindcss**: Utility-first CSS framework
+- **wouter**: Lightweight router for React
+
+### Development Dependencies
+- **vite**: Build tool and development server
+- **tsx**: TypeScript execution for Node.js
+- **esbuild**: Fast JavaScript bundler for production builds
+- **@replit/vite-plugin-***: Replit-specific development tools
+
+## Deployment Strategy
+
+### Development
+- **Dev Server**: Vite development server with HMR
+- **API Server**: Express server running alongside Vite
+- **Database**: Environment-based DATABASE_URL configuration
+- **Hot Reload**: Full-stack hot reloading with Vite middleware
+
+### Production Build
+- **Frontend**: Vite builds static assets to `dist/public`
+- **Backend**: ESBuild bundles server code to `dist/index.js`
+- **Static Serving**: Express serves built frontend assets
+- **Database**: Production PostgreSQL connection via DATABASE_URL
+
+### Environment Configuration
+- **DATABASE_URL**: Required environment variable for database connection
+- **NODE_ENV**: Environment detection for development/production modes
+- **Build Scripts**: Separate build and start commands for deployment
+
+The application follows a modern full-stack architecture with clear separation between frontend and backend concerns, while maintaining a smooth development experience through integrated tooling.

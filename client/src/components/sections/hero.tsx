@@ -1,0 +1,32 @@
+import { Button } from "@/components/ui/button";
+
+export default function Hero() {
+  return (
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
+      {/* Slow parallax background image */}
+      <div className="absolute inset-0 opacity-20">
+        <img 
+          src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080" 
+          alt="Fashion studio background" 
+          className="w-full h-full object-cover parallax-back"
+        />
+      </div>
+      
+      <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 scroll-reveal">
+          Your Personal <span className="gradient-text">AI Stylist</span>
+        </h1>
+        <p className="text-xl md:text-2xl text-white/80 mb-8 scroll-reveal">
+          Transform your wardrobe. Instantly.
+        </p>
+        <Button className="px-8 py-4 bg-gradient-purple-pink text-white text-lg font-semibold rounded-xl hover-lift scroll-reveal">
+          Get Styled Now
+        </Button>
+      </div>
+      
+      {/* Floating elements */}
+      <div className="absolute top-1/4 left-10 w-20 h-20 bg-gradient-blue-teal rounded-full opacity-20 floating"></div>
+      <div className="absolute bottom-1/4 right-10 w-16 h-16 bg-gradient-purple-pink rounded-full opacity-30 floating" style={{animationDelay: '-2s'}}></div>
+    </section>
+  );
+}
