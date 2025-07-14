@@ -79,7 +79,7 @@ export default function DigitalWardrobe() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("upload");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterCategory, setFilterCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   
   const [formData, setFormData] = useState<UploadFormData>({
