@@ -34,23 +34,47 @@ Preferred communication style: Simple, everyday language.
 - **Navigation**: Smooth scrolling navigation with blur effects on scroll
 
 ### Backend Components
-- **Storage Interface**: Abstracted storage layer with in-memory implementation
-- **Route Registration**: Centralized route management system
+- **Storage Interface**: Abstracted storage layer with PostgreSQL database implementation
+- **Route Registration**: Centralized route management system with full CRUD API endpoints
 - **Middleware**: Request logging, JSON parsing, error handling
 - **Development Tools**: Custom Vite integration for SSR-like development experience
+- **Database Connection**: Neon serverless PostgreSQL with Drizzle ORM
 
 ### Database Schema
-- **Users Table**: Basic user structure with id, username, and password fields
-- **Validation**: Zod schemas for type-safe data validation
+- **Users Table**: Enhanced user structure with email, name fields, and timestamps
+- **User Profiles Table**: Style preferences, body measurements, budget, and lifestyle data
+- **Outfits Table**: Saved outfit combinations with occasion and season metadata
+- **Wardrobe Table**: Individual clothing items with categorization and purchase tracking
+- **Relations**: Proper foreign key relationships between all entities
+- **Validation**: Zod schemas for type-safe data validation and API request parsing
 - **Migrations**: Drizzle-kit for database schema management
 
 ## Data Flow
 
 1. **Client Requests**: Frontend makes API calls to `/api` endpoints
-2. **Route Handling**: Express routes process requests and interact with storage layer
-3. **Data Storage**: Storage interface abstracts database operations
-4. **Response**: JSON responses sent back to client
+2. **Route Handling**: Express routes process requests with Zod validation
+3. **Database Operations**: Drizzle ORM queries PostgreSQL via storage interface
+4. **Response**: Type-safe JSON responses sent back to client
 5. **State Management**: React Query manages server state, caching, and synchronization
+
+## API Endpoints
+
+### User Management
+- `POST /api/users` - Create new user account
+- `GET /api/users/:id` - Get user by ID
+- `GET /api/users/:id/profile` - Get user style profile
+- `POST /api/users/:id/profile` - Create user style profile
+- `PATCH /api/users/:id/profile` - Update user style profile
+
+### Outfit Management
+- `GET /api/users/:id/outfits` - Get user's saved outfits
+- `POST /api/users/:id/outfits` - Create new outfit
+- `GET /api/outfits/:id` - Get specific outfit
+
+### Wardrobe Management
+- `GET /api/users/:id/wardrobe` - Get user's wardrobe items
+- `POST /api/users/:id/wardrobe` - Add new wardrobe item
+- `GET /api/wardrobe/:id` - Get specific wardrobe item
 
 ## External Dependencies
 
