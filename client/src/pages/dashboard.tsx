@@ -11,7 +11,6 @@ import AIOutfitAssistant from "@/components/features/AIOutfitAssistant";
 import ARWardrobeOrganizer from "@/components/features/ARWardrobeOrganizer";
 import MoodBoardSharing from "@/components/features/MoodBoardSharing";
 import WardrobeDigitizer from "@/components/features/WardrobeDigitizer";
-import WardrobeDigitizerTest from "@/components/features/WardrobeDigitizerTest";
 import ProfileDiagnosis from "@/components/features/ProfileDiagnosis";
 
 export default function Dashboard() {
