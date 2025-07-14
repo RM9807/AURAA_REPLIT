@@ -10,7 +10,7 @@ import ColorPaletteGenerator from "@/components/features/ColorPaletteGenerator";
 import AIOutfitAssistant from "@/components/features/AIOutfitAssistant";
 import ARWardrobeOrganizer from "@/components/features/ARWardrobeOrganizer";
 import MoodBoardSharing from "@/components/features/MoodBoardSharing";
-
+import WardrobeDigitizer from "@/components/features/WardrobeDigitizer";
 import ProfileDiagnosis from "@/components/features/ProfileDiagnosis";
 
 export default function Dashboard() {
@@ -154,44 +154,7 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="wardrobe" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Wardrobe</CardTitle>
-                <CardDescription>
-                  Manage your clothing items and track usage
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {wardrobe?.map((item) => (
-                    <div key={item.id} className="border rounded-lg p-4 space-y-2">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-semibold">{item.itemName}</h3>
-                        {item.favorite && <Heart className="h-4 w-4 text-red-500 fill-current" />}
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        <Badge variant="secondary">{item.category}</Badge>
-                        <Badge variant="outline">{item.color}</Badge>
-                        {item.brand && <Badge variant="outline">{item.brand}</Badge>}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        <p>Worn {item.wearCount || 0} times</p>
-                        {item.lastWorn && (
-                          <p>Last worn: {new Date(item.lastWorn).toLocaleDateString()}</p>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {item.tags?.map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <WardrobeDigitizer />
           </TabsContent>
 
           <TabsContent value="outfits" className="space-y-6">
