@@ -20,9 +20,18 @@ export default function Hero() {
         <p className="text-xl md:text-2xl text-white/80 mb-8 scroll-reveal max-w-4xl mx-auto">
           Your personal AI stylist that transforms morning uncertainty into instant confidence. Discover your style DNA, build your perfect wardrobe, and never have "nothing to wear" again.
         </p>
-        <Button className="px-8 py-4 bg-gradient-purple-pink text-white text-lg font-semibold rounded-xl hover-lift scroll-reveal">
-          Get Stylish Now
-        </Button>
+        <div className="space-x-4">
+          <Button className="px-8 py-4 bg-gradient-purple-pink text-white text-lg font-semibold rounded-xl hover-lift scroll-reveal">
+            Get Stylish Now
+          </Button>
+          <Button 
+            variant="outline" 
+            className="px-8 py-4 border-2 border-white text-white text-lg font-semibold rounded-xl hover-lift scroll-reveal"
+            onClick={() => window.location.href = '/dashboard'}
+          >
+            View Dashboard
+          </Button>
+        </div>
       </div>
       
       {/* Floating elements */}

@@ -48,7 +48,34 @@ export const wardrobe = pgTable("wardrobe", {
   purchaseDate: timestamp("purchase_date"),
   price: integer("price"),
   tags: text("tags").array(),
+  wearCount: integer("wear_count").default(0),
+  lastWorn: timestamp("last_worn"),
+  favorite: boolean("favorite").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const styleRecommendations = pgTable("style_recommendations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  recommendationType: text("recommendation_type").notNull(), // "outfit", "purchase", "color"
+  content: jsonb("content").notNull(),
+  reason: text("reason"),
+  confidence: integer("confidence"), // 1-100
+  isAccepted: boolean("is_accepted"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userAnalytics = pgTable("user_analytics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  totalOutfits: integer("total_outfits").default(0),
+  totalWardrobeItems: integer("total_wardrobe_items").default(0),
+  avgOutfitRating: integer("avg_outfit_rating"), // 1-5
+  mostWornCategory: text("most_worn_category"),
+  favoriteColors: text("favorite_colors").array(),
+  styleScore: integer("style_score").default(0), // 1-100
+  lastActive: timestamp("last_active").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Relations
@@ -59,6 +86,11 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   outfits: many(outfits),
   wardrobeItems: many(wardrobe),
+  recommendations: many(styleRecommendations),
+  analytics: one(userAnalytics, {
+    fields: [users.id],
+    references: [userAnalytics.userId],
+  }),
 }));
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -78,6 +110,20 @@ export const outfitsRelations = relations(outfits, ({ one }) => ({
 export const wardrobeRelations = relations(wardrobe, ({ one }) => ({
   user: one(users, {
     fields: [wardrobe.userId],
+    references: [users.id],
+  }),
+}));
+
+export const styleRecommendationsRelations = relations(styleRecommendations, ({ one }) => ({
+  user: one(users, {
+    fields: [styleRecommendations.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userAnalyticsRelations = relations(userAnalytics, ({ one }) => ({
+  user: one(users, {
+    fields: [userAnalytics.userId],
     references: [users.id],
   }),
 }));
@@ -106,6 +152,16 @@ export const insertWardrobeSchema = createInsertSchema(wardrobe).omit({
   createdAt: true,
 });
 
+export const insertStyleRecommendationSchema = createInsertSchema(styleRecommendations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserAnalyticsSchema = createInsertSchema(userAnalytics).omit({
+  id: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -115,3 +171,7 @@ export type InsertOutfit = z.infer<typeof insertOutfitSchema>;
 export type Outfit = typeof outfits.$inferSelect;
 export type InsertWardrobeItem = z.infer<typeof insertWardrobeSchema>;
 export type WardrobeItem = typeof wardrobe.$inferSelect;
+export type InsertStyleRecommendation = z.infer<typeof insertStyleRecommendationSchema>;
+export type StyleRecommendation = typeof styleRecommendations.$inferSelect;
+export type InsertUserAnalytics = z.infer<typeof insertUserAnalyticsSchema>;
+export type UserAnalytics = typeof userAnalytics.$inferSelect;

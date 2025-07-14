@@ -1,4 +1,4 @@
-import { users, userProfiles, outfits, wardrobe, type User, type InsertUser, type UserProfile, type InsertUserProfile, type Outfit, type InsertOutfit, type WardrobeItem, type InsertWardrobeItem } from "@shared/schema";
+import { users, userProfiles, outfits, wardrobe, styleRecommendations, userAnalytics, type User, type InsertUser, type UserProfile, type InsertUserProfile, type Outfit, type InsertOutfit, type WardrobeItem, type InsertWardrobeItem, type StyleRecommendation, type InsertStyleRecommendation, type UserAnalytics, type InsertUserAnalytics } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -21,6 +21,17 @@ export interface IStorage {
   getUserWardrobe(userId: number): Promise<WardrobeItem[]>;
   createWardrobeItem(item: InsertWardrobeItem): Promise<WardrobeItem>;
   getWardrobeItem(id: number): Promise<WardrobeItem | undefined>;
+  updateWardrobeItem(id: number, item: Partial<InsertWardrobeItem>): Promise<WardrobeItem>;
+  
+  // Style recommendation methods
+  getUserRecommendations(userId: number): Promise<StyleRecommendation[]>;
+  createRecommendation(recommendation: InsertStyleRecommendation): Promise<StyleRecommendation>;
+  updateRecommendation(id: number, recommendation: Partial<InsertStyleRecommendation>): Promise<StyleRecommendation>;
+  
+  // User analytics methods
+  getUserAnalytics(userId: number): Promise<UserAnalytics | undefined>;
+  createUserAnalytics(analytics: InsertUserAnalytics): Promise<UserAnalytics>;
+  updateUserAnalytics(userId: number, analytics: Partial<InsertUserAnalytics>): Promise<UserAnalytics>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -99,6 +110,60 @@ export class DatabaseStorage implements IStorage {
   async getWardrobeItem(id: number): Promise<WardrobeItem | undefined> {
     const [item] = await db.select().from(wardrobe).where(eq(wardrobe.id, id));
     return item || undefined;
+  }
+
+  async updateWardrobeItem(id: number, item: Partial<InsertWardrobeItem>): Promise<WardrobeItem> {
+    const [updatedItem] = await db
+      .update(wardrobe)
+      .set(item)
+      .where(eq(wardrobe.id, id))
+      .returning();
+    return updatedItem;
+  }
+
+  // Style recommendation methods
+  async getUserRecommendations(userId: number): Promise<StyleRecommendation[]> {
+    return await db.select().from(styleRecommendations).where(eq(styleRecommendations.userId, userId));
+  }
+
+  async createRecommendation(recommendation: InsertStyleRecommendation): Promise<StyleRecommendation> {
+    const [newRecommendation] = await db
+      .insert(styleRecommendations)
+      .values(recommendation)
+      .returning();
+    return newRecommendation;
+  }
+
+  async updateRecommendation(id: number, recommendation: Partial<InsertStyleRecommendation>): Promise<StyleRecommendation> {
+    const [updatedRecommendation] = await db
+      .update(styleRecommendations)
+      .set(recommendation)
+      .where(eq(styleRecommendations.id, id))
+      .returning();
+    return updatedRecommendation;
+  }
+
+  // User analytics methods
+  async getUserAnalytics(userId: number): Promise<UserAnalytics | undefined> {
+    const [analytics] = await db.select().from(userAnalytics).where(eq(userAnalytics.userId, userId));
+    return analytics || undefined;
+  }
+
+  async createUserAnalytics(analytics: InsertUserAnalytics): Promise<UserAnalytics> {
+    const [newAnalytics] = await db
+      .insert(userAnalytics)
+      .values(analytics)
+      .returning();
+    return newAnalytics;
+  }
+
+  async updateUserAnalytics(userId: number, analytics: Partial<InsertUserAnalytics>): Promise<UserAnalytics> {
+    const [updatedAnalytics] = await db
+      .update(userAnalytics)
+      .set(analytics)
+      .where(eq(userAnalytics.userId, userId))
+      .returning();
+    return updatedAnalytics;
   }
 }
 

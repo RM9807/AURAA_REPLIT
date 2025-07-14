@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertUserProfileSchema, insertOutfitSchema, insertWardrobeSchema } from "@shared/schema";
+import { insertUserSchema, insertUserProfileSchema, insertOutfitSchema, insertWardrobeSchema, insertStyleRecommendationSchema, insertUserAnalyticsSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
@@ -131,6 +131,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(item);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch wardrobe item" });
+    }
+  });
+
+  app.patch("/api/wardrobe/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const itemData = req.body;
+      const item = await storage.updateWardrobeItem(id, itemData);
+      res.json(item);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update wardrobe item" });
+    }
+  });
+
+  // Style recommendation routes
+  app.get("/api/users/:id/recommendations", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const recommendations = await storage.getUserRecommendations(userId);
+      res.json(recommendations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch recommendations" });
+    }
+  });
+
+  app.post("/api/users/:id/recommendations", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const recommendationData = insertStyleRecommendationSchema.parse({ ...req.body, userId });
+      const recommendation = await storage.createRecommendation(recommendationData);
+      res.json(recommendation);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid recommendation data" });
+    }
+  });
+
+  app.patch("/api/recommendations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const recommendationData = req.body;
+      const recommendation = await storage.updateRecommendation(id, recommendationData);
+      res.json(recommendation);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update recommendation" });
+    }
+  });
+
+  // User analytics routes
+  app.get("/api/users/:id/analytics", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const analytics = await storage.getUserAnalytics(userId);
+      if (!analytics) {
+        return res.status(404).json({ error: "Analytics not found" });
+      }
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  app.post("/api/users/:id/analytics", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const analyticsData = insertUserAnalyticsSchema.parse({ ...req.body, userId });
+      const analytics = await storage.createUserAnalytics(analyticsData);
+      res.json(analytics);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid analytics data" });
+    }
+  });
+
+  app.patch("/api/users/:id/analytics", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const analyticsData = req.body;
+      const analytics = await storage.updateUserAnalytics(userId, analyticsData);
+      res.json(analytics);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update analytics" });
     }
   });
 
