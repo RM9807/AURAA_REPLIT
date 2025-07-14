@@ -36,34 +36,34 @@ export default function Dashboard() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-white to-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your style dashboard...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gradient-purple-pink mx-auto"></div>
+          <p className="mt-4 text-slate">Loading your style dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-white to-slate-50">
       <AuthenticatedNav />
       
       {/* Header */}
-      <div className="bg-white shadow-sm border-b mt-20">
+      <div className="bg-gradient-hero shadow-sm border-b mt-20">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <img src="/images/auraa-logo.png" alt="AURAA" className="h-10 w-10" />
+              <img src="/auraa-logo.png" alt="AURAA" className="h-10 w-10" />
               <div>
-                <h1 className="text-2xl font-bold text-navy">
+                <h1 className="text-2xl font-bold text-white">
                   Welcome back, {user.firstName}!
                 </h1>
-                <p className="text-gray-600">Your personal style dashboard</p>
+                <p className="text-white/80">Your personal style dashboard</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Badge variant="outline" className="bg-gradient-to-r from-blue-50 to-purple-50">
+              <Badge variant="outline" className="bg-gradient-purple-pink text-white border-white/20">
                 Style Score: {analytics?.styleScore || 0}/100
               </Badge>
             </div>

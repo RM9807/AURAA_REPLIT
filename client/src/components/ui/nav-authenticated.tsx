@@ -11,27 +11,27 @@ export default function AuthenticatedNav() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">
+    <nav className="fixed top-0 left-0 right-0 z-50 blur-bg border-b border-white/20">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <img src="/images/auraa-logo.png" alt="AURAA" className="h-8 w-8" />
-            <span className="text-xl font-bold text-navy">AURAA</span>
+            <img src="/auraa-logo.png" alt="AURAA" className="h-8 w-8" />
+            <span className="text-xl font-bold gradient-text">AURAA</span>
           </div>
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-6">
-            <a href="/dashboard" className="text-gray-700 hover:text-navy transition-colors">
+            <a href="/dashboard" className="text-slate hover:text-navy transition-colors font-medium">
               Dashboard
             </a>
-            <a href="/dashboard" className="text-gray-700 hover:text-navy transition-colors">
+            <a href="/dashboard" className="text-slate hover:text-navy transition-colors font-medium">
               Wardrobe
             </a>
-            <a href="/dashboard" className="text-gray-700 hover:text-navy transition-colors">
+            <a href="/dashboard" className="text-slate hover:text-navy transition-colors font-medium">
               Outfits
             </a>
-            <a href="/dashboard" className="text-gray-700 hover:text-navy transition-colors">
+            <a href="/dashboard" className="text-slate hover:text-navy transition-colors font-medium">
               Recommendations
             </a>
           </div>
@@ -45,7 +45,7 @@ export default function AuthenticatedNav() {
                   {user?.firstName?.[0] || user?.email?.[0] || 'U'}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-slate">
                 {user?.firstName || user?.email?.split('@')[0] || 'User'}
               </span>
             </div>
@@ -53,7 +53,7 @@ export default function AuthenticatedNav() {
               onClick={handleLogout}
               variant="outline"
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-slate/20 text-slate hover:bg-gradient-purple-pink hover:text-white hover:border-transparent"
             >
               <LogOut className="h-4 w-4" />
               Logout
