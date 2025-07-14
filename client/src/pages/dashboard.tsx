@@ -8,12 +8,12 @@ import { Progress } from "@/components/ui/progress";
 import { Heart, TrendingUp, Shirt, Sparkles, Target, BarChart3, Palette, Wand2, Scan, Image, Calendar, Settings } from "lucide-react";
 import AuthenticatedNav from "@/components/ui/nav-authenticated";
 
-
+import OutfitCombinationAI from "@/components/features/OutfitCombinationAI";
 import ProfileDiagnosis from "@/components/features/ProfileDiagnosis";
 
 export default function Dashboard() {
   const userId = 1; // In a real app, this would come from auth context
-  const [activeTab, setActiveTab] = useState("shop");
+  const [activeTab, setActiveTab] = useState("outfits");
 
   const { data: user } = useQuery({
     queryKey: ['/api/users', userId],
@@ -78,7 +78,28 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Main Feature Cards */}
-        <div className="grid grid-cols-1 gap-6 mb-8 max-w-md mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Outfit Generator & Planner Card */}
+          <Card 
+            className="bg-gradient-to-br from-slate-900 to-slate-800 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 cursor-pointer group"
+            onClick={() => setActiveTab("outfits")}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
+                  <Image className="h-6 w-6 text-purple-400" />
+                </div>
+                <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300">
+                  Build Outfit →
+                </Button>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Outfit Generator & Planner</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Create perfect outfits using your wardrobe items with AI-powered suggestions
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Shop Smart Card */}
           <Card 
             className="bg-gradient-to-br from-slate-900 to-slate-800 border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 cursor-pointer group"
@@ -134,6 +155,7 @@ export default function Dashboard() {
 
         {/* Content based on active tab */}
         <div className="mt-6">
+          {activeTab === "outfits" && <OutfitCombinationAI />}
           {activeTab === "shop" && (
             <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-orange-500/30">
               <CardHeader>
