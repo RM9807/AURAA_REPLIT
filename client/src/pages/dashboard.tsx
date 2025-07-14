@@ -135,7 +135,7 @@ export default function Dashboard() {
         {/* Profile Diagnosis for Existing Users */}
         <ProfileDiagnosis />
 
-        <Tabs defaultValue="ai-features" className="space-y-6">
+        <Tabs defaultValue="wardrobe" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="ai-features">AI Features</TabsTrigger>
             <TabsTrigger value="wardrobe">Wardrobe</TabsTrigger>
@@ -155,7 +155,7 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="wardrobe" className="space-y-6">
-            <WardrobeDigitizerTest />
+            <WardrobeDigitizer />
           </TabsContent>
 
           <TabsContent value="outfits" className="space-y-6">
