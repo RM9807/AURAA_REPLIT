@@ -102,25 +102,7 @@ export default function UserDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Main Feature Cards */}
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Digital Wardrobe Card */}
-            <Card className="bg-gradient-to-br from-slate-800 to-slate-700 border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center">
-                    <Shirt className="h-6 w-6 text-cyan-400" />
-                  </div>
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">Digital Wardrobe</h3>
-                <p className="text-slate-300 text-sm mb-4">
-                  {wardrobe?.length || 0} items cataloged
-                </p>
-                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300 w-full">
-                  Explore Wardrobe →
-                </Button>
-              </CardContent>
-            </Card>
-
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Outfit Generator Card */}
             <Card className="bg-gradient-to-br from-slate-800 to-slate-700 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300">
               <CardContent className="p-6">
