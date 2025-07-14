@@ -5,11 +5,7 @@ import {
   wardrobe,
   styleRecommendations,
   userAnalytics,
-  colorPalettes,
   outfitSuggestions,
-  wardrobeAR,
-  moodBoards,
-  fashionInsights,
   type User,
   type InsertUser,
   type UpsertUser,
@@ -23,16 +19,8 @@ import {
   type InsertStyleRecommendation,
   type UserAnalytics,
   type InsertUserAnalytics,
-  type ColorPalette,
-  type InsertColorPalette,
   type OutfitSuggestion,
   type InsertOutfitSuggestion,
-  type WardrobeAR,
-  type InsertWardrobeAR,
-  type MoodBoard,
-  type InsertMoodBoard,
-  type FashionInsight,
-  type InsertFashionInsight,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -69,32 +57,10 @@ export interface IStorage {
   createUserAnalytics(analytics: InsertUserAnalytics): Promise<UserAnalytics>;
   updateUserAnalytics(userId: number, analytics: Partial<InsertUserAnalytics>): Promise<UserAnalytics>;
   
-  // Color palette methods
-  getUserColorPalettes(userId: number): Promise<ColorPalette[]>;
-  createColorPalette(palette: InsertColorPalette): Promise<ColorPalette>;
-  getActiveColorPalette(userId: number): Promise<ColorPalette | undefined>;
-  setActiveColorPalette(userId: number, paletteId: number): Promise<ColorPalette>;
-  
   // Outfit suggestion methods
   getUserOutfitSuggestions(userId: number): Promise<OutfitSuggestion[]>;
   createOutfitSuggestion(suggestion: InsertOutfitSuggestion): Promise<OutfitSuggestion>;
   acceptOutfitSuggestion(suggestionId: number): Promise<OutfitSuggestion>;
-  
-  // AR wardrobe methods
-  getWardrobeItemAR(wardrobeItemId: number): Promise<WardrobeAR | undefined>;
-  createWardrobeAR(arData: InsertWardrobeAR): Promise<WardrobeAR>;
-  updateWardrobeAR(id: number, arData: Partial<InsertWardrobeAR>): Promise<WardrobeAR>;
-  
-  // Mood board methods
-  getUserMoodBoards(userId: number): Promise<MoodBoard[]>;
-  createMoodBoard(moodBoard: InsertMoodBoard): Promise<MoodBoard>;
-  getPublicMoodBoards(): Promise<MoodBoard[]>;
-  likeMoodBoard(id: number): Promise<MoodBoard>;
-  
-  // Fashion insights methods
-  getUserFashionInsights(userId: number): Promise<FashionInsight[]>;
-  createFashionInsight(insight: InsertFashionInsight): Promise<FashionInsight>;
-  getLatestInsight(userId: number): Promise<FashionInsight | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -262,39 +228,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  // Color Palette Methods
-  async getUserColorPalettes(userId: number): Promise<ColorPalette[]> {
-    return await db.select().from(colorPalettes).where(eq(colorPalettes.userId, userId));
-  }
 
-  async createColorPalette(palette: InsertColorPalette): Promise<ColorPalette> {
-    const [created] = await db.insert(colorPalettes).values(palette).returning();
-    return created;
-  }
-
-  async getActiveColorPalette(userId: number): Promise<ColorPalette | undefined> {
-    const [palette] = await db
-      .select()
-      .from(colorPalettes)
-      .where(and(eq(colorPalettes.userId, userId), eq(colorPalettes.isActive, true)));
-    return palette;
-  }
-
-  async setActiveColorPalette(userId: number, paletteId: number): Promise<ColorPalette> {
-    // Deactivate all palettes for user
-    await db
-      .update(colorPalettes)
-      .set({ isActive: false })
-      .where(eq(colorPalettes.userId, userId));
-    
-    // Activate the selected palette
-    const [updated] = await db
-      .update(colorPalettes)
-      .set({ isActive: true })
-      .where(eq(colorPalettes.id, paletteId))
-      .returning();
-    return updated;
-  }
 
   // Outfit Suggestion Methods
   async getUserOutfitSuggestions(userId: number): Promise<OutfitSuggestion[]> {
@@ -315,72 +249,7 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  // AR Wardrobe Methods
-  async getWardrobeItemAR(wardrobeItemId: number): Promise<WardrobeAR | undefined> {
-    const [ar] = await db
-      .select()
-      .from(wardrobeAR)
-      .where(eq(wardrobeAR.wardrobeItemId, wardrobeItemId));
-    return ar;
-  }
 
-  async createWardrobeAR(arData: InsertWardrobeAR): Promise<WardrobeAR> {
-    const [created] = await db.insert(wardrobeAR).values(arData).returning();
-    return created;
-  }
-
-  async updateWardrobeAR(id: number, arData: Partial<InsertWardrobeAR>): Promise<WardrobeAR> {
-    const [updated] = await db
-      .update(wardrobeAR)
-      .set(arData)
-      .where(eq(wardrobeAR.id, id))
-      .returning();
-    return updated;
-  }
-
-  // Mood Board Methods
-  async getUserMoodBoards(userId: number): Promise<MoodBoard[]> {
-    return await db.select().from(moodBoards).where(eq(moodBoards.userId, userId));
-  }
-
-  async createMoodBoard(moodBoard: InsertMoodBoard): Promise<MoodBoard> {
-    const [created] = await db.insert(moodBoards).values(moodBoard).returning();
-    return created;
-  }
-
-  async getPublicMoodBoards(): Promise<MoodBoard[]> {
-    return await db.select().from(moodBoards).where(eq(moodBoards.isPublic, true));
-  }
-
-  async likeMoodBoard(id: number): Promise<MoodBoard> {
-    const [current] = await db.select().from(moodBoards).where(eq(moodBoards.id, id));
-    const [updated] = await db
-      .update(moodBoards)
-      .set({ likes: (current?.likes || 0) + 1 })
-      .where(eq(moodBoards.id, id))
-      .returning();
-    return updated;
-  }
-
-  // Fashion Insights Methods
-  async getUserFashionInsights(userId: number): Promise<FashionInsight[]> {
-    return await db.select().from(fashionInsights).where(eq(fashionInsights.userId, userId));
-  }
-
-  async createFashionInsight(insight: InsertFashionInsight): Promise<FashionInsight> {
-    const [created] = await db.insert(fashionInsights).values(insight).returning();
-    return created;
-  }
-
-  async getLatestInsight(userId: number): Promise<FashionInsight | undefined> {
-    const [latest] = await db
-      .select()
-      .from(fashionInsights)
-      .where(eq(fashionInsights.userId, userId))
-      .orderBy(fashionInsights.createdAt)
-      .limit(1);
-    return latest;
-  }
 }
 
 export const storage = new DatabaseStorage();

@@ -102,19 +102,9 @@ export const userAnalytics = pgTable("user_analytics", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// 1. Personalized Color Palette
-export const colorPalettes = pgTable("color_palettes", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  name: text("name").notNull(),
-  colors: jsonb("colors").notNull(), // Array of hex colors with names
-  seasonType: text("season_type"), // "spring", "summer", "autumn", "winter"
-  skinTone: text("skin_tone"),
-  isActive: boolean("is_active").default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
-// 2. AI Outfit Suggestions
+
+// AI Outfit Suggestions
 export const outfitSuggestions = pgTable("outfit_suggestions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
@@ -132,40 +122,11 @@ export const outfitSuggestions = pgTable("outfit_suggestions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// 3. AR Wardrobe Tags
-export const wardrobeAR = pgTable("wardrobe_ar", {
-  id: serial("id").primaryKey(),
-  wardrobeItemId: integer("wardrobe_item_id").references(() => wardrobe.id).notNull(),
-  arTagId: text("ar_tag_id").notNull(),
-  position: jsonb("position"), // 3D coordinates
-  metadata: jsonb("metadata"), // Size, fit notes, care instructions
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
-// 4. Style Mood Boards
-export const moodBoards = pgTable("mood_boards", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
-  images: text("images").array(), // Array of image URLs
-  tags: text("tags").array(),
-  isPublic: boolean("is_public").default(false),
-  likes: integer("likes").default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
-// 5. Weekly Fashion Insights
-export const fashionInsights = pgTable("fashion_insights", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  weekStartDate: timestamp("week_start_date").notNull(),
-  insights: jsonb("insights").notNull(), // Generated insights data
-  trends: text("trends").array(),
-  recommendations: text("recommendations").array(),
-  styleProgress: jsonb("style_progress"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+
+
+
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -180,10 +141,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [userAnalytics.userId],
   }),
-  colorPalettes: many(colorPalettes),
   outfitSuggestions: many(outfitSuggestions),
-  moodBoards: many(moodBoards),
-  fashionInsights: many(fashionInsights),
 }));
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -200,12 +158,11 @@ export const outfitsRelations = relations(outfits, ({ one }) => ({
   }),
 }));
 
-export const wardrobeRelations = relations(wardrobe, ({ one, many }) => ({
+export const wardrobeRelations = relations(wardrobe, ({ one }) => ({
   user: one(users, {
     fields: [wardrobe.userId],
     references: [users.id],
   }),
-  arTags: many(wardrobeAR),
 }));
 
 export const styleRecommendationsRelations = relations(styleRecommendations, ({ one }) => ({
@@ -222,38 +179,9 @@ export const userAnalyticsRelations = relations(userAnalytics, ({ one }) => ({
   }),
 }));
 
-// New feature relations
-export const colorPalettesRelations = relations(colorPalettes, ({ one }) => ({
-  user: one(users, {
-    fields: [colorPalettes.userId],
-    references: [users.id],
-  }),
-}));
-
 export const outfitSuggestionsRelations = relations(outfitSuggestions, ({ one }) => ({
   user: one(users, {
     fields: [outfitSuggestions.userId],
-    references: [users.id],
-  }),
-}));
-
-export const wardrobeARRelations = relations(wardrobeAR, ({ one }) => ({
-  wardrobeItem: one(wardrobe, {
-    fields: [wardrobeAR.wardrobeItemId],
-    references: [wardrobe.id],
-  }),
-}));
-
-export const moodBoardsRelations = relations(moodBoards, ({ one }) => ({
-  user: one(users, {
-    fields: [moodBoards.userId],
-    references: [users.id],
-  }),
-}));
-
-export const fashionInsightsRelations = relations(fashionInsights, ({ one }) => ({
-  user: one(users, {
-    fields: [fashionInsights.userId],
     references: [users.id],
   }),
 }));
@@ -299,28 +227,7 @@ export const insertUserAnalyticsSchema = createInsertSchema(userAnalytics).omit(
   updatedAt: true,
 });
 
-// New feature insert schemas
-export const insertColorPaletteSchema = createInsertSchema(colorPalettes).omit({
-  id: true,
-  createdAt: true,
-});
-
 export const insertOutfitSuggestionSchema = createInsertSchema(outfitSuggestions).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertWardrobeARSchema = createInsertSchema(wardrobeAR).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertMoodBoardSchema = createInsertSchema(moodBoards).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertFashionInsightSchema = createInsertSchema(fashionInsights).omit({
   id: true,
   createdAt: true,
 });
@@ -340,14 +247,5 @@ export type StyleRecommendation = typeof styleRecommendations.$inferSelect;
 export type InsertUserAnalytics = z.infer<typeof insertUserAnalyticsSchema>;
 export type UserAnalytics = typeof userAnalytics.$inferSelect;
 
-// New feature types
-export type InsertColorPalette = z.infer<typeof insertColorPaletteSchema>;
-export type ColorPalette = typeof colorPalettes.$inferSelect;
 export type InsertOutfitSuggestion = z.infer<typeof insertOutfitSuggestionSchema>;
 export type OutfitSuggestion = typeof outfitSuggestions.$inferSelect;
-export type InsertWardrobeAR = z.infer<typeof insertWardrobeARSchema>;
-export type WardrobeAR = typeof wardrobeAR.$inferSelect;
-export type InsertMoodBoard = z.infer<typeof insertMoodBoardSchema>;
-export type MoodBoard = typeof moodBoards.$inferSelect;
-export type InsertFashionInsight = z.infer<typeof insertFashionInsightSchema>;
-export type FashionInsight = typeof fashionInsights.$inferSelect;

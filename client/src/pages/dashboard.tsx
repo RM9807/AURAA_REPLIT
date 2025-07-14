@@ -6,10 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Heart, TrendingUp, Shirt, Sparkles, Target, BarChart3, Palette, Wand2, Scan, Image, Calendar } from "lucide-react";
 import AuthenticatedNav from "@/components/ui/nav-authenticated";
-import ColorPaletteGenerator from "@/components/features/ColorPaletteGenerator";
-import AIOutfitAssistant from "@/components/features/AIOutfitAssistant";
-import ARWardrobeOrganizer from "@/components/features/ARWardrobeOrganizer";
-import MoodBoardSharing from "@/components/features/MoodBoardSharing";
+
 import WardrobeDigitizer from "@/components/features/WardrobeDigitizer";
 import OutfitCombinationAI from "@/components/features/OutfitCombinationAI";
 import ProfileDiagnosis from "@/components/features/ProfileDiagnosis";
@@ -146,13 +143,6 @@ export default function Dashboard() {
 
           <TabsContent value="ai-features" className="space-y-6">
             <OutfitCombinationAI />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ColorPaletteGenerator />
-              <AIOutfitAssistant />
-              <ARWardrobeOrganizer />
-              <MoodBoardSharing />
-            </div>
-
           </TabsContent>
 
           <TabsContent value="wardrobe" className="space-y-6">

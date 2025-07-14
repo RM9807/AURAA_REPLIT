@@ -231,30 +231,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== NEW FEATURES API ROUTES =====
 
-  // 1. Color Palette Routes
-  app.get('/api/users/:id/color-palettes', async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const palettes = await storage.getUserColorPalettes(userId);
-      res.json(palettes);
-    } catch (error) {
-      console.error("Error fetching color palettes:", error);
-      res.status(500).json({ message: "Failed to fetch color palettes" });
-    }
-  });
 
-  app.post('/api/users/:id/color-palettes', async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const palette = await storage.createColorPalette({ ...req.body, userId });
-      res.json(palette);
-    } catch (error) {
-      console.error("Error creating color palette:", error);
-      res.status(500).json({ message: "Failed to create color palette" });
-    }
-  });
-
-  // 2. AI Outfit Suggestion Routes
+  // AI Outfit Suggestion Routes
   app.get('/api/users/:id/outfit-suggestions', async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
@@ -277,63 +255,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // 3. AR Wardrobe Routes
-  app.get('/api/wardrobe/:id/ar', async (req, res) => {
+  // Accept outfit suggestion
+  app.patch('/api/outfit-suggestions/:id/accept', async (req, res) => {
     try {
-      const wardrobeItemId = parseInt(req.params.id);
-      const ar = await storage.getWardrobeItemAR(wardrobeItemId);
-      res.json(ar);
+      const suggestionId = parseInt(req.params.id);
+      const suggestion = await storage.acceptOutfitSuggestion(suggestionId);
+      res.json(suggestion);
     } catch (error) {
-      console.error("Error fetching AR data:", error);
-      res.status(500).json({ message: "Failed to fetch AR data" });
+      console.error("Error accepting outfit suggestion:", error);
+      res.status(500).json({ message: "Failed to accept outfit suggestion" });
     }
   });
 
-  // 4. Mood Board Routes
-  app.get('/api/users/:id/mood-boards', async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const moodBoards = await storage.getUserMoodBoards(userId);
-      res.json(moodBoards);
-    } catch (error) {
-      console.error("Error fetching mood boards:", error);
-      res.status(500).json({ message: "Failed to fetch mood boards" });
-    }
-  });
 
-  app.post('/api/users/:id/mood-boards', async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const moodBoard = await storage.createMoodBoard({ ...req.body, userId });
-      res.json(moodBoard);
-    } catch (error) {
-      console.error("Error creating mood board:", error);
-      res.status(500).json({ message: "Failed to create mood board" });
-    }
-  });
 
-  // 5. Fashion Insights Routes
-  app.get('/api/users/:id/fashion-insights', async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const insights = await storage.getUserFashionInsights(userId);
-      res.json(insights);
-    } catch (error) {
-      console.error("Error fetching fashion insights:", error);
-      res.status(500).json({ message: "Failed to fetch fashion insights" });
-    }
-  });
 
-  app.post('/api/users/:id/fashion-insights', async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const insight = await storage.createFashionInsight({ ...req.body, userId });
-      res.json(insight);
-    } catch (error) {
-      console.error("Error creating fashion insight:", error);
-      res.status(500).json({ message: "Failed to create fashion insight" });
-    }
-  });
+
+
 
   const httpServer = createServer(app);
 
