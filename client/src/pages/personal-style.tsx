@@ -73,8 +73,8 @@ export default function PersonalStyle() {
     mutationFn: async (profileData: any) => {
       return await apiRequest(`/api/users/${userId}/profile`, {
         method: 'POST',
-        body: JSON.stringify(profileData),
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData),
       });
     },
     onSuccess: () => {
