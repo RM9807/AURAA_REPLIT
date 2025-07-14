@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { useAuthModal } from "@/components/auth/AuthProvider";
 
 export default function Hero() {
+  const { showAuthModal } = useAuthModal();
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-hero">
       {/* Slow parallax background image */}
@@ -21,7 +24,10 @@ export default function Hero() {
           Your personal AI stylist that transforms morning uncertainty into instant confidence. Discover your style DNA, build your perfect wardrobe, and never have "nothing to wear" again.
         </p>
         <div className="space-x-4">
-          <Button className="px-8 py-4 bg-gradient-purple-pink text-white text-lg font-semibold rounded-xl hover-lift scroll-reveal">
+          <Button 
+            onClick={showAuthModal}
+            className="px-8 py-4 bg-gradient-purple-pink text-white text-lg font-semibold rounded-xl hover-lift scroll-reveal"
+          >
             Get Stylish Now
           </Button>
           <Button 

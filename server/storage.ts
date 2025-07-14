@@ -1,4 +1,4 @@
-import { users, userProfiles, outfits, wardrobe, styleRecommendations, userAnalytics, type User, type InsertUser, type UserProfile, type InsertUserProfile, type Outfit, type InsertOutfit, type WardrobeItem, type InsertWardrobeItem, type StyleRecommendation, type InsertStyleRecommendation, type UserAnalytics, type InsertUserAnalytics } from "@shared/schema";
+import { users, userProfiles, outfits, wardrobe, styleRecommendations, userAnalytics, type User, type InsertUser, type UpsertUser, type UserProfile, type InsertUserProfile, type Outfit, type InsertOutfit, type WardrobeItem, type InsertWardrobeItem, type StyleRecommendation, type InsertStyleRecommendation, type UserAnalytics, type InsertUserAnalytics } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -6,6 +6,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser & { id?: number }): Promise<User>;
   
   // User profile methods
   getUserProfile(userId: number): Promise<UserProfile | undefined>;
@@ -164,6 +165,39 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userAnalytics.userId, userId))
       .returning();
     return updatedAnalytics;
+  }
+
+  async upsertUser(userData: UpsertUser & { id?: number }): Promise<User> {
+    if (userData.id) {
+      // Check if user exists
+      const existingUser = await this.getUser(userData.id);
+      if (existingUser) {
+        // Update existing user
+        const [user] = await db
+          .update(users)
+          .set({
+            ...userData,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, userData.id))
+          .returning();
+        return user;
+      }
+    }
+
+    // Create new user
+    const [user] = await db
+      .insert(users)
+      .values({
+        username: userData.username || userData.email || `user_${Date.now()}`,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        profileImageUrl: userData.profileImageUrl,
+        password: userData.password,
+      })
+      .returning();
+    return user;
   }
 }
 

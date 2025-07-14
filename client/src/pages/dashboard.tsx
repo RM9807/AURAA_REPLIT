@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Heart, TrendingUp, Shirt, Sparkles, Target, BarChart3 } from "lucide-react";
+import AuthenticatedNav from "@/components/ui/nav-authenticated";
 
 export default function Dashboard() {
   const userId = 1; // In a real app, this would come from auth context
@@ -46,8 +47,10 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <AuthenticatedNav />
+      
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b mt-20">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">

@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { useAuthModal } from "@/components/auth/AuthProvider";
 
 export default function FinalCTA() {
+  const { showAuthModal } = useAuthModal();
+  
   return (
     <section className="py-20 bg-gradient-hero relative overflow-hidden">
       <div className="max-w-4xl mx-auto px-6 text-center">
@@ -11,7 +14,10 @@ export default function FinalCTA() {
           <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
             Join thousands of fashion-forward individuals who've transformed their wardrobes with AI
           </p>
-          <Button className="px-12 py-4 bg-gradient-purple-pink text-white text-xl font-bold rounded-xl hover-lift">
+          <Button 
+            onClick={showAuthModal}
+            className="px-12 py-4 bg-gradient-purple-pink text-white text-xl font-bold rounded-xl hover-lift"
+          >
             Get Stylish Now
           </Button>
           <p className="text-white/60 mt-4">Free 7-day trial • No credit card required</p>
