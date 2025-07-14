@@ -1,0 +1,44 @@
+Create a dedicated, responsive page view (mobile and web friendly) for the "Digital Wardrobe" process after the user selects this option. 
+ 
+**Design Requirements:**
+- Place the AURAA footer logo at the very top of the page.
+- Maintain the exact look, feel, and color palette of page.
+- Use modern, clean UI elements with soft shadows, rounded corners, and accessible, on-brand text.
+- Ensure all components are mobile and web optimized, with smooth transitions between steps.
+- The interface must be accessible (good contrast, readable fonts, ARIA labels, keyboard navigation).
+ 
+**Step-by-Step Flow:**
+ 
+1. **Digital Closet Upload & Inventory**
+   - Display a friendly heading and brief instructions: “Upload Your Wardrobe Items to Begin Your Digital Closet Transformation.”
+   - Provide an intuitive photo upload interface:
+     - Users can take or upload photos of each clothing item (e.g., shirts, pants, dresses, accessories).
+     - For each item, present fields to add details: category (dropdown: top, bottom, dress, accessory, etc.), color, pattern, material, brand, season, and notes.
+     - Include bulk upload support (e.g., drag-and-drop multiple images).
+   - Show uploaded items in a gallery/thumbnail view with editable details.
+   - “Next” button to proceed after upload.
+ 
+2. **AI Analysis of Wardrobe Items**
+   - Show a progress animation or message: “Analyzing your wardrobe with your personal AURA Style Profile...”
+   - (No user action required; this is a system step.)
+ 
+3. **AI-Driven Declutter Recommendations**
+   - Present an organized, easy-to-scan view of declutter suggestions:
+     - **Keep:** Items perfectly aligned with the user’s style profile.
+     - **Consider Altering:** Items that fit the style but could be improved (e.g., “hem pants for better length”).
+     - **Consider Donating/Selling:** Items that are poor color matches, unflattering fits, or misaligned with the style DNA.
+   - For each “alter” or “discard” suggestion, display a brief, clear reason (e.g., “This color washes out your skin tone,” “The cut of this jacket doesn’t flatter your shoulder line”).
+   - Use visually distinct cards or lists for each pile, with icons and concise explanations.
+ 
+4. **Review & Confirm Declutter Decisions**
+   - Allow users to override AI suggestions (e.g., “Keep anyway”), mark items for tailoring, or add them to a “discarded” list.
+   - Provide simple controls (buttons, toggles) for each item.
+   - “Confirm” button to finalize decisions.
+ 
+5. **Update Digital Closet Inventory**
+   - Show the updated digital closet: a clean, curated view of the user’s current wardrobe.
+   - Highlight the “Wardrobe Gap Map”: AI visually indicates missing core items or over-represented categories, with suggestions for future purchases.
+   - Option to export or share the curated wardrobe list.
+ 
+**Output:**  
+Generate the code for this multi-step “Digital Wardrobe” page (preferably in React, but another modern frontend framework is acceptable), including the AURA logo at the top, all described step components, and state management for user actions and AI responses.
