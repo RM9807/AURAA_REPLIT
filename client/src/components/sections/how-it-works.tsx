@@ -22,7 +22,7 @@ const steps = [
       "Auto-categorize and tag items",
       "Create digital wardrobe inventory"
     ],
-    image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    image: "/images/wardrobe.png",
     alt: "Curated wardrobe with clothing items hanging on a rod - beige, brown, floral, and green garments"
   },
   {
