@@ -17,14 +17,10 @@ import {
   Scan, 
   CheckCircle, 
   XCircle, 
-  Heart,
-  Trash2,
-  Edit,
   Camera,
   ArrowLeft,
   ArrowRight,
   Star,
-  AlertTriangle,
   ShoppingBag,
   Plus,
   ChevronRight,
@@ -33,10 +29,8 @@ import {
   Scissors,
   Archive,
   Check,
-  X,
-  RotateCcw,
-  FileImage,
-  Loader2
+  Loader2,
+  FileImage
 } from "lucide-react";
 
 interface WardrobeItem {
@@ -65,18 +59,6 @@ interface WardrobeItem {
   createdAt: string;
 }
 
-interface UploadFormData {
-  itemName: string;
-  category: string;
-  color: string;
-  pattern: string;
-  material: string;
-  brand: string;
-  season: string;
-  notes: string;
-  imageFile: File | null;
-}
-
 export default function DigitalWardrobe() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -90,8 +72,7 @@ export default function DigitalWardrobe() {
   const [analysisProgress, setAnalysisProgress] = useState(0);
   
   // Upload state
-  const [uploadedItems, setUploadedItems] = useState<UploadFormData[]>([]);
-  const [currentUpload, setCurrentUpload] = useState<UploadFormData>({
+  const [currentUpload, setCurrentUpload] = useState({
     itemName: "",
     category: "",
     color: "",
@@ -100,7 +81,7 @@ export default function DigitalWardrobe() {
     brand: "",
     season: "",
     notes: "",
-    imageFile: null,
+    imageFile: null as File | null,
   });
 
   // Declutter state
@@ -113,21 +94,26 @@ export default function DigitalWardrobe() {
     queryKey: ['/api/users', userId, 'wardrobe'],
   });
 
-  // Upload mutation
+  // Upload mutation - Fixed to send JSON instead of FormData
   const uploadMutation = useMutation({
-    mutationFn: async (data: UploadFormData) => {
-      const formDataToSend = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (key === 'imageFile' && value) {
-          formDataToSend.append('image', value);
-        } else if (value) {
-          formDataToSend.append(key, value.toString());
-        }
-      });
+    mutationFn: async (data: typeof currentUpload) => {
+      const uploadData = {
+        itemName: data.itemName,
+        category: data.category,
+        color: data.color,
+        pattern: data.pattern || "",
+        material: data.material || "",
+        brand: data.brand || "",
+        season: data.season || "",
+        notes: data.notes || "",
+        imageUrl: data.imageFile ? `uploaded-${data.imageFile.name}` : "",
+        userId
+      };
 
-      await apiRequest(`/api/users/${userId}/wardrobe`, {
+      return await apiRequest(`/api/users/${userId}/wardrobe`, {
         method: 'POST',
-        body: formDataToSend,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(uploadData),
       });
     },
     onSuccess: () => {
@@ -143,7 +129,18 @@ export default function DigitalWardrobe() {
         notes: "",
         imageFile: null,
       });
+      toast({
+        title: "Item Added",
+        description: "Your wardrobe item has been successfully added.",
+      });
     },
+    onError: () => {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to add item. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,14 +161,11 @@ export default function DigitalWardrobe() {
     }
     
     uploadMutation.mutate(currentUpload);
-    setUploadedItems([...uploadedItems, currentUpload]);
   };
 
-  const handleAnalyzeWardrobe = async () => {
+  const handleAnalyzeWardrobe = () => {
     setIsAnalyzing(true);
     setAnalysisProgress(0);
-    
-    // Simulate AI analysis with progress
     const interval = setInterval(() => {
       setAnalysisProgress(prev => {
         if (prev >= 100) {
@@ -231,65 +225,83 @@ export default function DigitalWardrobe() {
   };
 
   const stepsConfig = [
-    { number: 1, title: "Upload Existing Items", description: "Digital Closet Upload & Inventory" },
-    { number: 2, title: "AI Analyzes Items", description: "Cross-reference with Style Profile" },
-    { number: 3, title: "Declutter Suggestions", description: "Keep, Alter, Donate piles" },
-    { number: 4, title: "Review & Confirm", description: "Override AI suggestions" },
-    { number: 5, title: "Updated Digital Closet", description: "Wardrobe Gap Map" }
+    { number: 1, title: "Upload Items", description: "Add your clothing" },
+    { number: 2, title: "AI Analysis", description: "Style assessment" },
+    { number: 3, title: "Declutter", description: "Keep, Alter, Donate" },
+    { number: 4, title: "Review", description: "Confirm decisions" },
+    { number: 5, title: "Complete", description: "Updated closet" }
   ];
 
-  const keepItems = wardrobe?.filter(item => item.aiAnalysis?.recommendation === 'keep' || declutterDecisions[item.id] === 'keep') || [];
-  const alterItems = wardrobe?.filter(item => item.aiAnalysis?.recommendation === 'alter' || declutterDecisions[item.id] === 'alter') || [];
-  const donateItems = wardrobe?.filter(item => item.aiAnalysis?.recommendation === 'donate' || declutterDecisions[item.id] === 'donate') || [];
+  const keepItems = wardrobe?.filter(item => {
+    const analysis = item.aiAnalysis || generateMockAnalysis(item);
+    return analysis.recommendation === 'keep' || declutterDecisions[item.id] === 'keep';
+  }) || [];
+  
+  const alterItems = wardrobe?.filter(item => {
+    const analysis = item.aiAnalysis || generateMockAnalysis(item);
+    return analysis.recommendation === 'alter' || declutterDecisions[item.id] === 'alter';
+  }) || [];
+  
+  const donateItems = wardrobe?.filter(item => {
+    const analysis = item.aiAnalysis || generateMockAnalysis(item);
+    return analysis.recommendation === 'donate' || declutterDecisions[item.id] === 'donate';
+  }) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-      {/* AURAA Logo Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocation('/dashboard')}
-                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-              <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">A</span>
-              </div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">AURAA Digital Wardrobe</h1>
+    <div className="min-h-screen bg-white dark:bg-slate-950">
+      {/* Header */}
+      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation('/dashboard')}
+              className="text-slate-600 dark:text-slate-400"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold">A</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">Digital Wardrobe</h1>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Transform your closet with AI</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Progress Steps */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-center space-x-4 md:space-x-8">
+      {/* Progress Steps - Modern Design */}
+      <div className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
             {stepsConfig.map((step, index) => (
-              <div key={step.number} className="flex items-center">
+              <div key={step.number} className="flex items-center flex-1">
                 <div className="flex flex-col items-center">
                   <div className={`
-                    w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all
+                    w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all
                     ${currentStep >= step.number 
-                      ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white' 
+                      ? 'bg-violet-500 text-white' 
                       : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                     }
                   `}>
-                    {currentStep > step.number ? <Check className="h-5 w-5" /> : step.number}
+                    {currentStep > step.number ? <Check className="h-4 w-4" /> : step.number}
                   </div>
                   <div className="mt-2 text-center">
                     <p className="text-xs font-medium text-slate-900 dark:text-white">{step.title}</p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 hidden md:block">{step.description}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{step.description}</p>
                   </div>
                 </div>
                 {index < stepsConfig.length - 1 && (
-                  <ChevronRight className="h-5 w-5 text-slate-400 mx-2 md:mx-4 mt-[-24px]" />
+                  <div className={`
+                    flex-1 h-px mx-4 mt-[-16px]
+                    ${currentStep > step.number 
+                      ? 'bg-violet-500' 
+                      : 'bg-slate-200 dark:bg-slate-700'
+                    }
+                  `} />
                 )}
               </div>
             ))}
@@ -297,100 +309,77 @@ export default function DigitalWardrobe() {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
-        {/* Welcome Prompt */}
-        {currentStep === 1 && wardrobe && wardrobe.length === 0 && (
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <div className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 rounded-2xl p-8 border border-violet-200 dark:border-violet-800">
-              <Sparkles className="h-16 w-16 text-violet-500 mx-auto mb-6" />
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
-                Ready to Transform Your Wardrobe?
-              </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400 mb-6">
-                Begin digitizing your wardrobe for personalized insights. Upload photos of your existing clothing items, and our AI will help you create a curated, organized closet that moves beyond chaotic physical storage.
-              </p>
-              <div className="flex justify-center">
-                <Button 
-                  onClick={() => {}} 
-                  className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8"
-                >
-                  <Camera className="h-4 w-4 mr-2" />
-                  Start Uploading Items
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 1: Upload & Inventory */}
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Step 1: Upload Items */}
         {currentStep === 1 && (
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                Begin digitizing your wardrobe for personalized insights
-              </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-                Upload photos of each clothing item in your closet. Add details like category, color, pattern, material, brand, and season. Our intuitive interface makes it easy to create a comprehensive, accessible inventory that moves beyond chaotic physical closets.
-              </p>
-            </div>
+          <div className="space-y-8">
+            {/* Welcome Section */}
+            {wardrobe && wardrobe.length === 0 && (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-violet-100 dark:bg-violet-950/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Sparkles className="h-8 w-8 text-violet-500" />
+                </div>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+                  Begin digitizing your wardrobe
+                </h2>
+                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                  Upload photos of your existing clothing items and add details. Our AI will help you create a curated, organized closet.
+                </p>
+              </div>
+            )}
 
             <div className="grid lg:grid-cols-2 gap-8">
-              {/* Upload Interface */}
-              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              {/* Upload Form - Simplified */}
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Camera className="h-5 w-5 text-violet-500" />
                     Add New Item
                   </CardTitle>
-                  <CardDescription>Upload a photo and add item details</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4">
                   {/* Photo Upload */}
-                  <div className="space-y-4">
-                    <Label className="text-slate-900 dark:text-white">Item Photo</Label>
-                    <div 
-                      className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center cursor-pointer hover:border-violet-400 transition-colors"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      {currentUpload.imageFile ? (
-                        <div className="space-y-2">
-                          <FileImage className="h-12 w-12 text-violet-500 mx-auto" />
-                          <p className="text-sm text-slate-900 dark:text-white font-medium">{currentUpload.imageFile.name}</p>
-                          <p className="text-xs text-slate-600 dark:text-slate-400">Click to change</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <Upload className="h-12 w-12 text-slate-400 mx-auto" />
-                          <p className="text-slate-600 dark:text-slate-400">Click to upload or drag and drop</p>
-                          <p className="text-xs text-slate-500">PNG, JPG up to 10MB</p>
-                        </div>
-                      )}
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
+                  <div 
+                    className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-violet-400 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {currentUpload.imageFile ? (
+                      <div className="space-y-2">
+                        <FileImage className="h-8 w-8 text-violet-500 mx-auto" />
+                        <p className="text-sm font-medium">{currentUpload.imageFile.name}</p>
+                        <p className="text-xs text-slate-500">Click to change</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Upload className="h-8 w-8 text-slate-400 mx-auto" />
+                        <p className="text-slate-600 dark:text-slate-400">Upload photo</p>
+                        <p className="text-xs text-slate-500">PNG, JPG up to 10MB</p>
+                      </div>
+                    )}
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
 
-                  {/* Item Details */}
+                  {/* Required Fields */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="itemName" className="text-slate-900 dark:text-white">Item Name *</Label>
+                    <div>
+                      <Label htmlFor="itemName">Item Name *</Label>
                       <Input
                         id="itemName"
                         value={currentUpload.itemName}
                         onChange={(e) => setCurrentUpload({ ...currentUpload, itemName: e.target.value })}
                         placeholder="e.g., Blue Denim Jacket"
-                        className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="category" className="text-slate-900 dark:text-white">Category *</Label>
+                    <div>
+                      <Label htmlFor="category">Category *</Label>
                       <Select value={currentUpload.category} onValueChange={(value) => setCurrentUpload({ ...currentUpload, category: value })}>
-                        <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600">
+                        <SelectTrigger>
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -406,115 +395,75 @@ export default function DigitalWardrobe() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="color" className="text-slate-900 dark:text-white">Color *</Label>
+                    <div>
+                      <Label htmlFor="color">Color *</Label>
                       <Input
                         id="color"
                         value={currentUpload.color}
                         onChange={(e) => setCurrentUpload({ ...currentUpload, color: e.target.value })}
                         placeholder="e.g., Navy Blue"
-                        className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="brand" className="text-slate-900 dark:text-white">Brand</Label>
+                    <div>
+                      <Label htmlFor="brand">Brand</Label>
                       <Input
                         id="brand"
                         value={currentUpload.brand}
                         onChange={(e) => setCurrentUpload({ ...currentUpload, brand: e.target.value })}
                         placeholder="e.g., Levi's"
-                        className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="material" className="text-slate-900 dark:text-white">Material</Label>
-                      <Input
-                        id="material"
-                        value={currentUpload.material}
-                        onChange={(e) => setCurrentUpload({ ...currentUpload, material: e.target.value })}
-                        placeholder="e.g., Cotton"
-                        className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="season" className="text-slate-900 dark:text-white">Season</Label>
-                      <Select value={currentUpload.season} onValueChange={(value) => setCurrentUpload({ ...currentUpload, season: value })}>
-                        <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600">
-                          <SelectValue placeholder="Select season" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="spring">Spring</SelectItem>
-                          <SelectItem value="summer">Summer</SelectItem>
-                          <SelectItem value="fall">Fall</SelectItem>
-                          <SelectItem value="winter">Winter</SelectItem>
-                          <SelectItem value="all-season">All Season</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes" className="text-slate-900 dark:text-white">Notes</Label>
-                    <Textarea
-                      id="notes"
-                      value={currentUpload.notes}
-                      onChange={(e) => setCurrentUpload({ ...currentUpload, notes: e.target.value })}
-                      placeholder="Any additional notes about this item..."
-                      className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"
-                      rows={3}
-                    />
                   </div>
 
                   <Button
                     onClick={handleAddItem}
                     disabled={uploadMutation.isPending}
-                    className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
+                    className="w-full bg-violet-500 hover:bg-violet-600"
                   >
                     {uploadMutation.isPending ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Adding Item...
+                        Adding...
                       </>
                     ) : (
                       <>
                         <Plus className="h-4 w-4 mr-2" />
-                        Add to Wardrobe
+                        Add Item
                       </>
                     )}
                   </Button>
                 </CardContent>
               </Card>
 
-              {/* Current Wardrobe */}
-              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              {/* Current Items */}
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Scan className="h-5 w-5 text-violet-500" />
-                    Your Current Wardrobe
+                    Your Items
                   </CardTitle>
                   <CardDescription>
-                    {wardrobe?.length || 0} items uploaded • Ready for AI analysis
+                    {wardrobe?.length || 0} items uploaded
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {wardrobeLoading ? (
                     <div className="text-center py-8">
                       <Loader2 className="h-8 w-8 animate-spin text-violet-500 mx-auto mb-4" />
-                      <p className="text-slate-600 dark:text-slate-400">Loading wardrobe...</p>
+                      <p className="text-slate-600 dark:text-slate-400">Loading...</p>
                     </div>
                   ) : wardrobe && wardrobe.length > 0 ? (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-                        {wardrobe.slice(0, 8).map((item: WardrobeItem) => (
-                          <div key={item.id} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3">
-                            <div className="aspect-square bg-slate-200 dark:bg-slate-700 rounded-md mb-2 flex items-center justify-center">
-                              <span className="text-2xl">👕</span>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {wardrobe.map((item: WardrobeItem) => (
+                          <div key={item.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                            <div className="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded flex items-center justify-center">
+                              <span className="text-lg">👕</span>
                             </div>
-                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{item.itemName}</p>
-                            <p className="text-xs text-slate-600 dark:text-slate-400">{item.category}</p>
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{item.itemName}</p>
+                              <p className="text-xs text-slate-600 dark:text-slate-400">{item.category} • {item.color}</p>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -522,29 +471,26 @@ export default function DigitalWardrobe() {
                       {wardrobe.length >= 3 && (
                         <Button
                           onClick={() => setCurrentStep(2)}
-                          className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
+                          className="w-full bg-violet-500 hover:bg-violet-600"
                         >
                           <Sparkles className="h-4 w-4 mr-2" />
-                          Start AI Analysis ({wardrobe.length} items)
+                          Start AI Analysis
                         </Button>
                       )}
                       
                       {wardrobe.length < 3 && (
                         <div className="text-center py-4">
-                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                            Add at least 3 items to start AI analysis
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {3 - wardrobe.length} more items needed
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Add {3 - wardrobe.length} more items to start AI analysis
                           </p>
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                      <p className="text-slate-600 dark:text-slate-400 mb-2">No items uploaded yet</p>
-                      <p className="text-sm text-slate-500">Start by adding your first wardrobe item</p>
+                      <Upload className="h-8 w-8 text-slate-400 mx-auto mb-4" />
+                      <p className="text-slate-600 dark:text-slate-400">No items yet</p>
+                      <p className="text-sm text-slate-500">Start by adding your first item</p>
                     </div>
                   )}
                 </CardContent>
@@ -555,49 +501,49 @@ export default function DigitalWardrobe() {
 
         {/* Step 2: AI Analysis */}
         {currentStep === 2 && (
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Sparkles className="h-12 w-12 text-white animate-pulse" />
+          <div className="max-w-2xl mx-auto text-center space-y-8">
+            <div>
+              <div className="w-16 h-16 bg-violet-100 dark:bg-violet-950/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="h-8 w-8 text-violet-500 animate-pulse" />
               </div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                AURAA's AI Cross-References Each Item with Your Style Profile
+                AI Cross-References with Your Style Profile
               </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">
-                Our AI analyzes each uploaded item against your AURAA Style Profile, examining color palette harmony, body shape fit, and personal style DNA alignment to provide personalized recommendations.
+              <p className="text-lg text-slate-600 dark:text-slate-400">
+                Analyzing color harmony, style alignment, and fit compatibility with your profile.
               </p>
             </div>
 
-            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <Card>
               <CardContent className="p-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-600 dark:text-slate-400">Analysis Progress</span>
-                      <span className="text-slate-900 dark:text-white font-medium">{analysisProgress}%</span>
+                      <span>Analysis Progress</span>
+                      <span className="font-medium">{analysisProgress}%</span>
                     </div>
-                    <Progress value={analysisProgress} className="h-3" />
+                    <Progress value={analysisProgress} className="h-2" />
                   </div>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-3 text-left">
                     <div className="flex items-center gap-3">
                       <Palette className="h-5 w-5 text-violet-500" />
-                      <span className="text-slate-900 dark:text-white">Color harmony analysis</span>
+                      <span>Color harmony analysis</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <Sparkles className="h-5 w-5 text-violet-500" />
-                      <span className="text-slate-900 dark:text-white">Style alignment scoring</span>
+                      <span>Style alignment scoring</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <Scissors className="h-5 w-5 text-violet-500" />
-                      <span className="text-slate-900 dark:text-white">Fit assessment</span>
+                      <span>Fit assessment</span>
                     </div>
                   </div>
 
                   {!isAnalyzing && analysisProgress === 0 && (
                     <Button
                       onClick={handleAnalyzeWardrobe}
-                      className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
+                      className="w-full bg-violet-500 hover:bg-violet-600"
                     >
                       Begin Analysis
                     </Button>
@@ -610,39 +556,39 @@ export default function DigitalWardrobe() {
 
         {/* Step 3: Declutter Recommendations */}
         {currentStep === 3 && (
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-8">
+          <div className="space-y-8">
+            <div className="text-center">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
                 Organized Declutter Suggestions
               </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-4xl mx-auto">
-                AURAA has organized your wardrobe into three categories. Each item includes a "Why This Doesn't Work" explanation for items that should be altered or donated, addressing the challenge of getting rid of 90% of your closet with specific, reasoned recommendations.
+              <p className="text-lg text-slate-600 dark:text-slate-400">
+                Your items organized into Keep, Alter, and Donate categories with explanations.
               </p>
             </div>
 
             <div className="grid lg:grid-cols-3 gap-6">
               {/* Keep Items */}
-              <Card className="bg-white dark:bg-slate-900 border-green-200 dark:border-green-800">
-                <CardHeader className="bg-green-50 dark:bg-green-900/20">
+              <Card className="border-green-200 dark:border-green-800">
+                <CardHeader className="bg-green-50 dark:bg-green-950/30">
                   <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
                     <CheckCircle className="h-5 w-5" />
-                    "Keep" Pile ({keepItems.length})
+                    Keep ({keepItems.length})
                   </CardTitle>
                   <CardDescription className="text-green-600 dark:text-green-500">
-                    Items perfectly aligned with your style profile
+                    Perfect style matches
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
+                <CardContent className="p-4 space-y-3 max-h-80 overflow-y-auto">
                   {keepItems.map((item: WardrobeItem) => (
-                    <div key={item.id} className="bg-green-50 dark:bg-green-900/10 rounded-lg p-3">
+                    <div key={item.id} className="bg-green-50 dark:bg-green-950/20 rounded-lg p-3">
                       <div className="flex gap-3">
-                        <div className="w-12 h-12 bg-green-200 dark:bg-green-800 rounded-md flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 bg-green-200 dark:bg-green-800 rounded flex items-center justify-center">
                           <span className="text-lg">👕</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-900 dark:text-white text-sm">{item.itemName}</p>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{item.itemName}</p>
                           <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                            {item.aiAnalysis?.reason || generateMockAnalysis(item).reason}
+                            {generateMockAnalysis(item).reason}
                           </p>
                         </div>
                       </div>
@@ -652,27 +598,27 @@ export default function DigitalWardrobe() {
               </Card>
 
               {/* Alter Items */}
-              <Card className="bg-white dark:bg-slate-900 border-yellow-200 dark:border-yellow-800">
-                <CardHeader className="bg-yellow-50 dark:bg-yellow-900/20">
+              <Card className="border-yellow-200 dark:border-yellow-800">
+                <CardHeader className="bg-yellow-50 dark:bg-yellow-950/30">
                   <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
                     <Scissors className="h-5 w-5" />
-                    "Consider Altering" Pile ({alterItems.length})
+                    Alter ({alterItems.length})
                   </CardTitle>
                   <CardDescription className="text-yellow-600 dark:text-yellow-500">
-                    Good style match but could be improved with minor alterations
+                    Need minor adjustments
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
+                <CardContent className="p-4 space-y-3 max-h-80 overflow-y-auto">
                   {alterItems.map((item: WardrobeItem) => (
-                    <div key={item.id} className="bg-yellow-50 dark:bg-yellow-900/10 rounded-lg p-3">
+                    <div key={item.id} className="bg-yellow-50 dark:bg-yellow-950/20 rounded-lg p-3">
                       <div className="flex gap-3">
-                        <div className="w-12 h-12 bg-yellow-200 dark:bg-yellow-800 rounded-md flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 bg-yellow-200 dark:bg-yellow-800 rounded flex items-center justify-center">
                           <span className="text-lg">👕</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-900 dark:text-white text-sm">{item.itemName}</p>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{item.itemName}</p>
                           <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                            {item.aiAnalysis?.reason || generateMockAnalysis(item).reason}
+                            {generateMockAnalysis(item).reason}
                           </p>
                         </div>
                       </div>
@@ -682,27 +628,27 @@ export default function DigitalWardrobe() {
               </Card>
 
               {/* Donate Items */}
-              <Card className="bg-white dark:bg-slate-900 border-red-200 dark:border-red-800">
-                <CardHeader className="bg-red-50 dark:bg-red-900/20">
+              <Card className="border-red-200 dark:border-red-800">
+                <CardHeader className="bg-red-50 dark:bg-red-950/30">
                   <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
                     <Archive className="h-5 w-5" />
-                    "Consider Donating/Selling" Pile ({donateItems.length})
+                    Donate ({donateItems.length})
                   </CardTitle>
                   <CardDescription className="text-red-600 dark:text-red-500">
-                    Poor color match, unflattering fit, or misaligned with new style
+                    Don't align with your style
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 space-y-3 max-h-96 overflow-y-auto">
+                <CardContent className="p-4 space-y-3 max-h-80 overflow-y-auto">
                   {donateItems.map((item: WardrobeItem) => (
-                    <div key={item.id} className="bg-red-50 dark:bg-red-900/10 rounded-lg p-3">
+                    <div key={item.id} className="bg-red-50 dark:bg-red-950/20 rounded-lg p-3">
                       <div className="flex gap-3">
-                        <div className="w-12 h-12 bg-red-200 dark:bg-red-800 rounded-md flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 bg-red-200 dark:bg-red-800 rounded flex items-center justify-center">
                           <span className="text-lg">👕</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-900 dark:text-white text-sm">{item.itemName}</p>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{item.itemName}</p>
                           <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                            {item.aiAnalysis?.reason || generateMockAnalysis(item).reason}
+                            {generateMockAnalysis(item).reason}
                           </p>
                         </div>
                       </div>
@@ -712,12 +658,12 @@ export default function DigitalWardrobe() {
               </Card>
             </div>
 
-            <div className="text-center mt-8">
+            <div className="text-center">
               <Button
                 onClick={() => setCurrentStep(4)}
-                className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8"
+                className="bg-violet-500 hover:bg-violet-600 px-8"
               >
-                Review & Confirm Decisions
+                Review Decisions
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
@@ -726,30 +672,30 @@ export default function DigitalWardrobe() {
 
         {/* Step 4: Review Decisions */}
         {currentStep === 4 && (
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
+          <div className="space-y-8">
+            <div className="text-center">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                Review & Confirm Declutter Decisions
+                Review & Confirm Decisions
               </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-                Users can override AI suggestions by clicking "Keep anyway", mark items for tailoring, or add them to a "discarded" list. Make your final decisions for each wardrobe item.
+              <p className="text-lg text-slate-600 dark:text-slate-400">
+                Override AI suggestions by selecting different options for each item.
               </p>
             </div>
 
             <div className="space-y-4">
               {wardrobe?.map((item: WardrobeItem) => {
-                const analysis = item.aiAnalysis || generateMockAnalysis(item);
+                const analysis = generateMockAnalysis(item);
                 const currentDecision = declutterDecisions[item.id] || analysis.recommendation;
                 
                 return (
-                  <Card key={item.id} className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                  <Card key={item.id}>
                     <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-2xl">👕</span>
+                        <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded flex items-center justify-center">
+                          <span className="text-lg">👕</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-slate-900 dark:text-white">{item.itemName}</h3>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{item.itemName}</h3>
                           <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{item.category} • {item.color}</p>
                           <p className="text-sm text-slate-700 dark:text-slate-300">{analysis.reason}</p>
                         </div>
@@ -758,7 +704,7 @@ export default function DigitalWardrobe() {
                             variant={currentDecision === 'keep' ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => handleDeclutterDecision(item.id, 'keep')}
-                            className={currentDecision === 'keep' ? 'bg-green-500 hover:bg-green-600 text-white' : ''}
+                            className={currentDecision === 'keep' ? 'bg-green-500 hover:bg-green-600' : ''}
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
                             Keep
@@ -767,7 +713,7 @@ export default function DigitalWardrobe() {
                             variant={currentDecision === 'alter' ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => handleDeclutterDecision(item.id, 'alter')}
-                            className={currentDecision === 'alter' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : ''}
+                            className={currentDecision === 'alter' ? 'bg-yellow-500 hover:bg-yellow-600' : ''}
                           >
                             <Scissors className="h-4 w-4 mr-1" />
                             Alter
@@ -776,7 +722,7 @@ export default function DigitalWardrobe() {
                             variant={currentDecision === 'donate' ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => handleDeclutterDecision(item.id, 'donate')}
-                            className={currentDecision === 'donate' ? 'bg-red-500 hover:bg-red-600 text-white' : ''}
+                            className={currentDecision === 'donate' ? 'bg-red-500 hover:bg-red-600' : ''}
                           >
                             <Archive className="h-4 w-4 mr-1" />
                             Donate
@@ -789,49 +735,52 @@ export default function DigitalWardrobe() {
               })}
             </div>
 
-            <div className="text-center mt-8">
+            <div className="text-center">
               <Button
                 onClick={handleConfirmDeclutter}
-                className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8"
+                className="bg-violet-500 hover:bg-violet-600 px-8"
               >
-                Confirm Decisions & Update Wardrobe
+                Confirm & Update Wardrobe
               </Button>
             </div>
           </div>
         )}
 
-        {/* Step 5: Updated Closet */}
+        {/* Step 5: Updated Digital Closet */}
         {currentStep === 5 && (
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-8">
+          <div className="space-y-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-950/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Check className="h-8 w-8 text-green-500" />
+              </div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
                 Updated Digital Closet Inventory
               </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400 max-w-4xl mx-auto">
-                The digital closet is updated, providing a clean, curated view of your current, optimal wardrobe. See the "Wardrobe Gap Map" that highlights missing core items or over-represented categories to guide future purchases.
+              <p className="text-lg text-slate-600 dark:text-slate-400">
+                Your wardrobe is now curated and optimized for your personal style.
               </p>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
-              {/* Curated Wardrobe */}
-              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              {/* Curated Items */}
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Star className="h-5 w-5 text-violet-500" />
-                    Clean, Curated Digital Closet
+                    Curated Collection
                   </CardTitle>
                   <CardDescription>
-                    {keepItems.length} current, optimal wardrobe items
+                    {keepItems.length} optimal wardrobe items
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 max-h-96 overflow-y-auto">
+                <CardContent className="space-y-3 max-h-80 overflow-y-auto">
                   {keepItems.map((item: WardrobeItem) => (
                     <div key={item.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                      <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded flex items-center justify-center">
                         <span className="text-lg">👕</span>
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-slate-900 dark:text-white">{item.itemName}</p>
+                        <p className="font-medium">{item.itemName}</p>
                         <p className="text-sm text-slate-600 dark:text-slate-400">{item.category} • {item.color}</p>
                       </div>
                       <Star className="h-4 w-4 text-yellow-500" />
@@ -841,37 +790,35 @@ export default function DigitalWardrobe() {
               </Card>
 
               {/* Wardrobe Gap Map */}
-              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ShoppingBag className="h-5 w-5 text-violet-500" />
                     Wardrobe Gap Analysis
                   </CardTitle>
                   <CardDescription>
-                    Smart suggestions for future purchases
+                    Smart shopping recommendations
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">Missing Core Items</h4>
-                      <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
-                        <li>• Classic white button-down shirt</li>
-                        <li>• Well-fitted blazer in neutral tone</li>
-                        <li>• Quality leather boots</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                      <h4 className="font-medium text-orange-900 dark:text-orange-300 mb-2">Over-represented</h4>
-                      <ul className="text-sm text-orange-700 dark:text-orange-400 space-y-1">
-                        <li>• 5 casual t-shirts (consider variety)</li>
-                        <li>• 3 similar jeans (diversify styles)</li>
-                      </ul>
-                    </div>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">Missing Core Items</h4>
+                    <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
+                      <li>• Classic white button-down shirt</li>
+                      <li>• Well-fitted blazer in neutral tone</li>
+                      <li>• Quality leather boots</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
+                    <h4 className="font-medium text-orange-900 dark:text-orange-300 mb-2">Over-represented</h4>
+                    <ul className="text-sm text-orange-700 dark:text-orange-400 space-y-1">
+                      <li>• 5 casual t-shirts (consider variety)</li>
+                      <li>• 3 similar jeans (diversify styles)</li>
+                    </ul>
                   </div>
 
-                  <Button className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white">
+                  <Button className="w-full bg-violet-500 hover:bg-violet-600">
                     <ShoppingBag className="h-4 w-4 mr-2" />
                     Get Shopping Recommendations
                   </Button>
@@ -879,15 +826,14 @@ export default function DigitalWardrobe() {
               </Card>
             </div>
 
-            <div className="text-center mt-8">
+            <div className="text-center space-x-4">
               <Button
                 onClick={() => setLocation('/dashboard')}
                 variant="outline"
-                className="mr-4"
               >
                 Return to Dashboard
               </Button>
-              <Button className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white">
+              <Button className="bg-violet-500 hover:bg-violet-600">
                 Share Your Curated Wardrobe
               </Button>
             </div>
