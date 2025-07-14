@@ -88,7 +88,13 @@ export default function PersonalStyleDiagnosis() {
       });
     },
     onSuccess: () => {
+      // Invalidate all profile-related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId] });
+      
+      // Refetch profile data to get the latest saved information
+      queryClient.refetchQueries({ queryKey: ['/api/users', userId, 'profile'] });
+      
       toast({
         title: "Profile Saved",
         description: "Your style profile has been successfully created.",
@@ -751,7 +757,11 @@ export default function PersonalStyleDiagnosis() {
 
             <div className="flex justify-center pt-6">
               <Button 
-                onClick={() => setLocation('/dashboard')}
+                onClick={async () => {
+                  // Wait for refetch to complete before navigating
+                  await queryClient.refetchQueries({ queryKey: ['/api/users', userId, 'profile'] });
+                  setLocation('/dashboard');
+                }}
                 className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-8 py-3 text-lg"
               >
                 Continue to Dashboard

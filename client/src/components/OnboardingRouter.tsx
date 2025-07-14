@@ -15,6 +15,8 @@ export default function OnboardingRouter({ children }: OnboardingRouterProps) {
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['/api/users', userId, 'profile'],
     retry: false,
+    refetchOnWindowFocus: true,
+    staleTime: 0, // Always refetch to get latest data
   });
 
   // Check if user has any wardrobe items
