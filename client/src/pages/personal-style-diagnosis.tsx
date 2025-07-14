@@ -436,27 +436,36 @@ export default function PersonalStyleDiagnosis() {
                     This helps us detect your accurate skin tone and undertone for personalized color recommendations.
                   </p>
                   
-                  <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center">
+                  <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
                     <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                    <Label htmlFor="face-photo" className="cursor-pointer">
-                      <span className="text-sm font-medium text-slate-900 dark:text-white">
-                        Click to upload face photo
-                      </span>
-                      <Input
+                    <div className="relative">
+                      <input
                         id="face-photo"
                         type="file"
                         accept="image/*"
-                        className="hidden"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) handleFileUpload('face', file);
                         }}
                       />
-                    </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
+                      >
+                        Click to upload face photo
+                      </Button>
+                    </div>
                     {photoUploads.facePhoto && (
-                      <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                        ✓ Face photo uploaded: {photoUploads.facePhoto.name}
-                      </p>
+                      <div className="mt-4 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                        <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                          ✓ Face photo uploaded: {photoUploads.facePhoto.name}
+                        </p>
+                        <p className="text-xs text-green-500 dark:text-green-400 mt-1">
+                          Size: {(photoUploads.facePhoto.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -477,27 +486,37 @@ export default function PersonalStyleDiagnosis() {
                   
                   <div className="grid grid-cols-3 gap-4">
                     {['front', 'side', 'back'].map((angle) => (
-                      <div key={angle} className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center">
+                      <div key={angle} className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center hover:border-slate-400 dark:hover:border-slate-500 transition-colors">
                         <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                        <Label htmlFor={`body-${angle}`} className="cursor-pointer">
-                          <span className="text-sm font-medium text-slate-900 dark:text-white capitalize">
-                            {angle} View
-                          </span>
-                          <Input
+                        <div className="relative">
+                          <input
                             id={`body-${angle}`}
                             type="file"
                             accept="image/*"
-                            className="hidden"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) handleFileUpload(angle as 'front' | 'side' | 'back', file);
                             }}
                           />
-                        </Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 capitalize"
+                          >
+                            {angle} View
+                          </Button>
+                        </div>
                         {photoUploads.bodyPhotos[angle as keyof typeof photoUploads.bodyPhotos] && (
-                          <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                            ✓ Uploaded
-                          </p>
+                          <div className="mt-2 p-2 bg-green-50 dark:bg-green-950/30 rounded border border-green-200 dark:border-green-800">
+                            <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                              ✓ Uploaded
+                            </p>
+                            <p className="text-xs text-green-500 dark:text-green-400">
+                              {(photoUploads.bodyPhotos[angle as keyof typeof photoUploads.bodyPhotos]!.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
                         )}
                       </div>
                     ))}
