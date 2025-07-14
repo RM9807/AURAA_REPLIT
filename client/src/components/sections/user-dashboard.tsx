@@ -115,7 +115,12 @@ export default function UserDashboard() {
                 <p className="text-slate-300 text-sm mb-4">
                   {wardrobe?.length || 0} items cataloged
                 </p>
-                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300 w-full">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-cyan-400 hover:text-cyan-300 w-full"
+                  onClick={() => window.location.href = '/digital-wardrobe'}
+                >
                   Explore Wardrobe →
                 </Button>
               </CardContent>

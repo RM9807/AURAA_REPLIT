@@ -1,0 +1,22 @@
+User Action: Navigate to "My Wardrobe" / "Digital Closet"
+System Response: Prompt to begin digitizing their wardrobe for personalized insights.
+User Action: Upload Existing Clothing Items (Digital Closet Upload & Inventory)
+System Response: Intuitive interface for photo upload:
+Users take/upload photos of each item (e.g., shirts, pants, dresses, accessories).
+Options to add details: category (e.g., "top," "bottom"), color, pattern, material, brand, season, and notes.
+Bulk upload options may be available.
+Pain Point Addressed: Creates a comprehensive, accessible inventory, moving beyond chaotic physical closets.
+System Action: AI Analyzes Each Wardrobe Item
+System Response: AURA's AI cross-references each uploaded item with the user's AURA Style Profile (color palette, body shape fit, personal style DNA).
+System Response: Present AI-Driven Declutter Recommendations
+System Response: Organized view of declutter suggestions:
+"Keep" Pile: Items perfectly aligned with their style profile.
+"Consider Altering" Pile: Items that are a good style match but could be improved with minor alterations (e.g., "hem pants for better length").
+"Consider Donating/Selling" Pile: Items that are a poor color match, unflattering fit, or completely misaligned with the new style.
+Sub-feature: "Why This Doesn't Work" Explanation: For each "discard" or "alter" suggestion, AURA provides a brief, clear reason (e.g., "This color washes out your skin tone," "The cut of this jacket doesn't flatter your shoulder line").
+Pain Point Addressed: Directly tackles the "get rid of 90% of my closet" challenge by providing specific, reasoned recommendations.
+User Action: Review & Confirm Declutter Decisions
+System Response: Users can override AI suggestions (e.g., "Keep anyway"), mark items for tailoring, or add them to a "discarded" list.
+System Action: Update Digital Closet Inventory
+System Response: The digital closet is updated, providing a clean, curated view of their current, optimal wardrobe.
+ “Wardrobe Gap Map” – AI highlights missing core items or over-represented categories to guide future purchases.
