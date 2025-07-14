@@ -14,13 +14,13 @@ export default function Hero() {
       
       <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
         <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 scroll-reveal">
-          Your Personal <span className="gradient-text">AI Stylist</span>
+          YOUR STYLE, <span className="gradient-text">PERFECTED</span>
         </h1>
-        <p className="text-xl md:text-2xl text-white/80 mb-8 scroll-reveal">
-          Transform your wardrobe. Instantly.
+        <p className="text-xl md:text-2xl text-white/80 mb-8 scroll-reveal max-w-4xl mx-auto">
+          Your personal AI stylist that transforms morning uncertainty into instant confidence. Discover your style DNA, build your perfect wardrobe, and never have "nothing to wear" again.
         </p>
         <Button className="px-8 py-4 bg-gradient-purple-pink text-white text-lg font-semibold rounded-xl hover-lift scroll-reveal">
-          Get Styled Now
+          Get Stylish Now
         </Button>
       </div>
       
