@@ -31,10 +31,19 @@ export const userProfiles = pgTable("user_profiles", {
   userId: integer("user_id").references(() => users.id).notNull(),
   bodyType: text("body_type"),
   stylePreferences: jsonb("style_preferences"),
-  budget: integer("budget"),
+  budget: text("budget"),
   lifestyle: text("lifestyle"),
   colorPreferences: text("color_preferences").array(),
   sizeMeasurements: jsonb("size_measurements"),
+  // Personal Style Diagnosis fields
+  dailyActivity: text("daily_activity"),
+  comfortLevel: text("comfort_level"),
+  occasions: text("occasions").array(),
+  styleInspirations: text("style_inspirations"),
+  colorAvoidances: text("color_avoidances").array(),
+  age: text("age"),
+  height: text("height"),
+  goals: text("goals").array(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
