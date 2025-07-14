@@ -4,8 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Heart, TrendingUp, Shirt, Sparkles, Target, BarChart3 } from "lucide-react";
+import { Heart, TrendingUp, Shirt, Sparkles, Target, BarChart3, Palette, Wand2, Scan, Image, Calendar } from "lucide-react";
 import AuthenticatedNav from "@/components/ui/nav-authenticated";
+import ColorPaletteGenerator from "@/components/features/ColorPaletteGenerator";
+import AIOutfitAssistant from "@/components/features/AIOutfitAssistant";
+import ARWardrobeOrganizer from "@/components/features/ARWardrobeOrganizer";
+import MoodBoardSharing from "@/components/features/MoodBoardSharing";
+import WeeklyFashionInsights from "@/components/features/WeeklyFashionInsights";
 
 export default function Dashboard() {
   const userId = 1; // In a real app, this would come from auth context
@@ -125,13 +130,26 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <Tabs defaultValue="wardrobe" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="ai-features" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="ai-features">AI Features</TabsTrigger>
             <TabsTrigger value="wardrobe">Wardrobe</TabsTrigger>
             <TabsTrigger value="outfits">Outfits</TabsTrigger>
             <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="ai-features" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ColorPaletteGenerator />
+              <AIOutfitAssistant />
+              <ARWardrobeOrganizer />
+              <MoodBoardSharing />
+            </div>
+            <div className="w-full">
+              <WeeklyFashionInsights />
+            </div>
+          </TabsContent>
 
           <TabsContent value="wardrobe" className="space-y-6">
             <Card>
