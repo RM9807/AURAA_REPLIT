@@ -231,9 +231,6 @@ export default function OutfitBuilder() {
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
               What would you like to wear today?
             </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-400">
-              Get AI-generated outfit combinations from your digital wardrobe
-            </p>
           </div>
 
           {/* Configuration Panel */}
