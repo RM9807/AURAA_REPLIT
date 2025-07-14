@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           <div>
-            <div className="text-2xl font-bold gradient-text mb-4">AURAA</div>
+            <img src="/images/auraa-logo.png" alt="AURAA Logo" className="h-16 w-16 mb-4" />
             <p className="text-gray-400">Your personal AI stylist for a better wardrobe experience.</p>
           </div>
           <div>

@@ -12,7 +12,7 @@ export default function FinalCTA() {
             Join thousands of fashion-forward individuals who've transformed their wardrobes with AI
           </p>
           <Button className="px-12 py-4 bg-gradient-purple-pink text-white text-xl font-bold rounded-xl hover-lift">
-            Start Your Style Journey
+            Get Stylish Now
           </Button>
           <p className="text-white/60 mt-4">Free 7-day trial • No credit card required</p>
         </div>
