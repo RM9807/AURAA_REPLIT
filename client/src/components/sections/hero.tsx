@@ -16,9 +16,11 @@ export default function Hero() {
       </div>
       
       <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-        <div className="h-24 w-24 mx-auto mb-8 scroll-reveal bg-gradient-purple-pink rounded-2xl flex items-center justify-center">
-          <span className="text-white text-2xl font-bold">A</span>
-        </div>
+        <img 
+          src="@assets/Aaura-3-removebg-preview_1752500886755.png" 
+          alt="AURAA Logo" 
+          className="h-32 w-32 mx-auto mb-8 scroll-reveal"
+        />
         <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 scroll-reveal">
           YOUR STYLE, <span className="gradient-text">PERFECTED</span>
         </h1>
