@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +90,8 @@ const weatherConditions = [
 
 export default function OutfitBuilder() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedOccasion, setSelectedOccasion] = useState("casual");
@@ -102,6 +106,31 @@ export default function OutfitBuilder() {
   // Fetch wardrobe data
   const { data: wardrobe } = useQuery({
     queryKey: ['/api/users', userId, 'wardrobe'],
+  });
+
+  // Mutation to save outfit
+  const saveOutfitMutation = useMutation({
+    mutationFn: async (outfitData: any) => {
+      return await apiRequest(`/api/users/${userId}/outfits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(outfitData),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'outfits'] });
+      toast({
+        title: "Outfit Saved",
+        description: "Your outfit has been saved to your collection.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save outfit. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   // Generate AI outfit combinations
@@ -186,8 +215,22 @@ export default function OutfitBuilder() {
     }));
   };
 
-  const saveToFavorites = (outfit: OutfitCombination) => {
-    setFavoriteOutfits(prev => [...prev, { ...outfit, isFavorite: true }]);
+  const saveToFavorites = async (outfit: OutfitCombination) => {
+    const outfitData = {
+      name: `${outfit.occasion} outfit for ${format(selectedDate, 'MMM dd')}`,
+      occasion: outfit.occasion,
+      weather: outfit.weather,
+      mood: outfit.mood,
+      items: outfit.items.map(item => item.id),
+      userId
+    };
+    
+    try {
+      await saveOutfitMutation.mutateAsync(outfitData);
+      setFavoriteOutfits(prev => [...prev, { ...outfit, isFavorite: true }]);
+    } catch (error) {
+      // Error handled by mutation onError
+    }
   };
 
   const planOutfit = (outfit: OutfitCombination) => {

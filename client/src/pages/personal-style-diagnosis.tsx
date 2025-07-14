@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,6 +38,9 @@ interface PhotoUploads {
 }
 
 export default function PersonalStyleDiagnosis() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -68,6 +75,33 @@ export default function PersonalStyleDiagnosis() {
     { id: 4, title: 'Processing', icon: Sparkles },
     { id: 5, title: 'Your Profile', icon: Palette }
   ];
+
+  const userId = user?.id || 1;
+
+  // Mutation to save user profile
+  const saveProfileMutation = useMutation({
+    mutationFn: async (profileData: any) => {
+      return await apiRequest(`/api/users/${userId}/profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'profile'] });
+      toast({
+        title: "Profile Saved",
+        description: "Your style profile has been successfully created.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
 
   const handleFileUpload = (type: 'face' | 'front' | 'side' | 'back', file: File) => {
     if (type === 'face') {
@@ -107,10 +141,40 @@ export default function PersonalStyleDiagnosis() {
 
   const processProfile = async () => {
     setIsProcessing(true);
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    setIsProcessing(false);
-    nextStep();
+    
+    // Prepare profile data for database
+    const profileData = {
+      bodyType: quizData.bodyType || 'hourglass',
+      dailyActivity: quizData.dailyActivity,
+      comfortLevel: quizData.comfortLevel,
+      occasions: quizData.occasions,
+      styleInspirations: quizData.styleInspirations,
+      colorPreferences: quizData.colorPreferences,
+      colorAvoidances: quizData.colorAvoidances,
+      lifestyle: quizData.lifestyle,
+      budget: quizData.budget,
+      goals: quizData.goals,
+      age: quizData.age,
+      height: quizData.height,
+    };
+    
+    try {
+      // Simulate AI processing
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Save profile to database
+      await saveProfileMutation.mutateAsync(profileData);
+      
+      setIsProcessing(false);
+      nextStep();
+    } catch (error) {
+      setIsProcessing(false);
+      toast({
+        title: "Error",
+        description: "Failed to save your profile. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const progressPercentage = ((currentStep - 1) / 4) * 100;
