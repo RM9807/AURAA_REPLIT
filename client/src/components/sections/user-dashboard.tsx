@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Shirt, Plus, Heart, Target } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 
 interface RecentActivityItem {
   id: string;
@@ -15,6 +16,7 @@ interface RecentActivityItem {
 
 export default function UserDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
   const userId = user?.id || 1;
 
   const { data: wardrobe } = useQuery({
@@ -119,7 +121,10 @@ export default function UserDashboard() {
                   variant="ghost" 
                   size="sm" 
                   className="text-cyan-400 hover:text-cyan-300 w-full"
-                  onClick={() => window.location.href = '/digital-wardrobe'}
+                  onClick={() => { 
+                    console.log('Navigating to digital wardrobe');
+                    setLocation('/digital-wardrobe');
+                  }}
                 >
                   Explore Wardrobe →
                 </Button>
