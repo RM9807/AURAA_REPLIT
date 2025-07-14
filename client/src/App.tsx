@@ -9,6 +9,7 @@ import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import PersonalStyle from "@/pages/personal-style";
+import PersonalStyleDiagnosis from "@/pages/personal-style-diagnosis";
 import DigitalWardrobe from "@/pages/digital-wardrobe";
 import OutfitBuilder from "@/pages/outfit-builder";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/home" component={Home} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/personal-style" component={PersonalStyle} />
+      <Route path="/personal-style-diagnosis" component={PersonalStyleDiagnosis} />
       <Route path="/digital-wardrobe" component={DigitalWardrobe} />
       <Route path="/outfit-builder" component={OutfitBuilder} />
       <Route path="/landing" component={Landing} />

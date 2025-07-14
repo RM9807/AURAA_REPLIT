@@ -130,19 +130,48 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Shop Smart Card */}
+          {/* Personal Style Diagnosis Card */}
           <Card 
-            className="bg-gradient-to-br from-slate-900 to-slate-800 border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 cursor-pointer group"
-            onClick={() => setActiveTab("shop")}
+            className="bg-gradient-to-br from-slate-900 to-slate-800 border-pink-500/30 hover:border-pink-400/50 transition-all duration-300 cursor-pointer group"
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-orange-400" />
+                <div className="w-12 h-12 bg-pink-500/20 rounded-full flex items-center justify-center">
+                  <Palette className="h-6 w-6 text-pink-400" />
                 </div>
-                <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300">
-                  View Trends →
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-pink-400 hover:text-pink-300"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLocation('/personal-style-diagnosis');
+                  }}
+                >
+                  Start Diagnosis →
                 </Button>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Personal Style Diagnosis</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Discover your unique style DNA through AI-powered color and body analysis
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Shop Smart Card */}
+        <Card 
+          className="bg-gradient-to-br from-slate-900 to-slate-800 border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 cursor-pointer group mb-8"
+          onClick={() => setActiveTab("shop")}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-orange-400" />
+              </div>
+              <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300">
+                View Trends →
+              </Button>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Shop Smart</h3>
               <p className="text-slate-300 text-sm mb-4">
@@ -150,7 +179,6 @@ export default function Dashboard() {
               </p>
             </CardContent>
           </Card>
-        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
