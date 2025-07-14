@@ -10,7 +10,7 @@ import ColorPaletteGenerator from "@/components/features/ColorPaletteGenerator";
 import AIOutfitAssistant from "@/components/features/AIOutfitAssistant";
 import ARWardrobeOrganizer from "@/components/features/ARWardrobeOrganizer";
 import MoodBoardSharing from "@/components/features/MoodBoardSharing";
-import WeeklyFashionInsights from "@/components/features/WeeklyFashionInsights";
+
 import ProfileDiagnosis from "@/components/features/ProfileDiagnosis";
 
 export default function Dashboard() {
@@ -150,9 +150,7 @@ export default function Dashboard() {
               <ARWardrobeOrganizer />
               <MoodBoardSharing />
             </div>
-            <div className="w-full">
-              <WeeklyFashionInsights />
-            </div>
+
           </TabsContent>
 
           <TabsContent value="wardrobe" className="space-y-6">
