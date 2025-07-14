@@ -17,7 +17,7 @@ export default function Hero() {
       
       <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
         <img 
-          src="@assets/Aaura-3-removebg-preview_1752500886755.png" 
+          src="/auraa-logo.png" 
           alt="AURAA Logo" 
           className="h-32 w-32 mx-auto mb-8 scroll-reveal"
         />
