@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -264,18 +264,46 @@ export default function Dashboard() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Scan className="h-5 w-5 text-cyan-400" />
-                  Digital Wardrobe - Coming Soon
+                  Your Digital Wardrobe
                 </CardTitle>
                 <CardDescription className="text-slate-300">
-                  Advanced wardrobe management and organization system
+                  Manage and organize your clothing collection
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <p className="text-slate-400 mb-4">Enhanced wardrobe features are under development</p>
-                  <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
-                    Get Notified When Ready
-                  </Button>
+                <div className="space-y-4">
+                  {wardrobe && wardrobe.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {wardrobe.slice(0, 6).map((item: any) => (
+                        <div key={item.id} className="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20">
+                          <h4 className="text-white font-medium mb-1">{item.itemName}</h4>
+                          <p className="text-slate-400 text-sm mb-2">{item.category} • {item.color}</p>
+                          {item.brand && (
+                            <p className="text-cyan-400 text-xs">{item.brand}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-slate-400 mb-4">No wardrobe items yet</p>
+                      <Link to="/digital-wardrobe">
+                        <Button className="bg-cyan-500 hover:bg-cyan-600 text-white">
+                          Add Your First Item
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-4 border-t border-slate-700">
+                    <span className="text-slate-400 text-sm">
+                      {wardrobe?.length || 0} items in wardrobe
+                    </span>
+                    <Link to="/digital-wardrobe">
+                      <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
+                        Manage Wardrobe →
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
             </Card>
