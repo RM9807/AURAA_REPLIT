@@ -598,50 +598,88 @@ export default function PersonalStyleDiagnosis() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 block">
                       What's your style inspiration?
                     </Label>
-                    <RadioGroup 
-                      value={quizData.styleInspirations} 
-                      onValueChange={(value) => handleQuizChange('styleInspirations', value)}
-                      className="space-y-3 mt-3"
-                    >
+                    <div className="space-y-4">
                       {[
-                        { value: 'classic', label: 'Classic & Timeless - Clean lines, neutral colors' },
-                        { value: 'trendy', label: 'Trendy & Fashion-Forward - Latest styles and colors' },
-                        { value: 'romantic', label: 'Romantic & Feminine - Soft fabrics, floral patterns' },
-                        { value: 'edgy', label: 'Edgy & Bold - Statement pieces, unique combinations' },
-                        { value: 'minimalist', label: 'Minimalist & Simple - Clean, understated elegance' }
+                        { id: 'classic', title: 'Classic & Timeless', description: 'Clean lines, neutral colors' },
+                        { id: 'trendy', title: 'Trendy & Fashion-Forward', description: 'Latest styles and colors' },
+                        { id: 'romantic', title: 'Romantic & Feminine', description: 'Soft fabrics, floral patterns' },
+                        { id: 'edgy', title: 'Edgy & Bold', description: 'Statement pieces, unique combinations' },
+                        { id: 'minimalist', title: 'Minimalist & Simple', description: 'Clean, understated elegance' }
                       ].map((option) => (
-                        <div key={option.value} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.value} id={option.value} />
-                          <Label htmlFor={option.value} className="text-sm">{option.label}</Label>
+                        <div 
+                          key={option.id} 
+                          className={`relative border rounded-lg p-4 transition-colors cursor-pointer ${
+                            quizData.styleInspirations === option.id 
+                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' 
+                              : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
+                          }`}
+                          onClick={() => handleQuizChange('styleInspirations', option.id)}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mt-1 ${
+                              quizData.styleInspirations === option.id ? 'border-violet-500' : 'border-slate-300'
+                            }`}>
+                              {quizData.styleInspirations === option.id && (
+                                <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <Label className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
+                                {option.title}
+                              </Label>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {option.description}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       ))}
-                    </RadioGroup>
+                    </div>
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 block">
                       What's your clothing budget range?
                     </Label>
-                    <RadioGroup 
-                      value={quizData.budget} 
-                      onValueChange={(value) => handleQuizChange('budget', value)}
-                      className="space-y-3 mt-3"
-                    >
+                    <div className="space-y-4">
                       {[
-                        { value: 'budget', label: 'Budget-Friendly ($0-50 per item)' },
-                        { value: 'moderate', label: 'Moderate ($50-150 per item)' },
-                        { value: 'investment', label: 'Investment ($150-500 per item)' },
-                        { value: 'luxury', label: 'Luxury ($500+ per item)' }
+                        { id: 'budget', title: 'Budget-Friendly', description: '$0-50 per item' },
+                        { id: 'moderate', title: 'Moderate', description: '$50-150 per item' },
+                        { id: 'investment', title: 'Investment', description: '$150-500 per item' },
+                        { id: 'luxury', title: 'Luxury', description: '$500+ per item' }
                       ].map((option) => (
-                        <div key={option.value} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.value} id={option.value} />
-                          <Label htmlFor={option.value} className="text-sm">{option.label}</Label>
+                        <div 
+                          key={option.id} 
+                          className={`relative border rounded-lg p-4 transition-colors cursor-pointer ${
+                            quizData.budget === option.id 
+                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' 
+                              : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
+                          }`}
+                          onClick={() => handleQuizChange('budget', option.id)}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mt-1 ${
+                              quizData.budget === option.id ? 'border-violet-500' : 'border-slate-300'
+                            }`}>
+                              {quizData.budget === option.id && (
+                                <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <Label className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
+                                {option.title}
+                              </Label>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {option.description}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       ))}
-                    </RadioGroup>
+                    </div>
                   </div>
                 </div>
               </CardContent>
