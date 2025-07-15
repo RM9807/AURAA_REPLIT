@@ -456,9 +456,9 @@ export default function PersonalStyleDiagnosis() {
               <CardContent className="p-8 space-y-8">
                 <div className="space-y-8">
                   <div>
-                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 text-center">
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 block">
                       What's your typical daily activity?
-                    </h3>
+                    </Label>
                     <div className="space-y-4">
                       {[
                         { id: 'casual-relaxed', title: 'Casual & Relaxed', description: 'Working from home, running errands, casual meetups' },
@@ -469,30 +469,28 @@ export default function PersonalStyleDiagnosis() {
                       ].map((option) => (
                         <div 
                           key={option.id} 
-                          className={`relative border rounded-2xl p-6 transition-colors cursor-pointer ${
+                          className={`relative border rounded-lg p-4 transition-colors cursor-pointer ${
                             quizData.dailyActivity === option.id 
-                              ? 'border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-white' 
+                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' 
                               : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
                           }`}
                           onClick={() => handleQuizChange('dailyActivity', option.id)}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-                                {option.title}
-                              </h4>
-                              <p className="text-sm text-slate-600 dark:text-slate-400">
-                                {option.description}
-                              </p>
-                            </div>
-                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ml-4 ${
-                              quizData.dailyActivity === option.id 
-                                ? 'border-slate-900 dark:border-white bg-slate-900 dark:bg-white' 
-                                : 'border-slate-300 dark:border-slate-500'
+                          <div className="flex items-start space-x-3">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mt-1 ${
+                              quizData.dailyActivity === option.id ? 'border-violet-500' : 'border-slate-300'
                             }`}>
                               {quizData.dailyActivity === option.id && (
-                                <div className="w-2 h-2 rounded-full bg-white dark:bg-slate-900"></div>
+                                <div className="w-2 h-2 rounded-full bg-violet-500"></div>
                               )}
+                            </div>
+                            <div className="flex-1">
+                              <Label className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
+                                {option.title}
+                              </Label>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {option.description}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -501,9 +499,9 @@ export default function PersonalStyleDiagnosis() {
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 text-center">
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 block">
                       Describe your preferred comfort level
-                    </h3>
+                    </Label>
                     <div className="space-y-4">
                       {[
                         { id: 'maximum-comfort', title: 'Maximum Comfort', description: 'Soft fabrics, loose fits, cozy styles' },
@@ -513,30 +511,28 @@ export default function PersonalStyleDiagnosis() {
                       ].map((option) => (
                         <div 
                           key={option.id} 
-                          className={`relative border rounded-2xl p-6 transition-colors cursor-pointer ${
+                          className={`relative border rounded-lg p-4 transition-colors cursor-pointer ${
                             quizData.comfortLevel === option.id 
-                              ? 'border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-white' 
+                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' 
                               : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
                           }`}
                           onClick={() => handleQuizChange('comfortLevel', option.id)}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-                                {option.title}
-                              </h4>
-                              <p className="text-sm text-slate-600 dark:text-slate-400">
-                                {option.description}
-                              </p>
-                            </div>
-                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ml-4 ${
-                              quizData.comfortLevel === option.id 
-                                ? 'border-slate-900 dark:border-white bg-slate-900 dark:bg-white' 
-                                : 'border-slate-300 dark:border-slate-500'
+                          <div className="flex items-start space-x-3">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mt-1 ${
+                              quizData.comfortLevel === option.id ? 'border-violet-500' : 'border-slate-300'
                             }`}>
                               {quizData.comfortLevel === option.id && (
-                                <div className="w-2 h-2 rounded-full bg-white dark:bg-slate-900"></div>
+                                <div className="w-2 h-2 rounded-full bg-violet-500"></div>
                               )}
+                            </div>
+                            <div className="flex-1">
+                              <Label className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
+                                {option.title}
+                              </Label>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {option.description}
+                              </p>
                             </div>
                           </div>
                         </div>
