@@ -194,7 +194,9 @@ export default function PersonalStyleDiagnosis() {
       await saveProfileMutation.mutateAsync(profileData);
       
       setIsProcessing(false);
-      nextStep();
+      
+      // Redirect to dashboard after successful completion
+      setLocation('/dashboard');
     } catch (error) {
       setIsProcessing(false);
       toast({
@@ -820,34 +822,21 @@ export default function PersonalStyleDiagnosis() {
           
           <Button
             onClick={currentStep === totalSteps ? processProfile : nextStep}
-            disabled={!isStepValid(currentStep)}
+            disabled={!isStepValid(currentStep) || isProcessing}
             className="flex items-center space-x-2 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
           >
-            <span>{currentStep === totalSteps ? 'Complete Quiz' : 'Next'}</span>
-            <ArrowRight className="h-4 w-4" />
+            {isProcessing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <span>{currentStep === totalSteps ? 'Complete Quiz' : 'Next'}</span>
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </Button>
-          
-          {/* Debug Info - Remove in production */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded text-xs">
-              <p>Step {currentStep} Valid: {isStepValid(currentStep) ? 'Yes' : 'No'}</p>
-              {currentStep === 1 && (
-                <>
-                  <p>Gender: {quizData.gender || 'None'}</p>
-                  <p>Age: {quizData.age || 'None'}</p>
-                  <p>Height: {quizData.height || 'None'}</p>
-                  <p>Body Type: {quizData.bodyType || 'None'}</p>
-                </>
-              )}
-              {currentStep === 3 && (
-                <>
-                  <p>Occasions: {quizData.occasions.length} selected</p>
-                  <p>Style: {quizData.styleInspirations || 'None'}</p>
-                  <p>Budget: {quizData.budget || 'None'}</p>
-                </>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>
