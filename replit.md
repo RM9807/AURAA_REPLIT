@@ -45,7 +45,17 @@ Preferred communication style: Simple, everyday language.
 - **User Profiles Table**: Style preferences, body measurements, budget, and lifestyle data
 - **Outfits Table**: Saved outfit combinations with occasion and season metadata
 - **Wardrobe Table**: Individual clothing items with categorization and purchase tracking
-- **Relations**: Proper foreign key relationships between all entities
+- **Photo Uploads Table**: User photo uploads with AI analysis metadata and file management
+- **User Settings Table**: Theme preferences, notifications, privacy controls, and localization
+- **Style Sessions Table**: Consultation progress tracking with step-by-step data storage
+- **Outfit Collections Table**: Organized outfit groupings with tags and privacy controls
+- **Wishlist Items Table**: Shopping lists with priority levels and purchase tracking
+- **User Activities Table**: Activity logging for engagement analytics and behavior tracking
+- **Style Insights Table**: Personalized tips and insights with relevance scoring
+- **Style Recommendations Table**: AI-generated recommendations with confidence scoring
+- **User Analytics Table**: Usage statistics and style metrics tracking
+- **Outfit Suggestions Table**: Weather-based AI outfit recommendations with acceptance tracking
+- **Relations**: Comprehensive foreign key relationships between all entities
 - **Validation**: Zod schemas for type-safe data validation and API request parsing
 - **Migrations**: Drizzle-kit for database schema management
 
@@ -75,6 +85,50 @@ Preferred communication style: Simple, everyday language.
 - `GET /api/users/:id/wardrobe` - Get user's wardrobe items
 - `POST /api/users/:id/wardrobe` - Add new wardrobe item
 - `GET /api/wardrobe/:id` - Get specific wardrobe item
+- `PATCH /api/wardrobe/:id` - Update wardrobe item
+
+### Photo Management
+- `GET /api/users/:id/photos` - Get user's photo uploads
+- `POST /api/users/:id/photos` - Upload new photo
+- `GET /api/photos/:id` - Get specific photo
+- `DELETE /api/photos/:id` - Delete photo
+
+### User Settings
+- `GET /api/users/:id/settings` - Get user preferences and settings
+- `POST /api/users/:id/settings` - Create user settings
+- `PATCH /api/users/:id/settings` - Update user settings
+
+### Style Sessions
+- `GET /api/users/:id/style-sessions` - Get user's style consultation sessions
+- `POST /api/users/:id/style-sessions` - Create new style session
+- `GET /api/style-sessions/:id` - Get specific session
+- `PATCH /api/style-sessions/:id` - Update session progress
+
+### Outfit Collections
+- `GET /api/users/:id/outfit-collections` - Get user's outfit collections
+- `POST /api/users/:id/outfit-collections` - Create new collection
+- `GET /api/outfit-collections/:id` - Get specific collection
+- `PATCH /api/outfit-collections/:id` - Update collection
+
+### Wishlist Management
+- `GET /api/users/:id/wishlist` - Get user's wishlist items
+- `POST /api/users/:id/wishlist` - Add item to wishlist
+- `PATCH /api/wishlist/:id` - Update wishlist item
+- `DELETE /api/wishlist/:id` - Remove item from wishlist
+
+### Activity Tracking
+- `GET /api/users/:id/activities` - Get user activity history
+- `POST /api/users/:id/activities` - Log new user activity
+
+### Style Insights
+- `GET /api/users/:id/style-insights` - Get personalized style insights
+- `POST /api/users/:id/style-insights` - Create new style insight
+- `PATCH /api/style-insights/:id/read` - Mark insight as read
+
+### AI Outfit Suggestions
+- `GET /api/users/:id/outfit-suggestions` - Get AI-generated outfit suggestions
+- `POST /api/users/:id/outfit-suggestions` - Create new outfit suggestion
+- `PATCH /api/outfit-suggestions/:id/accept` - Accept outfit suggestion
 
 ## External Dependencies
 
@@ -114,6 +168,22 @@ Preferred communication style: Simple, everyday language.
 The application follows a modern full-stack architecture with clear separation between frontend and backend concerns, while maintaining a smooth development experience through integrated tooling.
 
 ## Recent Changes: Latest modifications with dates
+
+### July 15, 2025 - Comprehensive Database Integration for All Sub-sections and Subpages
+- **Complete Schema Expansion**: Added 7 new database tables (photo_uploads, user_settings, style_sessions, outfit_collections, wishlist_items, user_activities, style_insights)
+- **Full Storage Interface**: Extended IStorage interface with 35+ new methods covering all database operations (CRUD for all new tables)
+- **Comprehensive API Coverage**: Added 50+ new API endpoints supporting all sub-sections and subpages with proper validation
+- **Database Relations**: Established proper foreign key relationships and constraints for all new tables
+- **Type Safety**: Created insert schemas and TypeScript types for all new database entities
+- **Error Handling**: Implemented comprehensive error handling for all new database operations
+- **Real-time Testing**: Verified all new endpoints with actual database operations and data persistence
+- **Photo Upload System**: Database support for user photo uploads with AI analysis metadata
+- **User Preferences**: Complete user settings and preferences storage with theme, notifications, privacy controls
+- **Session Tracking**: Style consultation and session progress tracking with step-by-step data storage
+- **Collection Management**: Outfit collections with tagging, privacy controls, and organization features
+- **Wishlist System**: Shopping wishlist with priority levels, purchase tracking, and reason documentation
+- **Activity Logging**: User activity tracking for all interactions and engagement analytics
+- **Style Insights**: Personalized style tips and insights with read status and relevance scoring
 
 ### July 14, 2025 - Database Integration Completed
 - Full PostgreSQL database integration with all CRUD operations

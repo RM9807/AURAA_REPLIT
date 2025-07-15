@@ -131,6 +131,100 @@ export const outfitSuggestions = pgTable("outfit_suggestions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Photo uploads for style analysis
+export const photoUploads = pgTable("photo_uploads", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  photoType: text("photo_type").notNull(), // "face", "front", "side", "back", "wardrobe_item"
+  fileName: text("file_name").notNull(),
+  fileUrl: text("file_url"),
+  fileSize: integer("file_size"),
+  mimeType: text("mime_type"),
+  relatedItemId: integer("related_item_id"), // For wardrobe items
+  aiAnalysis: jsonb("ai_analysis"), // AI-generated insights from photo
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// User preferences and settings
+export const userSettings = pgTable("user_settings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  theme: text("theme").default("light"), // "light", "dark", "auto"
+  notifications: jsonb("notifications").default('{"email": true, "push": true, "sms": false}'),
+  privacy: jsonb("privacy").default('{"public_profile": false, "share_analytics": true}'),
+  currency: text("currency").default("USD"),
+  language: text("language").default("en"),
+  timezone: text("timezone").default("UTC"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Style sessions/consultations
+export const styleSessions = pgTable("style_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  sessionType: text("session_type").notNull(), // "diagnosis", "wardrobe_audit", "outfit_planning"
+  status: text("status").default("in_progress"), // "in_progress", "completed", "abandoned"
+  currentStep: integer("current_step").default(1),
+  totalSteps: integer("total_steps").default(5),
+  sessionData: jsonb("session_data"), // Store session progress and data
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Saved outfit collections
+export const outfitCollections = pgTable("outfit_collections", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  outfitIds: integer("outfit_ids").array(), // References to outfits table
+  tags: text("tags").array(),
+  isPublic: boolean("is_public").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Shopping wishlists
+export const wishlistItems = pgTable("wishlist_items", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  itemName: text("item_name").notNull(),
+  brand: text("brand"),
+  category: text("category"),
+  color: text("color"),
+  size: text("size"),
+  estimatedPrice: integer("estimated_price"),
+  priority: text("priority").default("medium"), // "low", "medium", "high"
+  reason: text("reason"), // Why they want this item
+  imageUrl: text("image_url"),
+  storeUrl: text("store_url"),
+  isPurchased: boolean("is_purchased").default(false),
+  purchasedDate: timestamp("purchased_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Activity tracking
+export const userActivities = pgTable("user_activities", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  activityType: text("activity_type").notNull(), // "login", "outfit_created", "item_added", "profile_updated"
+  activityData: jsonb("activity_data"), // Additional data about the activity
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+// Style insights and tips
+export const styleInsights = pgTable("style_insights", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  insightType: text("insight_type").notNull(), // "color_analysis", "body_type_tips", "seasonal_updates"
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: text("category"), // "tips", "trends", "seasonal", "personal"
+  isRead: boolean("is_read").default(false),
+  relevanceScore: integer("relevance_score"), // How relevant to user (1-10)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 
 
 
@@ -151,6 +245,16 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [userAnalytics.userId],
   }),
   outfitSuggestions: many(outfitSuggestions),
+  photoUploads: many(photoUploads),
+  settings: one(userSettings, {
+    fields: [users.id],
+    references: [userSettings.userId],
+  }),
+  styleSessions: many(styleSessions),
+  outfitCollections: many(outfitCollections),
+  wishlistItems: many(wishlistItems),
+  activities: many(userActivities),
+  styleInsights: many(styleInsights),
 }));
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -191,6 +295,55 @@ export const userAnalyticsRelations = relations(userAnalytics, ({ one }) => ({
 export const outfitSuggestionsRelations = relations(outfitSuggestions, ({ one }) => ({
   user: one(users, {
     fields: [outfitSuggestions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const photoUploadsRelations = relations(photoUploads, ({ one }) => ({
+  user: one(users, {
+    fields: [photoUploads.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userSettingsRelations = relations(userSettings, ({ one }) => ({
+  user: one(users, {
+    fields: [userSettings.userId],
+    references: [users.id],
+  }),
+}));
+
+export const styleSessionsRelations = relations(styleSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [styleSessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const outfitCollectionsRelations = relations(outfitCollections, ({ one }) => ({
+  user: one(users, {
+    fields: [outfitCollections.userId],
+    references: [users.id],
+  }),
+}));
+
+export const wishlistItemsRelations = relations(wishlistItems, ({ one }) => ({
+  user: one(users, {
+    fields: [wishlistItems.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userActivitiesRelations = relations(userActivities, ({ one }) => ({
+  user: one(users, {
+    fields: [userActivities.userId],
+    references: [users.id],
+  }),
+}));
+
+export const styleInsightsRelations = relations(styleInsights, ({ one }) => ({
+  user: one(users, {
+    fields: [styleInsights.userId],
     references: [users.id],
   }),
 }));
@@ -241,6 +394,42 @@ export const insertOutfitSuggestionSchema = createInsertSchema(outfitSuggestions
   createdAt: true,
 });
 
+export const insertPhotoUploadSchema = createInsertSchema(photoUploads).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertStyleSessionSchema = createInsertSchema(styleSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertOutfitCollectionSchema = createInsertSchema(outfitCollections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWishlistItemSchema = createInsertSchema(wishlistItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserActivitySchema = createInsertSchema(userActivities).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertStyleInsightSchema = createInsertSchema(styleInsights).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -255,6 +444,21 @@ export type InsertStyleRecommendation = z.infer<typeof insertStyleRecommendation
 export type StyleRecommendation = typeof styleRecommendations.$inferSelect;
 export type InsertUserAnalytics = z.infer<typeof insertUserAnalyticsSchema>;
 export type UserAnalytics = typeof userAnalytics.$inferSelect;
-
 export type InsertOutfitSuggestion = z.infer<typeof insertOutfitSuggestionSchema>;
 export type OutfitSuggestion = typeof outfitSuggestions.$inferSelect;
+
+// New table types
+export type InsertPhotoUpload = z.infer<typeof insertPhotoUploadSchema>;
+export type PhotoUpload = typeof photoUploads.$inferSelect;
+export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;
+export type UserSettings = typeof userSettings.$inferSelect;
+export type InsertStyleSession = z.infer<typeof insertStyleSessionSchema>;
+export type StyleSession = typeof styleSessions.$inferSelect;
+export type InsertOutfitCollection = z.infer<typeof insertOutfitCollectionSchema>;
+export type OutfitCollection = typeof outfitCollections.$inferSelect;
+export type InsertWishlistItem = z.infer<typeof insertWishlistItemSchema>;
+export type WishlistItem = typeof wishlistItems.$inferSelect;
+export type InsertUserActivity = z.infer<typeof insertUserActivitySchema>;
+export type UserActivity = typeof userActivities.$inferSelect;
+export type InsertStyleInsight = z.infer<typeof insertStyleInsightSchema>;
+export type StyleInsight = typeof styleInsights.$inferSelect;
