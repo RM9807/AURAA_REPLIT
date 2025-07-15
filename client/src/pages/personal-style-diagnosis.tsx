@@ -506,17 +506,37 @@ export default function PersonalStyleDiagnosis() {
                 <div className="space-y-6">
                   <div>
                     <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Which colors do you love wearing? (Select all that apply)
+                      What colors do you gravitate towards?
                     </Label>
-                    <div className="grid grid-cols-3 gap-3 mt-3">
-                      {['Black', 'White', 'Navy', 'Gray', 'Beige', 'Brown', 'Red', 'Pink', 'Purple', 'Blue', 'Green', 'Yellow', 'Orange'].map((color) => (
-                        <div key={color} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={color}
-                            checked={quizData.colorPreferences.includes(color)}
-                            onCheckedChange={(checked) => handleArrayFieldChange('colorPreferences', color, checked as boolean)}
-                          />
-                          <Label htmlFor={color} className="text-sm">{color}</Label>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {[
+                        { id: 'neutrals', title: 'Neutrals', description: 'Black, white, beige, gray' },
+                        { id: 'earth-tones', title: 'Earth Tones', description: 'Brown, olive, rust, cream' },
+                        { id: 'jewel-tones', title: 'Jewel Tones', description: 'Emerald, sapphire, ruby' },
+                        { id: 'pastels', title: 'Pastels', description: 'Soft pink, lavender, mint' },
+                        { id: 'bold-bright', title: 'Bold & Bright', description: 'Red, electric blue, hot pink' },
+                        { id: 'monochrome', title: 'Monochrome', description: 'Strictly black and white' }
+                      ].map((colorGroup) => (
+                        <div 
+                          key={colorGroup.id} 
+                          className="relative border border-slate-200 dark:border-slate-600 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
+                        >
+                          <div className="flex items-start space-x-3">
+                            <Checkbox
+                              id={colorGroup.id}
+                              checked={quizData.colorPreferences.includes(colorGroup.id)}
+                              onCheckedChange={(checked) => handleArrayFieldChange('colorPreferences', colorGroup.id, checked as boolean)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <Label htmlFor={colorGroup.id} className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
+                                {colorGroup.title}
+                              </Label>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {colorGroup.description}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -524,17 +544,37 @@ export default function PersonalStyleDiagnosis() {
 
                   <div>
                     <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Are there any colors you prefer to avoid? (Optional)
+                      What colors do you tend to avoid? (Optional)
                     </Label>
-                    <div className="grid grid-cols-3 gap-3 mt-3">
-                      {['Black', 'White', 'Navy', 'Gray', 'Beige', 'Brown', 'Red', 'Pink', 'Purple', 'Blue', 'Green', 'Yellow', 'Orange'].map((color) => (
-                        <div key={color} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`avoid-${color}`}
-                            checked={quizData.colorAvoidances.includes(color)}
-                            onCheckedChange={(checked) => handleArrayFieldChange('colorAvoidances', color, checked as boolean)}
-                          />
-                          <Label htmlFor={`avoid-${color}`} className="text-sm">{color}</Label>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {[
+                        { id: 'neutrals', title: 'Neutrals', description: 'Black, white, beige, gray' },
+                        { id: 'earth-tones', title: 'Earth Tones', description: 'Brown, olive, rust, cream' },
+                        { id: 'jewel-tones', title: 'Jewel Tones', description: 'Emerald, sapphire, ruby' },
+                        { id: 'pastels', title: 'Pastels', description: 'Soft pink, lavender, mint' },
+                        { id: 'bold-bright', title: 'Bold & Bright', description: 'Red, electric blue, hot pink' },
+                        { id: 'monochrome', title: 'Monochrome', description: 'Strictly black and white' }
+                      ].map((colorGroup) => (
+                        <div 
+                          key={`avoid-${colorGroup.id}`} 
+                          className="relative border border-slate-200 dark:border-slate-600 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
+                        >
+                          <div className="flex items-start space-x-3">
+                            <Checkbox
+                              id={`avoid-${colorGroup.id}`}
+                              checked={quizData.colorAvoidances.includes(colorGroup.id)}
+                              onCheckedChange={(checked) => handleArrayFieldChange('colorAvoidances', colorGroup.id, checked as boolean)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <Label htmlFor={`avoid-${colorGroup.id}`} className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
+                                {colorGroup.title}
+                              </Label>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {colorGroup.description}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
