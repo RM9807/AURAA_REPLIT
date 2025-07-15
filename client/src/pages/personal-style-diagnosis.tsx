@@ -213,7 +213,7 @@ export default function PersonalStyleDiagnosis() {
       case 1:
         return quizData.gender && quizData.age && quizData.height && quizData.bodyType;
       case 2:
-        return quizData.dailyActivity && quizData.comfortLevel && quizData.lifestyle;
+        return quizData.dailyActivity && quizData.comfortLevel;
       case 3:
         return quizData.occasions.length > 0 && quizData.styleInspirations && quizData.budget;
       case 4:
@@ -452,76 +452,96 @@ export default function PersonalStyleDiagnosis() {
 
           {/* Step 2: Lifestyle & Activity */}
           {currentStep === 2 && (
-            <Card className="max-w-2xl mx-auto">
-              <CardContent className="p-8 space-y-6">
-                <div className="space-y-6">
+            <Card className="max-w-4xl mx-auto">
+              <CardContent className="p-8 space-y-8">
+                <div className="space-y-8">
                   <div>
-                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      What's your daily activity level?
-                    </Label>
-                    <RadioGroup 
-                      value={quizData.dailyActivity} 
-                      onValueChange={(value) => handleQuizChange('dailyActivity', value)}
-                      className="space-y-3 mt-3"
-                    >
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 text-center">
+                      What's your typical daily activity?
+                    </h3>
+                    <div className="space-y-4">
                       {[
-                        { value: 'sedentary', label: 'Mostly sitting (office work, studying)' },
-                        { value: 'light', label: 'Light activity (some walking, standing)' },
-                        { value: 'moderate', label: 'Moderate activity (regular exercise, active job)' },
-                        { value: 'active', label: 'Very active (fitness enthusiast, physical job)' }
+                        { id: 'casual-relaxed', title: 'Casual & Relaxed', description: 'Working from home, running errands, casual meetups' },
+                        { id: 'business-professional', title: 'Business Professional', description: 'Office work, meetings, professional events' },
+                        { id: 'active-lifestyle', title: 'Active Lifestyle', description: 'Gym, outdoor activities, sports' },
+                        { id: 'creative-artistic', title: 'Creative & Artistic', description: 'Studio work, galleries, creative spaces' },
+                        { id: 'social-events', title: 'Social & Events', description: 'Parties, dinners, social gatherings' }
                       ].map((option) => (
-                        <div key={option.value} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.value} id={option.value} />
-                          <Label htmlFor={option.value} className="text-sm">{option.label}</Label>
+                        <div 
+                          key={option.id} 
+                          className={`relative border rounded-2xl p-6 transition-colors cursor-pointer ${
+                            quizData.dailyActivity === option.id 
+                              ? 'border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-white' 
+                              : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
+                          }`}
+                          onClick={() => handleQuizChange('dailyActivity', option.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+                                {option.title}
+                              </h4>
+                              <p className="text-sm text-slate-600 dark:text-slate-400">
+                                {option.description}
+                              </p>
+                            </div>
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ml-4 ${
+                              quizData.dailyActivity === option.id 
+                                ? 'border-slate-900 dark:border-white bg-slate-900 dark:bg-white' 
+                                : 'border-slate-300 dark:border-slate-500'
+                            }`}>
+                              {quizData.dailyActivity === option.id && (
+                                <div className="w-2 h-2 rounded-full bg-white dark:bg-slate-900"></div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ))}
-                    </RadioGroup>
+                    </div>
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      What's your comfort priority?
-                    </Label>
-                    <RadioGroup 
-                      value={quizData.comfortLevel} 
-                      onValueChange={(value) => handleQuizChange('comfortLevel', value)}
-                      className="space-y-3 mt-3"
-                    >
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 text-center">
+                      Describe your preferred comfort level
+                    </h3>
+                    <div className="space-y-4">
                       {[
-                        { value: 'comfort', label: 'Comfort is everything - I prioritize ease of movement' },
-                        { value: 'balanced', label: 'Balanced - I want to look good and feel comfortable' },
-                        { value: 'style', label: 'Style first - I\'m willing to sacrifice some comfort for looks' }
+                        { id: 'maximum-comfort', title: 'Maximum Comfort', description: 'Soft fabrics, loose fits, cozy styles' },
+                        { id: 'balanced', title: 'Balanced', description: 'Mix of comfort and style' },
+                        { id: 'style-first', title: 'Style First', description: 'Willing to sacrifice some comfort for great looks' },
+                        { id: 'structured-polished', title: 'Structured & Polished', description: 'Tailored, crisp, put-together looks' }
                       ].map((option) => (
-                        <div key={option.value} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.value} id={option.value} />
-                          <Label htmlFor={option.value} className="text-sm">{option.label}</Label>
+                        <div 
+                          key={option.id} 
+                          className={`relative border rounded-2xl p-6 transition-colors cursor-pointer ${
+                            quizData.comfortLevel === option.id 
+                              ? 'border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-white' 
+                              : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
+                          }`}
+                          onClick={() => handleQuizChange('comfortLevel', option.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+                                {option.title}
+                              </h4>
+                              <p className="text-sm text-slate-600 dark:text-slate-400">
+                                {option.description}
+                              </p>
+                            </div>
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ml-4 ${
+                              quizData.comfortLevel === option.id 
+                                ? 'border-slate-900 dark:border-white bg-slate-900 dark:bg-white' 
+                                : 'border-slate-300 dark:border-slate-500'
+                            }`}>
+                              {quizData.comfortLevel === option.id && (
+                                <div className="w-2 h-2 rounded-full bg-white dark:bg-slate-900"></div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ))}
-                    </RadioGroup>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      How would you describe your lifestyle?
-                    </Label>
-                    <RadioGroup 
-                      value={quizData.lifestyle} 
-                      onValueChange={(value) => handleQuizChange('lifestyle', value)}
-                      className="space-y-3 mt-3"
-                    >
-                      {[
-                        { value: 'professional', label: 'Professional - Office environment, meetings, networking' },
-                        { value: 'casual', label: 'Casual - Relaxed environment, work from home' },
-                        { value: 'social', label: 'Social - Frequent events, dinners, social gatherings' },
-                        { value: 'active', label: 'Active - Gym, outdoor activities, sports' },
-                        { value: 'creative', label: 'Creative - Artistic expression, unique environments' }
-                      ].map((option) => (
-                        <div key={option.value} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.value} id={option.value} />
-                          <Label htmlFor={option.value} className="text-sm">{option.label}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -530,22 +550,48 @@ export default function PersonalStyleDiagnosis() {
 
           {/* Step 3: Style Preferences */}
           {currentStep === 3 && (
-            <Card className="max-w-2xl mx-auto">
-              <CardContent className="p-8 space-y-6">
-                <div className="space-y-6">
+            <Card className="max-w-4xl mx-auto">
+              <CardContent className="p-8 space-y-8">
+                <div className="space-y-8">
                   <div>
-                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Which occasions do you need outfits for? (Select all that apply)
-                    </Label>
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                      {['Work/Business', 'Social Events', 'Date Nights', 'Casual Outings', 'Fitness/Active', 'Special Events'].map((occasion) => (
-                        <div key={occasion} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={occasion}
-                            checked={quizData.occasions.includes(occasion)}
-                            onCheckedChange={(checked) => handleArrayFieldChange('occasions', occasion, checked as boolean)}
-                          />
-                          <Label htmlFor={occasion} className="text-sm">{occasion}</Label>
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 text-center">
+                      What occasions do you dress for most often?
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {[
+                        { id: 'work-professional', title: 'Work/Professional' },
+                        { id: 'casual-daily', title: 'Casual Daily' },
+                        { id: 'date-nights', title: 'Date Nights' },
+                        { id: 'social-events', title: 'Social Events' },
+                        { id: 'travel', title: 'Travel' },
+                        { id: 'fitness-active', title: 'Fitness/Active' },
+                        { id: 'special-events', title: 'Special Events' }
+                      ].map((occasion) => (
+                        <div 
+                          key={occasion.id} 
+                          className={`relative border rounded-2xl p-6 transition-colors cursor-pointer ${
+                            quizData.occasions.includes(occasion.id) 
+                              ? 'border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-white' 
+                              : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
+                          }`}
+                          onClick={() => handleArrayFieldChange('occasions', occasion.id, !quizData.occasions.includes(occasion.id))}
+                        >
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-semibold text-slate-900 dark:text-white">
+                              {occasion.title}
+                            </h4>
+                            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                              quizData.occasions.includes(occasion.id) 
+                                ? 'border-slate-900 dark:border-white bg-slate-900 dark:bg-white' 
+                                : 'border-slate-300 dark:border-slate-500'
+                            }`}>
+                              {quizData.occasions.includes(occasion.id) && (
+                                <svg className="w-3 h-3 text-white dark:text-slate-900" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
