@@ -260,53 +260,211 @@ export default function Dashboard() {
             </Card>
           )}
           {activeTab === "wardrobe" && (
-            <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-cyan-500/30">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Scan className="h-5 w-5 text-cyan-400" />
-                  Your Digital Wardrobe
-                </CardTitle>
-                <CardDescription className="text-slate-300">
-                  Manage and organize your clothing collection
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {wardrobe && wardrobe.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {wardrobe.slice(0, 6).map((item: any) => (
-                        <div key={item.id} className="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20">
-                          <h4 className="text-white font-medium mb-1">{item.itemName}</h4>
-                          <p className="text-slate-400 text-sm mb-2">{item.category} • {item.color}</p>
-                          {item.brand && (
-                            <p className="text-cyan-400 text-xs">{item.brand}</p>
-                          )}
+            <div className="space-y-6">
+              {/* Achievement Snippets */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Wardrobe Achievement */}
+                <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-cyan-500/30">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-white flex items-center gap-2 text-lg">
+                      <Scan className="h-5 w-5 text-cyan-400" />
+                      Digital Wardrobe
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="text-2xl font-bold text-white">{wardrobe?.length || 0}</div>
+                      <p className="text-slate-400 text-sm">Items catalogued</p>
+                      <div className="pt-2">
+                        <Link to="/digital-wardrobe">
+                          <Button size="sm" className="bg-cyan-500 hover:bg-cyan-600 text-white">
+                            Manage →
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Outfit Builder Achievement */}
+                <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-purple-500/30">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-white flex items-center gap-2 text-lg">
+                      <Palette className="h-5 w-5 text-purple-400" />
+                      Outfit Builder
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="text-2xl font-bold text-white">{outfits?.length || 0}</div>
+                      <p className="text-slate-400 text-sm">Outfits created</p>
+                      <div className="pt-2">
+                        <Link to="/outfit-builder">
+                          <Button size="sm" className="bg-purple-500 hover:bg-purple-600 text-white">
+                            Create →
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Shop Smart Achievement */}
+                <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-orange-500/30">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-white flex items-center gap-2 text-lg">
+                      <TrendingUp className="h-5 w-5 text-orange-400" />
+                      Shop Smart
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="text-2xl font-bold text-white">{recommendations?.length || 0}</div>
+                      <p className="text-slate-400 text-sm">Recommendations</p>
+                      <div className="pt-2">
+                        <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10">
+                          Coming Soon
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Style Diagnosis Profile */}
+              <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-pink-500/30">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-pink-400" />
+                    Your Style Diagnosis Profile
+                  </CardTitle>
+                  <CardDescription className="text-slate-300">
+                    Personal style analysis and preferences
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {profile ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-pink-500/20">
+                          <h4 className="text-white font-medium mb-2">Body Type & Lifestyle</h4>
+                          <div className="space-y-1">
+                            <p className="text-slate-300 text-sm">
+                              <span className="text-pink-400">Body Type:</span> {profile.bodyType || 'Not specified'}
+                            </p>
+                            <p className="text-slate-300 text-sm">
+                              <span className="text-pink-400">Daily Activity:</span> {profile.dailyActivity || 'Not specified'}
+                            </p>
+                            <p className="text-slate-300 text-sm">
+                              <span className="text-pink-400">Comfort Level:</span> {profile.comfortLevel || 'Not specified'}
+                            </p>
+                          </div>
                         </div>
-                      ))}
+
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-pink-500/20">
+                          <h4 className="text-white font-medium mb-2">Occasions & Goals</h4>
+                          <div className="space-y-2">
+                            {profile.occasions && profile.occasions.length > 0 && (
+                              <div>
+                                <p className="text-pink-400 text-sm mb-1">Occasions:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {profile.occasions.map((occasion: string, index: number) => (
+                                    <Badge key={index} variant="outline" className="text-xs border-pink-500/30 text-pink-400">
+                                      {occasion}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {profile.goals && profile.goals.length > 0 && (
+                              <div>
+                                <p className="text-pink-400 text-sm mb-1">Goals:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {profile.goals.map((goal: string, index: number) => (
+                                    <Badge key={index} variant="outline" className="text-xs border-pink-500/30 text-pink-400">
+                                      {goal}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-pink-500/20">
+                          <h4 className="text-white font-medium mb-2">Color Preferences</h4>
+                          <div className="space-y-2">
+                            {profile.colorPreferences && profile.colorPreferences.length > 0 && (
+                              <div>
+                                <p className="text-pink-400 text-sm mb-1">Preferred Colors:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {profile.colorPreferences.map((color: string, index: number) => (
+                                    <Badge key={index} variant="secondary" className="text-xs bg-green-500/20 text-green-400">
+                                      {color}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {profile.colorAvoidances && profile.colorAvoidances.length > 0 && (
+                              <div>
+                                <p className="text-pink-400 text-sm mb-1">Colors to Avoid:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {profile.colorAvoidances.map((color: string, index: number) => (
+                                    <Badge key={index} variant="secondary" className="text-xs bg-red-500/20 text-red-400">
+                                      {color}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-800/50 rounded-lg p-4 border border-pink-500/20">
+                          <h4 className="text-white font-medium mb-2">Additional Details</h4>
+                          <div className="space-y-1">
+                            {profile.styleInspirations && (
+                              <p className="text-slate-300 text-sm">
+                                <span className="text-pink-400">Style Inspiration:</span> {profile.styleInspirations}
+                              </p>
+                            )}
+                            {profile.age && (
+                              <p className="text-slate-300 text-sm">
+                                <span className="text-pink-400">Age Range:</span> {profile.age}
+                              </p>
+                            )}
+                            {profile.height && (
+                              <p className="text-slate-300 text-sm">
+                                <span className="text-pink-400">Height:</span> {profile.height}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-slate-400 mb-4">No wardrobe items yet</p>
-                      <Link to="/digital-wardrobe">
-                        <Button className="bg-cyan-500 hover:bg-cyan-600 text-white">
-                          Add Your First Item
+                      <p className="text-slate-400 mb-4">No style profile found</p>
+                      <Link to="/personal-style-diagnosis">
+                        <Button className="bg-pink-500 hover:bg-pink-600 text-white">
+                          Complete Style Diagnosis
                         </Button>
                       </Link>
                     </div>
                   )}
-                  <div className="flex justify-between items-center pt-4 border-t border-slate-700">
-                    <span className="text-slate-400 text-sm">
-                      {wardrobe?.length || 0} items in wardrobe
-                    </span>
-                    <Link to="/digital-wardrobe">
-                      <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
-                        Manage Wardrobe →
+                  <div className="flex justify-end pt-4 border-t border-slate-700 mt-6">
+                    <Link to="/personal-style-diagnosis">
+                      <Button variant="outline" className="border-pink-500/30 text-pink-400 hover:bg-pink-500/10">
+                        Update Profile →
                       </Button>
                     </Link>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
           </>
