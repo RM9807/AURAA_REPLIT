@@ -15,6 +15,7 @@ import { useLocation } from 'wouter';
 
 interface StyleQuizData {
   // Step 1: Basic Info
+  gender: string;
   age: string;
   height: string;
   bodyType: string;
@@ -55,17 +56,18 @@ export default function PersonalStyleDiagnosis() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [quizData, setQuizData] = useState<StyleQuizData>({
-    dailyActivity: '',
-    comfortLevel: '',
-    occasions: [],
-    styleInspirations: '',
-    colorPreferences: [],
-    colorAvoidances: [],
+    gender: '',
     age: '',
     height: '',
     bodyType: '',
+    dailyActivity: '',
+    comfortLevel: '',
     lifestyle: '',
+    occasions: [],
+    styleInspirations: '',
     budget: '',
+    colorPreferences: [],
+    colorAvoidances: [],
     goals: []
   });
   
@@ -209,7 +211,7 @@ export default function PersonalStyleDiagnosis() {
   const isStepValid = (step: number) => {
     switch (step) {
       case 1:
-        return quizData.age && quizData.height && quizData.bodyType;
+        return quizData.gender && quizData.age && quizData.height && quizData.bodyType;
       case 2:
         return quizData.dailyActivity && quizData.comfortLevel && quizData.lifestyle;
       case 3:
@@ -287,60 +289,161 @@ export default function PersonalStyleDiagnosis() {
           {/* Step 1: Basic Info */}
           {currentStep === 1 && (
             <Card className="max-w-2xl mx-auto">
-              <CardContent className="p-8 space-y-6">
-                <div className="space-y-6">
+              <CardContent className="p-8 space-y-8">
+                <div className="space-y-8">
                   <div>
-                    <Label htmlFor="age" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      What's your age?
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      What's your gender identity?
                     </Label>
-                    <RadioGroup 
-                      value={quizData.age} 
-                      onValueChange={(value) => handleQuizChange('age', value)}
-                      className="grid grid-cols-2 gap-3 mt-3"
-                    >
-                      {['18-25', '26-35', '36-45', '46-55', '55+'].map((age) => (
-                        <div key={age} className="flex items-center space-x-2">
-                          <RadioGroupItem value={age} id={age} />
-                          <Label htmlFor={age} className="text-sm">{age}</Label>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {[
+                        { id: 'woman', title: 'Woman' },
+                        { id: 'man', title: 'Man' },
+                        { id: 'non-binary', title: 'Non-binary' },
+                        { id: 'other', title: 'Other/Prefer not to say' }
+                      ].map((option) => (
+                        <div 
+                          key={option.id} 
+                          className={`relative border rounded-lg p-4 transition-colors cursor-pointer ${
+                            quizData.gender === option.id 
+                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' 
+                              : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
+                          }`}
+                          onClick={() => handleQuizChange('gender', option.id)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                              quizData.gender === option.id ? 'border-violet-500' : 'border-slate-300'
+                            }`}>
+                              {quizData.gender === option.id && (
+                                <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                              )}
+                            </div>
+                            <Label className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
+                              {option.title}
+                            </Label>
+                          </div>
                         </div>
                       ))}
-                    </RadioGroup>
+                    </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="height" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      What's your age range?
+                    </Label>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {[
+                        { id: '18-25', title: '18-25 years' },
+                        { id: '26-35', title: '26-35 years' },
+                        { id: '36-45', title: '36-45 years' },
+                        { id: '46-55', title: '46-55 years' },
+                        { id: '56+', title: '56+ years' }
+                      ].map((option) => (
+                        <div 
+                          key={option.id} 
+                          className={`relative border rounded-lg p-4 transition-colors cursor-pointer ${
+                            quizData.age === option.id 
+                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' 
+                              : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
+                          }`}
+                          onClick={() => handleQuizChange('age', option.id)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                              quizData.age === option.id ? 'border-violet-500' : 'border-slate-300'
+                            }`}>
+                              {quizData.age === option.id && (
+                                <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                              )}
+                            </div>
+                            <Label className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
+                              {option.title}
+                            </Label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       What's your height?
                     </Label>
-                    <RadioGroup 
-                      value={quizData.height} 
-                      onValueChange={(value) => handleQuizChange('height', value)}
-                      className="grid grid-cols-2 gap-3 mt-3"
-                    >
-                      {['Under 5\'2"', '5\'2" - 5\'5"', '5\'6" - 5\'8"', '5\'9" - 6\'0"', 'Over 6\'0"'].map((height) => (
-                        <div key={height} className="flex items-center space-x-2">
-                          <RadioGroupItem value={height} id={height} />
-                          <Label htmlFor={height} className="text-sm">{height}</Label>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {[
+                        { id: 'under-5-2', title: 'Under 5\'2"' },
+                        { id: '5-2-5-6', title: '5\'2" - 5\'6"' },
+                        { id: '5-6-5-10', title: '5\'6" - 5\'10"' },
+                        { id: 'over-5-10', title: 'Over 5\'10"' }
+                      ].map((option) => (
+                        <div 
+                          key={option.id} 
+                          className={`relative border rounded-lg p-4 transition-colors cursor-pointer ${
+                            quizData.height === option.id 
+                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' 
+                              : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
+                          }`}
+                          onClick={() => handleQuizChange('height', option.id)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                              quizData.height === option.id ? 'border-violet-500' : 'border-slate-300'
+                            }`}>
+                              {quizData.height === option.id && (
+                                <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                              )}
+                            </div>
+                            <Label className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
+                              {option.title}
+                            </Label>
+                          </div>
                         </div>
                       ))}
-                    </RadioGroup>
+                    </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="bodyType" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Which body shape best describes you?
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      What's your body shape?
                     </Label>
-                    <RadioGroup 
-                      value={quizData.bodyType} 
-                      onValueChange={(value) => handleQuizChange('bodyType', value)}
-                      className="grid grid-cols-2 gap-3 mt-3"
-                    >
-                      {['Apple', 'Pear', 'Hourglass', 'Rectangle', 'Inverted Triangle'].map((type) => (
-                        <div key={type} className="flex items-center space-x-2">
-                          <RadioGroupItem value={type} id={type} />
-                          <Label htmlFor={type} className="text-sm">{type}</Label>
+                    <div className="grid grid-cols-1 gap-4 mt-4">
+                      {[
+                        { id: 'pear', title: 'Pear', description: 'Hips wider than shoulders, smaller bust' },
+                        { id: 'apple', title: 'Apple', description: 'Fuller midsection, broader shoulders' },
+                        { id: 'hourglass', title: 'Hourglass', description: 'Balanced shoulders and hips, defined waist' },
+                        { id: 'rectangle', title: 'Rectangle', description: 'Similar shoulder, waist, and hip measurements' },
+                        { id: 'athletic', title: 'Athletic', description: 'Muscular build, broad shoulders, less defined waist' }
+                      ].map((option) => (
+                        <div 
+                          key={option.id} 
+                          className={`relative border rounded-lg p-4 transition-colors cursor-pointer ${
+                            quizData.bodyType === option.id 
+                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' 
+                              : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
+                          }`}
+                          onClick={() => handleQuizChange('bodyType', option.id)}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mt-1 ${
+                              quizData.bodyType === option.id ? 'border-violet-500' : 'border-slate-300'
+                            }`}>
+                              {quizData.bodyType === option.id && (
+                                <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <Label className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
+                                {option.title}
+                              </Label>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {option.description}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       ))}
-                    </RadioGroup>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -648,9 +751,21 @@ export default function PersonalStyleDiagnosis() {
           {process.env.NODE_ENV === 'development' && (
             <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded text-xs">
               <p>Step {currentStep} Valid: {isStepValid(currentStep) ? 'Yes' : 'No'}</p>
-              <p>Occasions: {quizData.occasions.length} selected</p>
-              <p>Style: {quizData.styleInspirations || 'None'}</p>
-              <p>Budget: {quizData.budget || 'None'}</p>
+              {currentStep === 1 && (
+                <>
+                  <p>Gender: {quizData.gender || 'None'}</p>
+                  <p>Age: {quizData.age || 'None'}</p>
+                  <p>Height: {quizData.height || 'None'}</p>
+                  <p>Body Type: {quizData.bodyType || 'None'}</p>
+                </>
+              )}
+              {currentStep === 3 && (
+                <>
+                  <p>Occasions: {quizData.occasions.length} selected</p>
+                  <p>Style: {quizData.styleInspirations || 'None'}</p>
+                  <p>Budget: {quizData.budget || 'None'}</p>
+                </>
+              )}
             </div>
           )}
         </div>
