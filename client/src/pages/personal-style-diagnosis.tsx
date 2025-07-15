@@ -554,9 +554,9 @@ export default function PersonalStyleDiagnosis() {
               <CardContent className="p-8 space-y-8">
                 <div className="space-y-8">
                   <div>
-                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 text-center">
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 block">
                       What occasions do you dress for most often?
-                    </h3>
+                    </Label>
                     <div className="grid grid-cols-2 gap-4">
                       {[
                         { id: 'work-professional', title: 'Work/Professional' },
@@ -569,24 +569,24 @@ export default function PersonalStyleDiagnosis() {
                       ].map((occasion) => (
                         <div 
                           key={occasion.id} 
-                          className={`relative border rounded-2xl p-6 transition-colors cursor-pointer ${
+                          className={`relative border rounded-lg p-4 transition-colors cursor-pointer ${
                             quizData.occasions.includes(occasion.id) 
-                              ? 'border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-white' 
+                              ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20' 
                               : 'border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500'
                           }`}
                           onClick={() => handleArrayFieldChange('occasions', occasion.id, !quizData.occasions.includes(occasion.id))}
                         >
                           <div className="flex items-center justify-between">
-                            <h4 className="text-lg font-semibold text-slate-900 dark:text-white">
+                            <Label className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer">
                               {occasion.title}
-                            </h4>
-                            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                            </Label>
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
                               quizData.occasions.includes(occasion.id) 
-                                ? 'border-slate-900 dark:border-white bg-slate-900 dark:bg-white' 
+                                ? 'border-violet-500 bg-violet-500' 
                                 : 'border-slate-300 dark:border-slate-500'
                             }`}>
                               {quizData.occasions.includes(occasion.id) && (
-                                <svg className="w-3 h-3 text-white dark:text-slate-900" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                               )}
