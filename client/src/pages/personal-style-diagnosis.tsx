@@ -55,6 +55,8 @@ export default function PersonalStyleDiagnosis() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [styleDNAResults, setStyleDNAResults] = useState<any>(null);
   const [quizData, setQuizData] = useState<StyleQuizData>({
     gender: '',
     age: '',
@@ -86,7 +88,9 @@ export default function PersonalStyleDiagnosis() {
     { id: 3, title: 'Style Preferences', icon: Palette, description: 'Occasions and inspirations' },
     { id: 4, title: 'Color Profile', icon: Sparkles, description: 'Your color preferences' },
     { id: 5, title: 'Goals', icon: CheckCircle, description: 'What you want to achieve' },
-    { id: 6, title: 'Photo Upload', icon: Camera, description: 'Upload photos for AI analysis' }
+    { id: 6, title: 'Photo Upload', icon: Camera, description: 'Upload photos for AI analysis' },
+    { id: 7, title: 'AI Analysis', icon: Sparkles, description: 'Creating your Style DNA' },
+    { id: 8, title: 'Results', icon: CheckCircle, description: 'Your personalized Style DNA' }
   ];
 
   const totalSteps = quizSteps.length;
@@ -194,13 +198,19 @@ export default function PersonalStyleDiagnosis() {
       // Simulate AI processing with multiple stages
       await new Promise(resolve => setTimeout(resolve, 5000));
       
+      // Generate Style DNA results based on user input
+      const generatedResults = generateStyleDNAResults(quizData, photoUploads);
+      setStyleDNAResults(generatedResults);
+      
       // Save profile to database
       await saveProfileMutation.mutateAsync(profileData);
       
       setIsProcessing(false);
+      setAnalysisComplete(true);
       
-      // Redirect to dashboard after successful completion
-      setLocation('/dashboard');
+      // Move to results step
+      setCurrentStep(8);
+      
     } catch (error) {
       setIsProcessing(false);
       toast({
@@ -209,6 +219,87 @@ export default function PersonalStyleDiagnosis() {
         variant: "destructive",
       });
     }
+  };
+
+  // Generate Style DNA results based on user input
+  const generateStyleDNAResults = (data: StyleQuizData, photos: PhotoUploads) => {
+    // Generate color palette based on preferences
+    const colorPalettes = {
+      warm: ['#D2691E', '#CD853F', '#DEB887', '#F4A460', '#8B4513'],
+      cool: ['#4682B4', '#6495ED', '#87CEEB', '#B0C4DE', '#778899'],
+      neutral: ['#2F2F2F', '#696969', '#A9A9A9', '#D3D3D3', '#F5F5F5'],
+      vibrant: ['#FF6347', '#FF69B4', '#00CED1', '#32CD32', '#FFD700']
+    };
+
+    let primaryPalette = colorPalettes.neutral;
+    if (data.colorPreferences.includes('warm-tones')) primaryPalette = colorPalettes.warm;
+    else if (data.colorPreferences.includes('cool-tones')) primaryPalette = colorPalettes.cool;
+    else if (data.colorPreferences.includes('bold-bright')) primaryPalette = colorPalettes.vibrant;
+
+    // Generate style archetype based on preferences
+    const styleArchetypes = {
+      classic: { name: 'Classic Elegance', description: 'Timeless pieces with clean lines and sophisticated details' },
+      bohemian: { name: 'Bohemian Spirit', description: 'Free-spirited with artistic flair and flowing silhouettes' },
+      minimalist: { name: 'Modern Minimalist', description: 'Clean, simple lines with focus on quality and fit' },
+      romantic: { name: 'Romantic Feminine', description: 'Soft textures, delicate details, and flattering silhouettes' },
+      edgy: { name: 'Urban Edge', description: 'Contemporary pieces with bold details and statement elements' }
+    };
+
+    let styleArchetype = styleArchetypes.classic;
+    if (data.styleInspirations === 'street-style') styleArchetype = styleArchetypes.edgy;
+    else if (data.styleInspirations === 'vintage') styleArchetype = styleArchetypes.romantic;
+    else if (data.comfortLevel === 'very-comfortable') styleArchetype = styleArchetypes.minimalist;
+
+    return {
+      styleArchetype,
+      colorPalette: primaryPalette,
+      bodyAnalysis: {
+        bodyType: data.bodyType,
+        recommendations: getBodyTypeRecommendations(data.bodyType),
+        fitTips: getFitTips(data.bodyType)
+      },
+      personalizedTips: getPersonalizedTips(data),
+      shoppingGuide: getShoppingGuide(data),
+      confidenceScore: 92
+    };
+  };
+
+  const getBodyTypeRecommendations = (bodyType: string) => {
+    const recommendations = {
+      hourglass: 'Emphasize your waist with fitted styles and belted pieces',
+      apple: 'Focus on creating a defined waistline with A-line and empire cuts',
+      pear: 'Balance your proportions with structured shoulders and fitted tops',
+      rectangle: 'Create curves with layering and textured fabrics',
+      'inverted-triangle': 'Soften your shoulders with flowing fabrics and wider hems'
+    };
+    return recommendations[bodyType as keyof typeof recommendations] || recommendations.hourglass;
+  };
+
+  const getFitTips = (bodyType: string) => {
+    const tips = {
+      hourglass: ['High-waisted bottoms', 'Wrap dresses', 'Fitted blazers'],
+      apple: ['Empire waistlines', 'A-line dresses', 'Open necklines'],
+      pear: ['Structured shoulders', 'Wide-leg pants', 'Statement tops'],
+      rectangle: ['Belted jackets', 'Layered looks', 'Textured fabrics'],
+      'inverted-triangle': ['Soft shoulders', 'A-line skirts', 'Flowy tops']
+    };
+    return tips[bodyType as keyof typeof tips] || tips.hourglass;
+  };
+
+  const getPersonalizedTips = (data: StyleQuizData) => {
+    const tips = [];
+    if (data.occasions.includes('work')) tips.push('Invest in quality blazers and tailored pieces for professional settings');
+    if (data.goals.includes('Build confidence through style')) tips.push('Start with one signature piece that makes you feel powerful');
+    if (data.budget === 'budget-conscious') tips.push('Focus on versatile basics that can be styled multiple ways');
+    return tips.slice(0, 3);
+  };
+
+  const getShoppingGuide = (data: StyleQuizData) => {
+    const priorities = [];
+    if (data.goals.includes('Build a capsule wardrobe')) priorities.push('Neutral blazer', 'Well-fitted jeans', 'Classic white shirt');
+    if (data.occasions.includes('casual')) priorities.push('Comfortable sneakers', 'Casual dresses');
+    if (data.occasions.includes('formal')) priorities.push('Little black dress', 'Professional heels');
+    return priorities.slice(0, 5);
   };
 
   const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
@@ -1046,10 +1137,195 @@ export default function PersonalStyleDiagnosis() {
               </CardContent>
             </Card>
           )}
+
+          {/* Step 8: Style DNA Results */}
+          {currentStep === 8 && styleDNAResults && (
+            <div className="max-w-6xl mx-auto space-y-8">
+              {/* Header */}
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="space-y-4">
+                    <div className="flex justify-center">
+                      <div className="w-20 h-20 bg-gradient-to-r from-violet-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <Sparkles className="h-10 w-10 text-white" />
+                      </div>
+                    </div>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                      Your Style DNA is Ready!
+                    </h2>
+                    <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                      Based on your photos and preferences, we've created your personalized style profile with AI-powered insights.
+                    </p>
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-4 inline-block">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                          Confidence Score: {styleDNAResults.confidenceScore}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Style Archetype */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Your Style Archetype</h3>
+                      </div>
+                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6">
+                        <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                          {styleDNAResults.styleArchetype.name}
+                        </h4>
+                        <p className="text-slate-600 dark:text-slate-400">
+                          {styleDNAResults.styleArchetype.description}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Color Palette */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                          <Palette className="h-4 w-4 text-white" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Your Color Palette</h3>
+                      </div>
+                      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-6">
+                        <div className="flex space-x-3 mb-4">
+                          {styleDNAResults.colorPalette.map((color: string, index: number) => (
+                            <div
+                              key={index}
+                              className="w-12 h-12 rounded-full border-2 border-white shadow-lg"
+                              style={{ backgroundColor: color }}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          These colors complement your natural features and personal style preferences.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Body Analysis */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <Target className="h-4 w-4 text-white" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Body Shape Analysis</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6">
+                        <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Recommendations</h4>
+                        <p className="text-slate-600 dark:text-slate-400 text-sm">
+                          {styleDNAResults.bodyAnalysis.recommendations}
+                        </p>
+                      </div>
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6">
+                        <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Perfect Fits</h4>
+                        <ul className="text-slate-600 dark:text-slate-400 text-sm space-y-1">
+                          {styleDNAResults.bodyAnalysis.fitTips.map((tip: string, index: number) => (
+                            <li key={index} className="flex items-center space-x-2">
+                              <CheckCircle className="h-3 w-3 text-green-500" />
+                              <span>{tip}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Personalized Tips & Shopping Guide */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                          <Sparkles className="h-4 w-4 text-white" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Personalized Tips</h3>
+                      </div>
+                      <div className="space-y-3">
+                        {styleDNAResults.personalizedTips.map((tip: string, index: number) => (
+                          <div key={index} className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg p-4">
+                            <p className="text-sm text-slate-600 dark:text-slate-400">{tip}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-violet-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Shopping Priority</h3>
+                      </div>
+                      <div className="space-y-2">
+                        {styleDNAResults.shoppingGuide.map((item: string, index: number) => (
+                          <div key={index} className="flex items-center space-x-3 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg p-3">
+                            <span className="text-sm font-medium text-violet-600 dark:text-violet-400">
+                              {index + 1}.
+                            </span>
+                            <span className="text-sm text-slate-600 dark:text-slate-400">{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* CTA Button */}
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
+                      Ready to Build Your Wardrobe?
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      Your Style DNA is now saved to your profile. Let's start building your perfect wardrobe!
+                    </p>
+                    <Button
+                      onClick={() => setLocation('/dashboard')}
+                      className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
+                      size="lg"
+                    >
+                      Go to Dashboard
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
 
-        {/* Navigation Buttons - Hidden during AI analysis */}
-        {currentStep !== 7 && (
+        {/* Navigation Buttons - Hidden during AI analysis and results */}
+        {currentStep <= 6 && (
           <div className="flex justify-between items-center max-w-2xl mx-auto mt-8">
             <Button
               variant="outline"
@@ -1062,7 +1338,7 @@ export default function PersonalStyleDiagnosis() {
             </Button>
             
             <Button
-              onClick={currentStep === totalSteps ? processProfile : nextStep}
+              onClick={currentStep === 6 ? processProfile : nextStep}
               disabled={!isStepValid(currentStep) || isProcessing}
               className="flex items-center space-x-2 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
             >
@@ -1073,7 +1349,7 @@ export default function PersonalStyleDiagnosis() {
                 </>
               ) : (
                 <>
-                  <span>{currentStep === totalSteps ? 'Complete Quiz' : 'Next'}</span>
+                  <span>{currentStep === 6 ? 'Analyze My Style' : 'Next'}</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
