@@ -603,6 +603,16 @@ export default function PersonalStyleDiagnosis() {
             <span>{currentStep === totalSteps ? 'Complete Quiz' : 'Next'}</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
+          
+          {/* Debug Info - Remove in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+              <p>Step {currentStep} Valid: {isStepValid(currentStep) ? 'Yes' : 'No'}</p>
+              <p>Occasions: {quizData.occasions.length} selected</p>
+              <p>Style: {quizData.styleInspirations || 'None'}</p>
+              <p>Budget: {quizData.budget || 'None'}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
