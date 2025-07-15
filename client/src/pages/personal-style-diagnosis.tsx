@@ -85,7 +85,8 @@ export default function PersonalStyleDiagnosis() {
     { id: 2, title: 'Lifestyle', icon: Target, description: 'Your daily activities and comfort' },
     { id: 3, title: 'Style Preferences', icon: Palette, description: 'Occasions and inspirations' },
     { id: 4, title: 'Color Profile', icon: Sparkles, description: 'Your color preferences' },
-    { id: 5, title: 'Goals', icon: CheckCircle, description: 'What you want to achieve' }
+    { id: 5, title: 'Goals', icon: CheckCircle, description: 'What you want to achieve' },
+    { id: 6, title: 'Photo Upload', icon: Camera, description: 'Upload photos for AI analysis' }
   ];
 
   const totalSteps = quizSteps.length;
@@ -170,6 +171,9 @@ export default function PersonalStyleDiagnosis() {
   const processProfile = async () => {
     setIsProcessing(true);
     
+    // Show AI Style DNA analysis step
+    setCurrentStep(7); // Move to AI analysis step
+    
     // Prepare profile data for database
     const profileData = {
       bodyType: quizData.bodyType || 'hourglass',
@@ -187,8 +191,8 @@ export default function PersonalStyleDiagnosis() {
     };
     
     try {
-      // Simulate AI processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Simulate AI processing with multiple stages
+      await new Promise(resolve => setTimeout(resolve, 5000));
       
       // Save profile to database
       await saveProfileMutation.mutateAsync(profileData);
@@ -222,6 +226,8 @@ export default function PersonalStyleDiagnosis() {
         return quizData.colorPreferences.length > 0;
       case 5:
         return quizData.goals.length > 0;
+      case 6:
+        return photoUploads.facePhoto !== null; // At least face photo is required
       default:
         return false;
     }
@@ -806,38 +812,274 @@ export default function PersonalStyleDiagnosis() {
               </CardContent>
             </Card>
           )}
+
+          {/* Step 6: Photo Upload for AI Analysis */}
+          {currentStep === 6 && (
+            <Card className="max-w-4xl mx-auto">
+              <CardContent className="p-8 space-y-8">
+                <div className="text-center mb-8">
+                  <Camera className="h-12 w-12 mx-auto mb-4 text-violet-500" />
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                    Upload Photos for AI Style Analysis
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    Help our AI create your personalized Style DNA by uploading photos
+                  </p>
+                </div>
+
+                <div className="space-y-8">
+                  {/* Face Photo for Color Analysis */}
+                  <div>
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 block">
+                      Face Photo (Required) - For Color Analysis
+                    </Label>
+                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-violet-400 transition-colors">
+                      {photoUploads.facePhoto ? (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-center">
+                            <CheckCircle className="h-8 w-8 text-green-500" />
+                          </div>
+                          <p className="text-sm text-green-600 dark:text-green-400">
+                            Face photo uploaded: {photoUploads.facePhoto.name}
+                          </p>
+                          <Button
+                            variant="outline"
+                            onClick={() => setPhotoUploads(prev => ({ ...prev, facePhoto: null }))}
+                            className="text-sm"
+                          >
+                            Remove Photo
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <Upload className="h-8 w-8 mx-auto text-slate-400" />
+                          <div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                              Upload a clear face photo for AI color analysis
+                            </p>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload('face', file);
+                              }}
+                              className="max-w-xs mx-auto"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Body Photos for Fit Analysis */}
+                  <div>
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4 block">
+                      Body Photos (Optional) - For Fit & Style Analysis
+                    </Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {(['front', 'side', 'back'] as const).map((angle) => (
+                        <div key={angle} className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-center hover:border-violet-400 transition-colors">
+                          {photoUploads.bodyPhotos[angle] ? (
+                            <div className="space-y-2">
+                              <CheckCircle className="h-6 w-6 mx-auto text-green-500" />
+                              <p className="text-xs text-green-600 dark:text-green-400">
+                                {angle.charAt(0).toUpperCase() + angle.slice(1)} photo uploaded
+                              </p>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPhotoUploads(prev => ({
+                                  ...prev,
+                                  bodyPhotos: { ...prev.bodyPhotos, [angle]: null }
+                                }))}
+                                className="text-xs"
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <Upload className="h-6 w-6 mx-auto text-slate-400" />
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
+                                {angle.charAt(0).toUpperCase() + angle.slice(1)} view
+                              </p>
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleFileUpload(angle, file);
+                                }}
+                                className="text-xs"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* AI Analysis Preview */}
+                  {photoUploads.facePhoto && (
+                    <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg p-6">
+                      <div className="flex items-start space-x-4">
+                        <Sparkles className="h-6 w-6 text-violet-500 mt-1" />
+                        <div>
+                          <h4 className="font-medium text-slate-900 dark:text-white mb-2">
+                            AI Analysis Preview
+                          </h4>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                            Our AI will analyze your photos to create your personalized Style DNA including:
+                          </p>
+                          <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                            <li>• Color analysis based on skin tone, hair, and eye color</li>
+                            <li>• Body shape analysis and fit recommendations</li>
+                            <li>• Personalized style suggestions</li>
+                            <li>• Color palette recommendations</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 7: AI Style DNA Analysis */}
+          {currentStep === 7 && (
+            <Card className="max-w-4xl mx-auto">
+              <CardContent className="p-8">
+                <div className="text-center space-y-8">
+                  <div className="space-y-4">
+                    <div className="flex justify-center">
+                      <div className="relative">
+                        <div className="animate-spin rounded-full h-16 w-16 border-4 border-violet-200 border-t-violet-500"></div>
+                        <Sparkles className="h-8 w-8 text-violet-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                      </div>
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                      Creating Your Style DNA
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+                      Our AI is analyzing your photos and preferences to create your personalized style profile
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-6">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <Palette className="h-4 w-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-slate-900 dark:text-white">Color Analysis</h4>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Analyzing your skin tone, hair, and eye color to determine your perfect color palette
+                        </p>
+                      </div>
+
+                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                            <User className="h-4 w-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-slate-900 dark:text-white">Body Analysis</h4>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Understanding your body shape to recommend the most flattering fits and silhouettes
+                        </p>
+                      </div>
+
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                            <Target className="h-4 w-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-slate-900 dark:text-white">Style Matching</h4>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Combining your lifestyle, preferences, and goals into personalized style recommendations
+                        </p>
+                      </div>
+
+                      <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg p-6">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                            <Sparkles className="h-4 w-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-slate-900 dark:text-white">DNA Creation</h4>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Generating your unique Style DNA profile with personalized insights and recommendations
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg p-6">
+                      <h4 className="font-semibold text-slate-900 dark:text-white mb-3 text-center">
+                        What You'll Get
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-600 dark:text-slate-400">
+                        <div className="text-center">
+                          <CheckCircle className="h-5 w-5 text-green-500 mx-auto mb-1" />
+                          <p>Personal Color Palette</p>
+                        </div>
+                        <div className="text-center">
+                          <CheckCircle className="h-5 w-5 text-green-500 mx-auto mb-1" />
+                          <p>Body Shape Analysis</p>
+                        </div>
+                        <div className="text-center">
+                          <CheckCircle className="h-5 w-5 text-green-500 mx-auto mb-1" />
+                          <p>Style Recommendations</p>
+                        </div>
+                        <div className="text-center">
+                          <CheckCircle className="h-5 w-5 text-green-500 mx-auto mb-1" />
+                          <p>Shopping Guide</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between items-center max-w-2xl mx-auto mt-8">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back</span>
-          </Button>
-          
-          <Button
-            onClick={currentStep === totalSteps ? processProfile : nextStep}
-            disabled={!isStepValid(currentStep) || isProcessing}
-            className="flex items-center space-x-2 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
-          >
-            {isProcessing ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Processing...</span>
-              </>
-            ) : (
-              <>
-                <span>{currentStep === totalSteps ? 'Complete Quiz' : 'Next'}</span>
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
-        </div>
+        {/* Navigation Buttons - Hidden during AI analysis */}
+        {currentStep !== 7 && (
+          <div className="flex justify-between items-center max-w-2xl mx-auto mt-8">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </Button>
+            
+            <Button
+              onClick={currentStep === totalSteps ? processProfile : nextStep}
+              disabled={!isStepValid(currentStep) || isProcessing}
+              className="flex items-center space-x-2 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
+            >
+              {isProcessing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <span>{currentStep === totalSteps ? 'Complete Quiz' : 'Next'}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
