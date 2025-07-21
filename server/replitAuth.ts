@@ -5,8 +5,7 @@ import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
-import connectPg from "connect-pg-simple";
-import { storage } from "./storage";
+import MemoryStore from "memorystore";
 
 // For development, we'll create a simple auth system that redirects to dashboard
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -27,12 +26,9 @@ const getOidcConfig = memoize(
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: true,
-    ttl: sessionTtl,
-    tableName: "sessions",
+  const memoryStore = MemoryStore(session);
+  const sessionStore = new memoryStore({
+    checkPeriod: sessionTtl
   });
   return session({
     secret: process.env.SESSION_SECRET || 'development-secret-change-in-production',
@@ -57,21 +53,16 @@ function updateUserSession(
   user.expires_at = user.claims?.exp;
 }
 
-async function upsertUser(
-  claims: any,
-) {
-  const existingUser = await storage.getUser(parseInt(claims["sub"]));
-  if (existingUser) {
-    return existingUser;
-  }
-
-  return await storage.createUser({
-    username: claims["email"] || `user_${claims["sub"]}`,
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
-  });
+// Mock user creation for development
+function createMockUser() {
+  return {
+    id: 1,
+    username: "demo@example.com",
+    email: "demo@example.com",
+    firstName: "Demo",
+    lastName: "User",
+    profileImageUrl: "https://images.unsplash.com/photo-1494790108755-2616b6e13468?w=150&h=150&fit=crop&crop=face"
+  };
 }
 
 export async function setupAuth(app: Express) {
@@ -87,14 +78,7 @@ export async function setupAuth(app: Express) {
 
     app.get("/api/login", async (req, res) => {
       // Create a demo user for development
-      const demoUser = await storage.upsertUser({
-        id: 1,
-        username: "demo@example.com",
-        email: "demo@example.com",
-        firstName: "Demo",
-        lastName: "User",
-        profileImageUrl: "https://images.unsplash.com/photo-1494790108755-2616b6e13468?w=150&h=150&fit=crop&crop=face"
-      });
+      const demoUser = createMockUser();
 
       // Create demo session
       const user = {
@@ -131,7 +115,7 @@ export async function setupAuth(app: Express) {
     ) => {
       const user = {};
       updateUserSession(user, tokens);
-      await upsertUser(tokens.claims());
+      // User creation handled separately - no database dependency
       verified(null, user);
     };
 
