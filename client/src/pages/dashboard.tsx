@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,39 +13,46 @@ import OutfitCombinationAI from "@/components/features/OutfitCombinationAI";
 import ProfileDiagnosis from "@/components/features/ProfileDiagnosis";
 
 export default function Dashboard() {
-  const userId = 1; // In a real app, this would come from auth context
   const [activeTab, setActiveTab] = useState("wardrobe");
   const [, setLocation] = useLocation();
 
-  const { data: user } = useQuery({
-    queryKey: ['/api/users', userId],
-    retry: false,
-  });
+  // Mock data - no database integration
+  const user = {
+    id: 1,
+    firstName: "User",
+    username: "demo@example.com"
+  };
 
-  const { data: profile } = useQuery({
-    queryKey: ['/api/users', userId, 'profile'],
-  });
+  const profile = {
+    bodyType: "athletic",
+    styleInspirations: "modern minimalist",
+    dailyActivity: "professional"
+  };
 
-  const { data: analytics } = useQuery({
-    queryKey: ['/api/users', userId, 'analytics'],
-  });
+  const analytics = {
+    styleScore: 85
+  };
 
-  const { data: wardrobe } = useQuery({
-    queryKey: ['/api/users', userId, 'wardrobe'],
-  });
+  const wardrobe = [
+    { id: 1, itemName: "Navy Blazer", category: "tops" },
+    { id: 2, itemName: "White Button Shirt", category: "tops" },
+    { id: 3, itemName: "Dark Jeans", category: "bottoms" }
+  ];
 
-  const { data: outfits } = useQuery({
-    queryKey: ['/api/users', userId, 'outfits'],
-  });
+  const outfits = [
+    { id: 1, name: "Business Casual", occasion: "work" },
+    { id: 2, name: "Weekend Chic", occasion: "casual" }
+  ];
 
-  const { data: recommendations } = useQuery({
-    queryKey: ['/api/users', userId, 'recommendations'],
-  });
+  const recommendations = [
+    { id: 1, recommendation: "Add a casual cardigan", confidence: 0.9 },
+    { id: 2, recommendation: "Consider neutral accessories", confidence: 0.8 }
+  ];
 
-  // Check if user is new or existing
-  const isNewUser = !profile || !profile?.bodyType || !profile?.dailyActivity;
-  const hasWardrobe = wardrobe && wardrobe?.length > 0;
-  const hasOutfits = outfits && outfits?.length > 0;
+  // Check if user is new or existing (using mock data, user always has profile)
+  const isNewUser = false; // Since we have mock profile data
+  const hasWardrobe = wardrobe && wardrobe.length > 0;
+  const hasOutfits = outfits && outfits.length > 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -95,7 +101,7 @@ export default function Dashboard() {
                         <h4 className="font-semibold text-slate-900 dark:text-white">Body Type</h4>
                       </div>
                       <p className="text-sm text-slate-600 dark:text-slate-400 capitalize">
-                        {profile?.bodyType}
+                        {profile.bodyType}
                       </p>
                     </div>
 
@@ -107,7 +113,7 @@ export default function Dashboard() {
                         <h4 className="font-semibold text-slate-900 dark:text-white">Style Preference</h4>
                       </div>
                       <p className="text-sm text-slate-600 dark:text-slate-400 capitalize">
-                        {profile?.styleInspirations || 'Classic'}
+                        {profile.styleInspirations || 'Classic'}
                       </p>
                     </div>
 
@@ -119,7 +125,7 @@ export default function Dashboard() {
                         <h4 className="font-semibold text-slate-900 dark:text-white">Lifestyle</h4>
                       </div>
                       <p className="text-sm text-slate-600 dark:text-slate-400 capitalize">
-                        {profile?.dailyActivity || 'Professional'}
+                        {profile.dailyActivity || 'Professional'}
                       </p>
                     </div>
                   </div>
@@ -201,7 +207,7 @@ export default function Dashboard() {
                   <div className="flex items-center justify-center space-x-2 text-sm text-slate-500 mb-4">
                     <Sparkles className="h-4 w-4" />
                     <span>
-                      {hasWardrobe ? `${wardrobe?.length} items digitized` : 'Ready to start'}
+                      {hasWardrobe ? `${wardrobe.length} items digitized` : 'Ready to start'}
                     </span>
                   </div>
                 </div>
@@ -228,7 +234,7 @@ export default function Dashboard() {
                   <div className="flex items-center justify-center space-x-2 text-sm text-slate-500 mb-4">
                     <Image className="h-4 w-4" />
                     <span>
-                      {hasOutfits ? `${outfits?.length} outfits created` : 'Ready to create'}
+                      {hasOutfits ? `${outfits.length} outfits created` : 'Ready to create'}
                     </span>
                   </div>
                 </div>
@@ -281,19 +287,19 @@ export default function Dashboard() {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-violet-600">{analytics?.styleScore || 0}</div>
+                    <div className="text-2xl font-bold text-violet-600">{analytics.styleScore || 0}</div>
                     <div className="text-sm text-slate-600">Style Score</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-blue-600">{wardrobe?.length || 0}</div>
+                    <div className="text-2xl font-bold text-blue-600">{wardrobe.length || 0}</div>
                     <div className="text-sm text-slate-600">Items Digitized</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-purple-600">{outfits?.length || 0}</div>
+                    <div className="text-2xl font-bold text-purple-600">{outfits.length || 0}</div>
                     <div className="text-sm text-slate-600">Outfits Created</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-cyan-600">{recommendations?.length || 0}</div>
+                    <div className="text-2xl font-bold text-cyan-600">{recommendations.length || 0}</div>
                     <div className="text-sm text-slate-600">AI Recommendations</div>
                   </div>
                 </div>
