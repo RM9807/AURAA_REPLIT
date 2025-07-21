@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,41 +17,115 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("wardrobe");
   const [, setLocation] = useLocation();
 
-  // Mock data - no database integration
-  const user = {
-    id: 1,
-    firstName: "User",
-    username: "demo@example.com"
-  };
+  const userId = 1; // Demo user ID
 
-  const profile = {
-    bodyType: "athletic",
-    styleInspirations: "modern minimalist",
-    dailyActivity: "professional"
-  };
+  // Type definitions
+  interface User {
+    id: number;
+    username: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  }
 
-  const analytics = {
-    styleScore: 85
-  };
+  interface UserProfile {
+    id: number;
+    userId: number;
+    bodyType?: string;
+    height?: string;
+    age?: number;
+    skinTone?: string;
+    dailyActivity?: string;
+    comfortLevel?: string;
+    occasions?: string[];
+    goals?: string[];
+    colorPreferences?: string[];
+    styleInspirations?: string;
+    budget?: string;
+    specialRequirements?: string;
+  }
 
-  const wardrobe = [
-    { id: 1, itemName: "Navy Blazer", category: "tops" },
-    { id: 2, itemName: "White Button Shirt", category: "tops" },
-    { id: 3, itemName: "Dark Jeans", category: "bottoms" }
-  ];
+  interface WardrobeItem {
+    id: number;
+    userId: number;
+    itemName: string;
+    category: string;
+    color?: string;
+    brand?: string;
+    season?: string;
+    isFavorite?: boolean;
+  }
 
-  const outfits = [
-    { id: 1, name: "Business Casual", occasion: "work" },
-    { id: 2, name: "Weekend Chic", occasion: "casual" }
-  ];
+  interface Outfit {
+    id: number;
+    userId: number;
+    name: string;
+    occasion?: string;
+    mood?: string;
+    items?: number[];
+    isFavorite?: boolean;
+  }
 
-  const recommendations = [
-    { id: 1, recommendation: "Add a casual cardigan", confidence: 0.9 },
-    { id: 2, recommendation: "Consider neutral accessories", confidence: 0.8 }
-  ];
+  interface StyleRecommendation {
+    id: number;
+    userId: number;
+    recommendation: string;
+    confidence?: number;
+    type?: string;
+  }
 
-  // Check if user is new or existing (using mock data, user always has profile)
-  const isNewUser = false; // Since we have mock profile data
+  interface UserAnalytics {
+    id: number;
+    userId: number;
+    styleScore?: number;
+    totalOutfits?: number;
+    totalWardrobeItems?: number;
+    favoriteColors?: string[];
+    mostWornCategories?: string[];
+  }
+
+  // Fetch data from database
+  const { data: user, isLoading: userLoading } = useQuery<User>({
+    queryKey: ['/api/auth/user']
+  });
+
+  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile | null>({
+    queryKey: ['/api/users', userId, 'profile']
+  });
+
+  const { data: wardrobe = [], isLoading: wardrobeLoading } = useQuery<WardrobeItem[]>({
+    queryKey: ['/api/users', userId, 'wardrobe']
+  });
+
+  const { data: outfits = [], isLoading: outfitsLoading } = useQuery<Outfit[]>({
+    queryKey: ['/api/users', userId, 'outfits']
+  });
+
+  const { data: recommendations = [], isLoading: recommendationsLoading } = useQuery<StyleRecommendation[]>({
+    queryKey: ['/api/users', userId, 'recommendations']
+  });
+
+  const { data: analytics, isLoading: analyticsLoading } = useQuery<UserAnalytics | null>({
+    queryKey: ['/api/users', userId, 'analytics']
+  });
+
+  // Loading state
+  if (userLoading || profileLoading || wardrobeLoading || outfitsLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <AuthenticatedNav />
+        <div className="flex items-center justify-center min-h-[calc(100vh-5rem)]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-cyan-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user is new or existing
+  const isNewUser = !profile;
   const hasWardrobe = wardrobe && wardrobe.length > 0;
   const hasOutfits = outfits && outfits.length > 0;
 
@@ -287,7 +362,7 @@ export default function Dashboard() {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-violet-600">{analytics.styleScore || 0}</div>
+                    <div className="text-2xl font-bold text-violet-600">{analytics?.styleScore || 0}</div>
                     <div className="text-sm text-slate-600">Style Score</div>
                   </div>
                   <div>
