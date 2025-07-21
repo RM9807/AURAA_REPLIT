@@ -111,9 +111,9 @@ export default function Dashboard() {
                       </p>
                     </div>
 
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-4">
+                    <div className="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-lg p-4">
                       <div className="flex items-center space-x-3 mb-2">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center">
                           <Target className="h-4 w-4 text-white" />
                         </div>
                         <h4 className="font-semibold text-slate-900 dark:text-white">Lifestyle</h4>
@@ -244,7 +244,7 @@ export default function Dashboard() {
             {/* Shop Smart Card */}
             <Card className="group hover:shadow-xl transition-all duration-300 border-violet-200 hover:border-violet-300">
               <CardContent className="p-8 text-center space-y-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300">
                   <ShoppingBag className="h-8 w-8 text-white" />
                 </div>
                 <div>
@@ -259,7 +259,7 @@ export default function Dashboard() {
                 </div>
                 <Button
                   onClick={() => setLocation('/shop-smart')}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
                 >
                   Discover Items
                 </Button>
@@ -293,7 +293,7 @@ export default function Dashboard() {
                     <div className="text-sm text-slate-600">Outfits Created</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-green-600">{recommendations?.length || 0}</div>
+                    <div className="text-2xl font-bold text-cyan-600">{recommendations?.length || 0}</div>
                     <div className="text-sm text-slate-600">AI Recommendations</div>
                   </div>
                 </div>
