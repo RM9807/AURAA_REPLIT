@@ -106,6 +106,17 @@ export default function PersonalStyleDiagnosis() {
 
   const userId = (user as any)?.id || 1;
 
+  // Query database data for results page
+  const { data: profile } = useQuery({
+    queryKey: ['/api/users', userId, 'profile'],
+    enabled: currentStep === 8
+  });
+
+  const { data: recommendations } = useQuery({
+    queryKey: ['/api/users', userId, 'recommendations'],
+    enabled: currentStep === 8
+  });
+
   // Mutation to save user profile
   const saveProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
@@ -1267,7 +1278,7 @@ export default function PersonalStyleDiagnosis() {
           )}
 
           {/* Step 8: Style DNA Results */}
-          {currentStep === 8 && styleDNAResults && (
+          {currentStep === 8 && (
             <div className="max-w-6xl mx-auto space-y-8">
               {/* Header */}
               <Card>
@@ -1308,7 +1319,12 @@ export default function PersonalStyleDiagnosis() {
                       <div className="flex items-center space-x-2">
                         <CheckCircle className="h-5 w-5 text-green-500" />
                         <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                          Confidence Score: {styleDNAResults.confidenceScore}%
+                          Confidence Score: {(() => {
+                            const styleRec = recommendations?.find((r: any) => r.type === 'style_analysis');
+                            const dbConfidence = styleRec?.metadata?.styleDNA?.confidenceScore;
+                            const localConfidence = styleDNAResults?.confidenceScore;
+                            return dbConfidence || localConfidence || 90;
+                          })()}%
                         </span>
                       </div>
                     </div>
@@ -1329,10 +1345,22 @@ export default function PersonalStyleDiagnosis() {
                       </div>
                       <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6">
                         <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                          {styleDNAResults.styleDNA?.primaryStyle || styleDNAResults.styleArchetype.name}
+                          {(() => {
+                            const styleRec = recommendations?.find((r: any) => r.type === 'style_analysis');
+                            return styleRec?.metadata?.styleDNA?.primaryStyle || 
+                                   styleDNAResults?.styleDNA?.primaryStyle || 
+                                   styleDNAResults?.styleArchetype?.name || 
+                                   'Classic Elegance';
+                          })()}
                         </h4>
                         <p className="text-slate-600 dark:text-slate-400">
-                          {styleDNAResults.styleDNA?.styleDescription || styleDNAResults.styleArchetype.description}
+                          {(() => {
+                            const styleRec = recommendations?.find((r: any) => r.type === 'style_analysis');
+                            return styleRec?.metadata?.styleDNA?.styleDescription || 
+                                   styleDNAResults?.styleDNA?.styleDescription || 
+                                   styleDNAResults?.styleArchetype?.description || 
+                                   'Timeless pieces with clean lines and sophisticated details';
+                          })()}
                         </p>
                       </div>
                     </div>
@@ -1351,16 +1379,24 @@ export default function PersonalStyleDiagnosis() {
                       </div>
                       <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-6">
                         <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 mb-4">
-                          {styleDNAResults.colorPalette.map((color: string, index: number) => (
-                            <div key={index} className="flex flex-col items-center space-y-1">
-                              <div
-                                className="w-12 h-12 rounded-full border-2 border-white shadow-lg hover:scale-110 transition-transform"
-                                style={{ backgroundColor: color }}
-                                title={color}
-                              />
-                              <span className="text-xs text-slate-500 font-mono">{color}</span>
-                            </div>
-                          ))}
+                          {(() => {
+                            // Get colors from database first, then fallback to local state
+                            const styleRec = recommendations?.find((r: any) => r.type === 'style_analysis');
+                            const aiColors = styleRec?.metadata?.colorPalette?.bestColors || [];
+                            const fallbackColors = styleDNAResults?.colorPalette || [];
+                            const displayColors = aiColors.length > 0 ? aiColors : fallbackColors;
+                            
+                            return displayColors.map((color: string, index: number) => (
+                              <div key={index} className="flex flex-col items-center space-y-1">
+                                <div
+                                  className="w-12 h-12 rounded-full border-2 border-white shadow-lg hover:scale-110 transition-transform"
+                                  style={{ backgroundColor: color }}
+                                  title={color}
+                                />
+                                <span className="text-xs text-slate-500 font-mono">{color}</span>
+                              </div>
+                            ));
+                          })()}
                         </div>
                         <div className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
                           <p>These gorgeous colors will enhance your natural beauty and work perfectly with your {quizData.colorPreferences.join(' and ')} preferences!</p>
@@ -1443,11 +1479,19 @@ export default function PersonalStyleDiagnosis() {
                         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Just For You - Styling Secrets 💡</h3>
                       </div>
                       <div className="space-y-3">
-                        {(styleDNAResults.personalizedTips?.stylingTips || styleDNAResults.personalizedTips || []).map((tip: string, index: number) => (
-                          <div key={index} className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg p-4">
-                            <p className="text-sm text-slate-600 dark:text-slate-400">{tip}</p>
-                          </div>
-                        ))}
+                        {(() => {
+                          // Get personalized tips from database first, then fallback to local state
+                          const styleRec = recommendations?.find((r: any) => r.type === 'style_analysis');
+                          const dbTips = styleRec?.metadata?.personalizedTips?.stylingTips || [];
+                          const localTips = styleDNAResults?.personalizedTips?.stylingTips || styleDNAResults?.personalizedTips || [];
+                          const displayTips = dbTips.length > 0 ? dbTips : localTips;
+                          
+                          return displayTips.map((tip: string, index: number) => (
+                            <div key={index} className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg p-4">
+                              <p className="text-sm text-slate-600 dark:text-slate-400">{tip}</p>
+                            </div>
+                          ));
+                        })()}
                       </div>
                     </div>
                   </CardContent>
@@ -1463,14 +1507,22 @@ export default function PersonalStyleDiagnosis() {
                         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Your Smart Shopping List 🛍️</h3>
                       </div>
                       <div className="space-y-2">
-                        {(styleDNAResults.personalizedTips?.shoppingGuide || styleDNAResults.shoppingGuide || []).map((item: string, index: number) => (
-                          <div key={index} className="flex items-center space-x-3 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg p-3">
-                            <span className="text-sm font-medium text-violet-600 dark:text-violet-400">
-                              {index + 1}.
-                            </span>
-                            <span className="text-sm text-slate-600 dark:text-slate-400">{item}</span>
-                          </div>
-                        ))}
+                        {(() => {
+                          // Get shopping guide from database first, then fallback to local state
+                          const styleRec = recommendations?.find((r: any) => r.type === 'style_analysis');
+                          const dbGuide = styleRec?.metadata?.personalizedTips?.shoppingGuide || [];
+                          const localGuide = styleDNAResults?.personalizedTips?.shoppingGuide || styleDNAResults?.shoppingGuide || [];
+                          const displayGuide = dbGuide.length > 0 ? dbGuide : localGuide;
+                          
+                          return displayGuide.map((item: string, index: number) => (
+                            <div key={index} className="flex items-center space-x-3 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg p-3">
+                              <span className="text-sm font-medium text-violet-600 dark:text-violet-400">
+                                {index + 1}.
+                              </span>
+                              <span className="text-sm text-slate-600 dark:text-slate-400">{item}</span>
+                            </div>
+                          ));
+                        })()}
                       </div>
                     </div>
                   </CardContent>
