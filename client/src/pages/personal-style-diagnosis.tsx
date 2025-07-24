@@ -254,51 +254,65 @@ export default function PersonalStyleDiagnosis() {
           name: analysisResult.styleDNA?.primaryStyle || 'Classic Elegance',
           description: analysisResult.styleDNA?.styleDescription || 'Timeless pieces with clean lines and sophisticated details'
         },
-        colorPalette: analysisResult.styleDNA?.colorPalette?.bestColors || 
+        colorPalette: (() => {
+          // Use AI analysis colors first, then fallback to generated colors
+          const aiColors = analysisResult.styleDNA?.colorPalette?.bestColors || [];
+          
+          if (aiColors.length >= 6) {
+            return aiColors;
+          }
+          
           // Generate comprehensive palette based on user preferences
-          (() => {
-            const baseColors = ['#2F4F4F', '#8FBC8F', '#F5F5DC', '#DDA0DD', '#CD853F'];
-            const extendedColors = [];
-            
-            // Add colors based on user preferences
-            if (quizData.colorPreferences.includes('neutrals')) {
-              extendedColors.push('#8B7D6B', '#A9A9A9', '#D3D3D3', '#F5F5F5');
-            }
-            if (quizData.colorPreferences.includes('earth-tones')) {
-              extendedColors.push('#DEB887', '#CD853F', '#D2691E', '#A0522D');
-            }
-            if (quizData.colorPreferences.includes('jewel-tones')) {
-              extendedColors.push('#4169E1', '#8A2BE2', '#DC143C', '#228B22');
-            }
-            if (quizData.colorPreferences.includes('pastels')) {
-              extendedColors.push('#DDA0DD', '#FFB6C1', '#98FB98', '#87CEEB');
-            }
-            if (quizData.colorPreferences.includes('bold-bright')) {
-              extendedColors.push('#FF6347', '#FF69B4', '#00CED1', '#FFD700');
-            }
-            if (quizData.colorPreferences.includes('monochrome')) {
-              extendedColors.push('#2F2F2F', '#696969', '#A9A9A9', '#D3D3D3');
-            }
-            
-            // Combine and ensure we have at least 8 colors
-            const allColors = [...baseColors, ...extendedColors];
-            return allColors.slice(0, Math.max(8, allColors.length));
-          })(),
+          const baseColors = ['#2F4F4F', '#8FBC8F', '#F5F5DC', '#DDA0DD', '#CD853F'];
+          const extendedColors = [];
+          
+          // Add colors based on user preferences
+          if (quizData.colorPreferences.includes('neutrals')) {
+            extendedColors.push('#8B7D6B', '#A9A9A9', '#D3D3D3', '#F5F5F5');
+          }
+          if (quizData.colorPreferences.includes('earth-tones')) {
+            extendedColors.push('#DEB887', '#CD853F', '#D2691E', '#A0522D');
+          }
+          if (quizData.colorPreferences.includes('jewel-tones')) {
+            extendedColors.push('#4169E1', '#8A2BE2', '#DC143C', '#228B22');
+          }
+          if (quizData.colorPreferences.includes('pastels')) {
+            extendedColors.push('#DDA0DD', '#FFB6C1', '#98FB98', '#87CEEB');
+          }
+          if (quizData.colorPreferences.includes('bold-bright')) {
+            extendedColors.push('#FF6347', '#FF69B4', '#00CED1', '#FFD700');
+          }
+          if (quizData.colorPreferences.includes('monochrome')) {
+            extendedColors.push('#2F2F2F', '#696969', '#A9A9A9', '#D3D3D3');
+          }
+          
+          // Combine AI colors with generated colors
+          const allColors = [...aiColors, ...baseColors, ...extendedColors];
+          // Remove duplicates and ensure we have at least 8 colors
+          const uniqueColors = Array.from(new Set(allColors));
+          return uniqueColors.slice(0, Math.max(8, uniqueColors.length));
+        })(),
         bodyAnalysis: {
           bodyType: quizData.bodyType,
-          recommendations: Array.isArray(analysisResult.styleDNA?.bodyAnalysis?.bestSilhouettes) ? 
-            analysisResult.styleDNA.bodyAnalysis.bestSilhouettes : 
-            [analysisResult.styleDNA?.bodyAnalysis?.bestSilhouettes || 'Emphasize your waist with fitted styles'],
-          fitTips: Array.isArray(analysisResult.styleDNA?.bodyAnalysis?.fitGuidance) ? 
-            analysisResult.styleDNA.bodyAnalysis.fitGuidance : 
-            [analysisResult.styleDNA?.bodyAnalysis?.fitGuidance || 'Choose well-fitted pieces that follow your natural silhouette']
+          genderSpecificAnalysis: analysisResult.bodyAnalysis?.bodyTypeConfirmation || 
+            `Your ${quizData.bodyType} body shape is perfect for ${quizData.gender} fashion`,
+          recommendations: Array.isArray(analysisResult.bodyAnalysis?.bestSilhouettes) ? 
+            analysisResult.bodyAnalysis.bestSilhouettes : 
+            [analysisResult.bodyAnalysis?.bestSilhouettes || 'Emphasize your natural silhouette'],
+          fitTips: Array.isArray(analysisResult.bodyAnalysis?.fitGuidance) ? 
+            analysisResult.bodyAnalysis.fitGuidance : 
+            [analysisResult.bodyAnalysis?.fitGuidance || 'Choose well-fitted pieces that complement your body']
         },
-        personalizedTips: Array.isArray(analysisResult.styleDNA?.personalizedTips?.stylingTips) ? 
-          analysisResult.styleDNA.personalizedTips.stylingTips : 
-          ['Build a capsule wardrobe with versatile pieces', 'Invest in quality basics in your best colors'],
-        shoppingGuide: Array.isArray(analysisResult.styleDNA?.personalizedTips?.shoppingGuide) ? 
-          analysisResult.styleDNA.personalizedTips.shoppingGuide : 
-          ['Well-fitted blazer in a neutral color', 'Classic white button-down shirt', 'Dark wash jeans that fit perfectly'],
+        personalizedTips: Array.isArray(analysisResult.personalizedTips?.stylingTips) ? 
+          analysisResult.personalizedTips.stylingTips : 
+          [`Build a capsule wardrobe that fits your ${quizData.lifestyle} lifestyle`, 
+           `Focus on ${quizData.colorPreferences.join(' and ')} tones that complement you`,
+           `Invest in quality pieces for your ${quizData.occasions.join(', ')} occasions`],
+        shoppingGuide: Array.isArray(analysisResult.personalizedTips?.shoppingGuide) ? 
+          analysisResult.personalizedTips.shoppingGuide : 
+          [`${quizData.gender === 'female' ? 'Well-fitted blazer' : 'Sharp tailored jacket'} in a neutral color`, 
+           `${quizData.gender === 'female' ? 'Classic blouse' : 'Crisp dress shirt'} in white or cream`,
+           `${quizData.gender === 'female' ? 'Dark wash jeans or trousers' : 'Well-fitted chinos or dress pants'}`],
         confidenceScore: Math.round((analysisResult.styleDNA?.confidenceScore || 0.85) * 100)
       };
       
@@ -1265,10 +1279,10 @@ export default function PersonalStyleDiagnosis() {
                       </div>
                     </div>
                     <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-                      Your Style DNA is Ready!
+                      ✨ Your Personalized Style DNA is Ready!
                     </h2>
                     <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-                      Based on your photos and preferences, we've created your personalized style profile with AI-powered insights.
+                      Hello beautiful! Based on your photos and style preferences, I've crafted a personalized style guide that celebrates your unique {quizData.gender} beauty and fits perfectly with your {quizData.lifestyle} lifestyle.
                     </p>
                     
                     {/* Display Current User Inputs */}
@@ -1311,7 +1325,7 @@ export default function PersonalStyleDiagnosis() {
                         <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
                           <User className="h-4 w-4 text-white" />
                         </div>
-                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Your Style Archetype</h3>
+                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Your Signature Style ✨</h3>
                       </div>
                       <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6">
                         <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
@@ -1333,7 +1347,7 @@ export default function PersonalStyleDiagnosis() {
                         <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                           <Palette className="h-4 w-4 text-white" />
                         </div>
-                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Your Color Palette</h3>
+                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Colors That Make You Glow 🎨</h3>
                       </div>
                       <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-6">
                         <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 mb-4">
@@ -1349,7 +1363,7 @@ export default function PersonalStyleDiagnosis() {
                           ))}
                         </div>
                         <div className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
-                          <p>These colors complement your natural features and personal style preferences.</p>
+                          <p>These gorgeous colors will enhance your natural beauty and work perfectly with your {quizData.colorPreferences.join(' and ')} preferences!</p>
                           <div className="flex flex-wrap gap-2">
                             <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                               {styleDNAResults.colorPalette.length} colors total
@@ -1373,16 +1387,32 @@ export default function PersonalStyleDiagnosis() {
                       <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                         <Target className="h-4 w-4 text-white" />
                       </div>
-                      <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Body Shape Analysis</h3>
+                      <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Celebrating Your Beautiful Shape 💫</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6">
                         <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Your Body Type</h4>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <p className="text-lg font-medium text-slate-800 capitalize">{quizData.bodyType}</p>
-                          <p className="text-slate-600 dark:text-slate-400 text-sm">
-                            {styleDNAResults.bodyAnalysis.recommendations}
+                          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                            {styleDNAResults.bodyAnalysis.genderSpecificAnalysis}
                           </p>
+                          {styleDNAResults.bodyAnalysis.recommendations && (
+                            <div className="space-y-1">
+                              {Array.isArray(styleDNAResults.bodyAnalysis.recommendations) ? (
+                                styleDNAResults.bodyAnalysis.recommendations.map((rec: string, index: number) => (
+                                  <p key={index} className="text-slate-600 dark:text-slate-400 text-sm flex items-start space-x-2">
+                                    <span className="text-green-500 text-xs mt-1">•</span>
+                                    <span>{rec}</span>
+                                  </p>
+                                ))
+                              ) : (
+                                <p className="text-slate-600 dark:text-slate-400 text-sm">
+                                  {styleDNAResults.bodyAnalysis.recommendations}
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6">
@@ -1410,7 +1440,7 @@ export default function PersonalStyleDiagnosis() {
                         <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
                           <Sparkles className="h-4 w-4 text-white" />
                         </div>
-                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Personalized Tips</h3>
+                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Just For You - Styling Secrets 💡</h3>
                       </div>
                       <div className="space-y-3">
                         {styleDNAResults.personalizedTips.map((tip: string, index: number) => (
@@ -1430,7 +1460,7 @@ export default function PersonalStyleDiagnosis() {
                         <div className="w-8 h-8 bg-violet-500 rounded-full flex items-center justify-center">
                           <CheckCircle className="h-4 w-4 text-white" />
                         </div>
-                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Shopping Priority</h3>
+                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Your Smart Shopping List 🛍️</h3>
                       </div>
                       <div className="space-y-2">
                         {styleDNAResults.shoppingGuide.map((item: string, index: number) => (
@@ -1452,17 +1482,17 @@ export default function PersonalStyleDiagnosis() {
                 <CardContent className="p-8 text-center">
                   <div className="space-y-4">
                     <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-                      Ready to Build Your Wardrobe?
+                      🎉 You're All Set to Shine!
                     </h3>
                     <p className="text-slate-600 dark:text-slate-400">
-                      Your Style DNA is now saved to your profile. Let's start building your perfect wardrobe!
+                      Your personalized Style DNA is now saved! Ready to build a wardrobe that makes you feel absolutely amazing? Let's make it happen together! 
                     </p>
                     <Button
                       onClick={() => setLocation('/dashboard')}
                       className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
                       size="lg"
                     >
-                      Go to Dashboard
+                      Start Building My Wardrobe ✨
                     </Button>
                   </div>
                 </CardContent>

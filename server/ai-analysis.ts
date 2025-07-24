@@ -69,13 +69,15 @@ export interface StyleDNAResult {
 
 export async function analyzeStyleProfile(input: StyleAnalysisInput): Promise<StyleDNAResult> {
   try {
-    const prompt = `You are an expert AI stylist and fashion consultant. Analyze this user's style profile and provide a comprehensive Style DNA analysis.
+    const prompt = `You are a warm, friendly AI stylist and fashion consultant with expertise in ${input.gender} fashion. Analyze this user's style profile and provide a comprehensive, humanized Style DNA analysis with a professional yet approachable tone.
+
+IMPORTANT: Tailor ALL recommendations specifically for ${input.gender} fashion, body shape analysis, and styling advice.
 
 User Profile:
-- Gender: ${input.gender}
+- Gender: ${input.gender} (CRITICAL: All recommendations must be gender-specific)
 - Age: ${input.age}
 - Height: ${input.height}
-- Body Type: ${input.bodyType}
+- Body Type: ${input.bodyType} (provide ${input.gender}-specific body shape analysis)
 - Daily Activity: ${input.dailyActivity}
 - Comfort Level: ${input.comfortLevel}
 - Lifestyle: ${input.lifestyle}
@@ -89,7 +91,15 @@ ${input.skinTone ? `- Skin Tone: ${input.skinTone}` : ''}
 ${input.hairColor ? `- Hair Color: ${input.hairColor}` : ''}
 ${input.eyeColor ? `- Eye Color: ${input.eyeColor}` : ''}
 
-Please provide a detailed analysis in JSON format with the following structure:
+REQUIREMENTS:
+1. Use a warm, encouraging, and friendly tone throughout
+2. All body analysis must be specific to ${input.gender} anatomy and fashion
+3. Include 8-10 specific color codes (hex values) in bestColors array
+4. Shopping guide should consider their budget: ${input.budget}
+5. All tips should reference their specific goals: ${input.goals.join(', ')}
+6. Styling advice should fit their lifestyle: ${input.lifestyle} and activities: ${input.dailyActivity}
+
+Please provide a detailed, humanized analysis in JSON format with the following structure:
 {
   "styleDNA": {
     "primaryStyle": "Main style category (e.g., Classic, Bohemian, Modern)",
@@ -99,16 +109,16 @@ Please provide a detailed analysis in JSON format with the following structure:
   },
   "colorPalette": {
     "seasonalType": "Spring/Summer/Autumn/Winter",
-    "bestColors": ["Array of 6-8 best colors"],
+    "bestColors": ["Array of 8-10 specific hex color codes like #FF6B6B"],
     "colorsToAvoid": ["Array of colors to avoid"],
     "neutrals": ["Array of neutral colors"],
     "accents": ["Array of accent colors"]
   },
   "bodyAnalysis": {
-    "bodyTypeConfirmation": "Confirmation or refinement of body type",
-    "bestSilhouettes": ["Array of flattering silhouettes"],
-    "proportionTips": ["Array of proportion-enhancing tips"],
-    "fitGuidance": ["Array of fit guidelines"]
+    "bodyTypeConfirmation": "Gender-specific body type analysis and confirmation",
+    "bestSilhouettes": ["Array of flattering silhouettes specific to ${input.gender} fashion"],
+    "proportionTips": ["Array of proportion-enhancing tips for ${input.gender}"],
+    "fitGuidance": ["Array of fit guidelines for ${input.gender} clothing"]
   },
   "personalizedTips": {
     "shoppingGuide": ["Array of shopping recommendations"],
@@ -128,7 +138,17 @@ Please provide a detailed analysis in JSON format with the following structure:
   "overallRecommendation": "Overall summary and encouragement"
 }
 
-Provide specific, actionable advice that's tailored to their lifestyle, budget, and goals. Be encouraging and positive while providing practical guidance.`;
+Provide specific, actionable advice that's tailored to their ${input.gender} identity, lifestyle (${input.lifestyle}), budget (${input.budget}), and goals (${input.goals.join(', ')}). 
+
+TONE: Use a warm, friendly, and encouraging voice. Address them personally and make them feel confident about their style journey. Avoid clinical or robotic language - be conversational and supportive.
+
+EXAMPLES of friendly tone:
+- "Your ${input.bodyType} figure is absolutely beautiful, and here's how to enhance it..."
+- "Based on your busy ${input.dailyActivity} lifestyle, here are some effortless looks..."
+- "I love that you're drawn to ${input.styleInspirations} - let's build on that!"
+- "These colors will make your features absolutely glow..."
+
+Be encouraging and positive while providing practical, personalized guidance.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
