@@ -71,6 +71,8 @@ export async function analyzeStyleProfile(input: StyleAnalysisInput): Promise<St
   try {
     const prompt = `You are a warm, friendly AI stylist and fashion consultant with expertise in ${input.gender} fashion. Analyze this user's style profile and provide a comprehensive, humanized Style DNA analysis with a professional yet approachable tone.
 
+CRITICAL ANALYSIS APPROACH: Base your recommendations on WHAT WORKS BEST for achieving the user's goals and lifestyle, NOT just their stated preferences. If they want to look professional but like bright colors, recommend muted tones for work and explain why. Be objective and goal-oriented.
+
 IMPORTANT: Tailor ALL recommendations specifically for ${input.gender} fashion, body shape analysis, and styling advice.
 
 User Profile:
@@ -98,6 +100,9 @@ REQUIREMENTS:
 4. Shopping guide should consider their budget: ${input.budget}
 5. All tips should reference their specific goals: ${input.goals.join(', ')}
 6. Styling advice should fit their lifestyle: ${input.lifestyle} and activities: ${input.dailyActivity}
+7. CRITICAL: Prioritize goal achievement over personal preferences - if their goals conflict with preferences, recommend what works best for goals
+8. Highlight areas where they might be making style mistakes based on their goals
+9. Provide corrective guidance when preferences don't align with objectives
 
 Please provide a detailed, humanized analysis in JSON format with the following structure:
 {
@@ -148,7 +153,14 @@ EXAMPLES of friendly tone:
 - "I love that you're drawn to ${input.styleInspirations} - let's build on that!"
 - "These colors will make your features absolutely glow..."
 
-Be encouraging and positive while providing practical, personalized guidance.`;
+Be encouraging and positive while providing practical, personalized guidance.
+
+CRITICAL GOAL-ORIENTED ANALYSIS:
+- If they want to look professional but prefer bright colors, recommend navy/charcoal and explain why
+- If they want to appear confident but choose oversized clothes, suggest fitted options
+- If they want to look younger but choose dated styles, recommend modern alternatives
+- Always explain WHY certain choices work better for their specific goals
+- Be honest about what they might be doing wrong currently to achieve their objectives.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

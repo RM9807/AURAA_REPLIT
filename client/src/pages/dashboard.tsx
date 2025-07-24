@@ -227,19 +227,32 @@ export default function Dashboard() {
                                 <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
                                   <User className="h-4 w-4 text-white" />
                                 </div>
-                                <h4 className="text-lg font-semibold text-slate-900">Style Archetype</h4>
+                                <h4 className="text-lg font-semibold text-slate-900">Your Signature Style ✨</h4>
                               </div>
                               <div className="space-y-2">
                                 <p className="font-medium text-slate-900">
-                                  {recommendations.find(r => r.type === 'style_analysis')?.recommendation.split(':')[1] || 'Classic Elegance'}
+                                  {(() => {
+                                    const styleRec = recommendations.find(r => r.type === 'style_analysis');
+                                    return styleRec?.metadata?.styleDNA?.primaryStyle || 
+                                           styleRec?.recommendation.split(':')[1]?.trim() || 
+                                           'Classic Elegance';
+                                  })()}
                                 </p>
-                                <p className="text-sm text-slate-600">
-                                  {recommendations.find(r => r.type === 'style_analysis')?.metadata?.styleDNA?.styleDescription || 
-                                   'Timeless pieces with clean lines and sophisticated details'}
+                                <p className="text-sm text-slate-600 leading-relaxed">
+                                  {(() => {
+                                    const styleRec = recommendations.find(r => r.type === 'style_analysis');
+                                    return styleRec?.metadata?.styleDNA?.styleDescription || 
+                                           'Timeless pieces with clean lines and sophisticated details that reflect your unique personality and goals';
+                                  })()}
                                 </p>
                                 <div className="flex items-center space-x-2 mt-3">
                                   <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
-                                    Confidence: {Math.round(parseFloat(recommendations.find(r => r.type === 'style_analysis')?.confidence || '0.85') * 100)}%
+                                    Confidence: {(() => {
+                                      const styleRec = recommendations.find(r => r.type === 'style_analysis');
+                                      const confidence = styleRec?.metadata?.styleDNA?.confidenceScore || 
+                                                       parseFloat(styleRec?.confidence || '0.85');
+                                      return Math.round(confidence * 100);
+                                    })()}%
                                   </div>
                                 </div>
                               </div>
@@ -254,13 +267,18 @@ export default function Dashboard() {
                               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                                 <Palette className="h-4 w-4 text-white" />
                               </div>
-                              <h4 className="text-lg font-semibold text-slate-900">Your Color Palette</h4>
+                              <h4 className="text-lg font-semibold text-slate-900">Colors That Make You Glow 🎨</h4>
                             </div>
                             <div className="space-y-3">
-                              <div className="flex space-x-2">
-                                {/* Sample colors from profile or defaults */}
-                                {profile.colorPreferences && profile.colorPreferences.length > 0 ? (
-                                  profile.colorPreferences.slice(0, 5).map((colorGroup, index) => {
+                              <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                                {(() => {
+                                  // Get AI-generated colors from recommendations
+                                  const styleRec = recommendations.find(r => r.type === 'style_analysis');
+                                  const aiColors = styleRec?.metadata?.colorPalette?.bestColors || [];
+                                  
+                                  // Use AI colors if available, otherwise fallback to generated colors
+                                  let displayColors = aiColors;
+                                  if (!aiColors || aiColors.length < 6) {
                                     const colorMap: Record<string, string> = {
                                       'neutrals': '#8B7D6B',
                                       'earth-tones': '#DEB887',
@@ -269,29 +287,35 @@ export default function Dashboard() {
                                       'bold-bright': '#FF6347',
                                       'monochrome': '#2F2F2F'
                                     };
-                                    return (
+                                    const generatedColors = profile?.colorPreferences?.map(pref => colorMap[pref]) || 
+                                                           ['#2F4F4F', '#8FBC8F', '#F5F5DC', '#DDA0DD', '#CD853F', '#8B7D6B', '#4169E1', '#DEB887'];
+                                    displayColors = [...aiColors, ...generatedColors].slice(0, 8);
+                                  }
+                                  
+                                  return displayColors.map((color: string, index: number) => (
+                                    <div key={index} className="flex flex-col items-center space-y-1">
                                       <div
-                                        key={index}
-                                        className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
-                                        style={{ backgroundColor: colorMap[colorGroup] || '#8B7D6B' }}
-                                        title={colorGroup}
+                                        className="w-8 h-8 rounded-full border-2 border-white shadow-sm hover:scale-110 transition-transform cursor-pointer"
+                                        style={{ backgroundColor: color }}
+                                        title={color}
                                       />
-                                    );
-                                  })
-                                ) : (
-                                  ['#2F4F4F', '#8FBC8F', '#F5F5DC', '#DDA0DD', '#CD853F'].map((color, index) => (
-                                    <div
-                                      key={index}
-                                      className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
-                                      style={{ backgroundColor: color }}
-                                      title={color}
-                                    />
-                                  ))
-                                )}
+                                      <span className="text-xs text-slate-500 font-mono">{color}</span>
+                                    </div>
+                                  ));
+                                })()}
                               </div>
-                              <p className="text-sm text-slate-600">
-                                Colors that complement your natural features and personal style
-                              </p>
+                              <div className="text-sm text-slate-600 space-y-1">
+                                <p>Colors that enhance your natural beauty and work perfectly with your style goals!</p>
+                                <div className="flex items-center space-x-2 text-xs">
+                                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                    {(() => {
+                                      const styleRec = recommendations.find(r => r.type === 'style_analysis');
+                                      const aiColors = styleRec?.metadata?.colorPalette?.bestColors || [];
+                                      return aiColors.length > 0 ? `${aiColors.length} AI-curated colors` : 'Based on preferences';
+                                    })()}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -304,20 +328,39 @@ export default function Dashboard() {
                             <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                               <Target className="h-4 w-4 text-white" />
                             </div>
-                            <h4 className="text-lg font-semibold text-slate-900">Personalized Recommendations</h4>
+                            <h4 className="text-lg font-semibold text-slate-900">Just For You - Styling Secrets 💡</h4>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {recommendations.filter(r => r.type === 'shopping_guide').slice(0, 4).map((rec, index) => (
-                              <div key={index} className="flex items-start space-x-3 bg-white/50 rounded-lg p-3">
-                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                <p className="text-sm text-slate-600">{rec.recommendation}</p>
-                              </div>
-                            ))}
-                            {recommendations.filter(r => r.type === 'shopping_guide').length === 0 && (
-                              <div className="col-span-2 text-center text-slate-500 text-sm">
-                                Complete your Style DNA analysis to see personalized recommendations
-                              </div>
-                            )}
+                          <div className="grid grid-cols-1 gap-3">
+                            {(() => {
+                              // Get personalized tips from AI analysis
+                              const styleRec = recommendations.find(r => r.type === 'style_analysis');
+                              const personalizedTips = styleRec?.metadata?.personalizedTips?.stylingTips || 
+                                                     recommendations.filter(r => r.type === 'styling_tips').map(r => r.recommendation) ||
+                                                     [];
+                              
+                              // Get shopping guide from AI analysis  
+                              const shoppingGuide = styleRec?.metadata?.personalizedTips?.shoppingGuide || 
+                                                  recommendations.filter(r => r.type === 'shopping_guide').map(r => r.recommendation) ||
+                                                  [];
+                              
+                              // Combine both arrays and show first 4
+                              const allTips = [...personalizedTips, ...shoppingGuide].slice(0, 4);
+                              
+                              if (allTips.length === 0) {
+                                return (
+                                  <div className="text-center text-slate-500 text-sm py-4">
+                                    Complete your Style DNA analysis to see personalized recommendations
+                                  </div>
+                                );
+                              }
+                              
+                              return allTips.map((tip: string, index: number) => (
+                                <div key={index} className="flex items-start space-x-3 bg-white/50 rounded-lg p-3">
+                                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                  <p className="text-sm text-slate-600 leading-relaxed">{tip}</p>
+                                </div>
+                              ));
+                            })()}
                           </div>
                         </CardContent>
                       </Card>

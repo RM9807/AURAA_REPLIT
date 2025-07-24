@@ -179,6 +179,12 @@ export class DatabaseStorage implements IStorage {
     return recommendation;
   }
 
+  async deleteRecommendation(id: number): Promise<void> {
+    await db
+      .delete(styleRecommendations)
+      .where(eq(styleRecommendations.id, id));
+  }
+
   // User analytics
   async getUserAnalytics(userId: number): Promise<UserAnalytics | undefined> {
     const [analytics] = await db

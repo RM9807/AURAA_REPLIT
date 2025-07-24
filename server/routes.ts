@@ -319,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profile = await storage.createUserProfile(profileData);
       }
 
-      // Store AI recommendations
+      // Store AI recommendations with complete metadata for dashboard synchronization
       const recommendations = [
         {
           userId,
@@ -327,18 +327,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'style_analysis',
           confidence: styleDNA.styleDNA.confidenceScore.toString(),
           reasoning: styleDNA.styleDNA.styleDescription,
-          metadata: { styleDNA: styleDNA.styleDNA }
+          metadata: {
+            styleDNA: styleDNA.styleDNA,
+            colorPalette: styleDNA.colorPalette,
+            bodyAnalysis: styleDNA.bodyAnalysis,
+            personalizedTips: styleDNA.personalizedTips,
+            confidenceBoost: styleDNA.confidenceBoost,
+            overallRecommendation: styleDNA.overallRecommendation
+          }
         },
         ...styleDNA.personalizedTips.shoppingGuide.map(tip => ({
           userId,
           recommendation: tip,
           type: 'shopping_guide',
           confidence: '0.8',
-          reasoning: 'AI-generated shopping recommendation',
-          metadata: {}
+          reasoning: 'AI-generated shopping recommendation based on style goals',
+          metadata: { category: 'shopping_priority' }
+        })),
+        ...styleDNA.personalizedTips.stylingTips.map(tip => ({
+          userId,
+          recommendation: tip,
+          type: 'styling_tips',
+          confidence: '0.85',
+          reasoning: 'Personalized styling advice based on AI analysis',
+          metadata: { category: 'personalized_advice' }
         }))
       ];
 
+      // Clear existing AI recommendations to prevent duplicates
+      const existingRecs = await storage.getUserRecommendations(userId);
+      for (const existing of existingRecs) {
+        if (existing.type === 'style_analysis' || existing.type === 'shopping_guide' || existing.type === 'styling_tips') {
+          await storage.deleteRecommendation(existing.id);
+        }
+      }
+
+      // Create new recommendations
       for (const rec of recommendations) {
         await storage.createRecommendation(rec);
       }
