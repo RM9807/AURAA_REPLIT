@@ -34,29 +34,34 @@ export default function OnboardingRouter({ children }: OnboardingRouterProps) {
   const isLoading = profileLoading || wardrobeLoading || outfitsLoading;
 
   useEffect(() => {
-    // Don't redirect if we're still loading or if we're already on the right page
+    // Don't redirect if we're still loading
     if (isLoading) return;
+    
+    // If user is on landing page, let them through
+    if (location === '/landing') return;
     
     // If user is accessing personal style diagnosis directly, let them through
     if (location === '/personal-style-diagnosis') return;
     
-    // If user is on landing page, let them through
-    if (location === '/' || location === '/landing') return;
-    
     // Check if user is new (no profile completed)
     const isNewUser = !profile || !profile.bodyType || !profile.dailyActivity;
     
-    // If user tries to access dashboard or other features but hasn't completed diagnosis
-    if (isNewUser && (location === '/dashboard' || location === '/digital-wardrobe' || location === '/outfit-builder')) {
-      // Redirect new users to personal style diagnosis
-      setLocation('/personal-style-diagnosis');
-      return;
+    // NEW USER JOURNEY: Direct new users to personal style diagnosis first
+    if (isNewUser) {
+      // Redirect ALL authenticated new users to complete diagnosis first
+      if (location === '/' || location === '/dashboard' || location === '/digital-wardrobe' || location === '/outfit-builder' || location === '/home') {
+        setLocation('/personal-style-diagnosis');
+        return;
+      }
     }
     
-    // If user has completed diagnosis but tries to access root, send them to dashboard
-    if (!isNewUser && location === '/') {
-      setLocation('/dashboard');
-      return;
+    // EXISTING USER JOURNEY: Direct existing users to dashboard 
+    if (!isNewUser) {
+      // If existing user tries to access root or home, send them to dashboard
+      if (location === '/' || location === '/home') {
+        setLocation('/dashboard');
+        return;
+      }
     }
     
   }, [isLoading, profile, location, setLocation]);
