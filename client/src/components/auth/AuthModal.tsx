@@ -19,26 +19,56 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [email, setEmail] = useState('');
 
   const handleSocialLogin = (provider: 'google' | 'facebook' | 'replit') => {
-    if (provider === 'replit') {
-      // Use Replit Auth which supports multiple providers
-      window.location.href = '/api/login';
+    if (provider === 'google') {
+      // Redirect to Google OAuth
+      window.location.href = `/api/auth/google`;
+    } else if (provider === 'facebook') {
+      // Redirect to Facebook OAuth
+      window.location.href = `/api/auth/facebook`;
     } else {
-      // For Google and Facebook, redirect to Replit Auth which handles them
+      // Use Replit Auth for development
       window.location.href = '/api/login';
     }
   };
 
-  const handleOTPRequest = () => {
-    // In a real app, this would send OTP to the phone number
-    console.log('Sending OTP to:', phoneNumber);
-    setAuthMode('otp');
+  const handleOTPRequest = async () => {
+    try {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber })
+      });
+      
+      if (response.ok) {
+        console.log('Sending OTP to:', phoneNumber);
+        setAuthMode('otp');
+      } else {
+        console.error('Failed to send OTP');
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+    }
   };
 
-  const handleOTPVerify = () => {
-    // In a real app, this would verify the OTP code
-    console.log('Verifying OTP:', otpCode);
-    // For demo, redirect to login
-    handleSocialLogin('replit');
+  const handleOTPVerify = async () => {
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber, otpCode })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        console.log('Verifying OTP:', otpCode);
+        window.location.href = data.redirectUrl || '/dashboard';
+      } else {
+        console.error('OTP verification failed:', data.message);
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+    }
   };
 
   return (

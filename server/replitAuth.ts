@@ -1,5 +1,7 @@
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { Strategy as FacebookStrategy } from "passport-facebook";
 
 import passport from "passport";
 import session from "express-session";

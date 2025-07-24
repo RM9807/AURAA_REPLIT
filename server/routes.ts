@@ -49,6 +49,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.redirect('/dashboard');
   });
 
+  // Google OAuth routes
+  app.get('/api/auth/google', async (req: any, res) => {
+    // For demo, simulate Google OAuth by creating a demo user
+    const user = {
+      claims: {
+        sub: "1",
+        email: "demo@gmail.com", 
+        first_name: "Demo",
+        last_name: "User",
+        profile_image_url: "https://images.unsplash.com/photo-1494790108755-2616b6e13468?w=150&h=150&fit=crop&crop=face"
+      },
+      expires_at: Math.floor(Date.now() / 1000) + 86400
+    };
+
+    req.login(user, (err: any) => {
+      if (err) {
+        return res.status(500).json({ error: "Login failed" });
+      }
+      res.redirect("/dashboard");
+    });
+  });
+
+  // Facebook OAuth routes  
+  app.get('/api/auth/facebook', async (req: any, res) => {
+    // For demo, simulate Facebook OAuth by creating a demo user
+    const user = {
+      claims: {
+        sub: "1",
+        email: "demo@facebook.com",
+        first_name: "Demo", 
+        last_name: "User",
+        profile_image_url: "https://images.unsplash.com/photo-1494790108755-2616b6e13468?w=150&h=150&fit=crop&crop=face"
+      },
+      expires_at: Math.floor(Date.now() / 1000) + 86400
+    };
+
+    req.login(user, (err: any) => {
+      if (err) {
+        return res.status(500).json({ error: "Login failed" });
+      }
+      res.redirect("/dashboard");
+    });
+  });
+
+  // Mobile OTP routes
+  app.post('/api/auth/send-otp', async (req, res) => {
+    try {
+      const { phoneNumber } = req.body;
+      
+      // For demo, just return success
+      // In production, integrate with Twilio to send real OTP
+      console.log(`Sending OTP to ${phoneNumber}`);
+      
+      res.json({ success: true, message: "OTP sent successfully" });
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      res.status(500).json({ message: "Failed to send OTP" });
+    }
+  });
+
+  app.post('/api/auth/verify-otp', async (req, res) => {
+    try {
+      const { phoneNumber, otpCode } = req.body;
+      
+      // For demo, accept any 6-digit code
+      if (otpCode && otpCode.length === 6) {
+        const user = {
+          claims: {
+            sub: "1",
+            email: `${phoneNumber}@phone.com`,
+            first_name: "Demo",
+            last_name: "User", 
+            profile_image_url: "https://images.unsplash.com/photo-1494790108755-2616b6e13468?w=150&h=150&fit=crop&crop=face"
+          },
+          expires_at: Math.floor(Date.now() / 1000) + 86400
+        };
+
+        req.login(user, (err: any) => {
+          if (err) {
+            return res.status(500).json({ error: "Login failed" });
+          }
+          res.json({ success: true, redirectUrl: "/dashboard" });
+        });
+      } else {
+        res.status(400).json({ message: "Invalid OTP code" });
+      }
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      res.status(500).json({ message: "Failed to verify OTP" });
+    }
+  });
+
   // User Management Routes
   app.post('/api/users', async (req, res) => {
     try {
