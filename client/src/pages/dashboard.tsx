@@ -70,8 +70,9 @@ export default function Dashboard() {
     id: number;
     userId: number;
     recommendation: string;
-    confidence?: number;
+    confidence?: string;
     type?: string;
+    metadata?: any;
   }
 
   interface UserAnalytics {
@@ -204,6 +205,124 @@ export default function Dashboard() {
                       </p>
                     </div>
                   </div>
+
+                  {/* AI Style DNA Analysis Results */}
+                  {recommendations.length > 0 && (
+                    <div className="mt-8 space-y-6">
+                      <div className="text-center">
+                        <h3 className="text-xl font-semibold text-slate-900 mb-2 flex items-center justify-center space-x-2">
+                          <Sparkles className="h-5 w-5 text-violet-500" />
+                          <span>AI Style DNA Analysis</span>
+                        </h3>
+                        <p className="text-slate-600 text-sm">Your personalized style insights powered by AI</p>
+                      </div>
+
+                      {/* Style DNA Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Style Archetype from AI */}
+                        {recommendations.find(r => r.type === 'style_analysis') && (
+                          <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+                            <CardContent className="p-6">
+                              <div className="flex items-center space-x-3 mb-4">
+                                <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                                  <User className="h-4 w-4 text-white" />
+                                </div>
+                                <h4 className="text-lg font-semibold text-slate-900">Style Archetype</h4>
+                              </div>
+                              <div className="space-y-2">
+                                <p className="font-medium text-slate-900">
+                                  {recommendations.find(r => r.type === 'style_analysis')?.recommendation.split(':')[1] || 'Classic Elegance'}
+                                </p>
+                                <p className="text-sm text-slate-600">
+                                  {recommendations.find(r => r.type === 'style_analysis')?.metadata?.styleDNA?.styleDescription || 
+                                   'Timeless pieces with clean lines and sophisticated details'}
+                                </p>
+                                <div className="flex items-center space-x-2 mt-3">
+                                  <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                                    Confidence: {Math.round(parseFloat(recommendations.find(r => r.type === 'style_analysis')?.confidence || '0.85') * 100)}%
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Color Palette */}
+                        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20">
+                          <CardContent className="p-6">
+                            <div className="flex items-center space-x-3 mb-4">
+                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                <Palette className="h-4 w-4 text-white" />
+                              </div>
+                              <h4 className="text-lg font-semibold text-slate-900">Your Color Palette</h4>
+                            </div>
+                            <div className="space-y-3">
+                              <div className="flex space-x-2">
+                                {/* Sample colors from profile or defaults */}
+                                {profile.colorPreferences && profile.colorPreferences.length > 0 ? (
+                                  profile.colorPreferences.slice(0, 5).map((colorGroup, index) => {
+                                    const colorMap: Record<string, string> = {
+                                      'neutrals': '#8B7D6B',
+                                      'earth-tones': '#DEB887',
+                                      'jewel-tones': '#4169E1',
+                                      'pastels': '#DDA0DD',
+                                      'bold-bright': '#FF6347',
+                                      'monochrome': '#2F2F2F'
+                                    };
+                                    return (
+                                      <div
+                                        key={index}
+                                        className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                                        style={{ backgroundColor: colorMap[colorGroup] || '#8B7D6B' }}
+                                        title={colorGroup}
+                                      />
+                                    );
+                                  })
+                                ) : (
+                                  ['#2F4F4F', '#8FBC8F', '#F5F5DC', '#DDA0DD', '#CD853F'].map((color, index) => (
+                                    <div
+                                      key={index}
+                                      className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                                      style={{ backgroundColor: color }}
+                                      title={color}
+                                    />
+                                  ))
+                                )}
+                              </div>
+                              <p className="text-sm text-slate-600">
+                                Colors that complement your natural features and personal style
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* AI Recommendations */}
+                      <Card className="border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+                        <CardContent className="p-6">
+                          <div className="flex items-center space-x-3 mb-4">
+                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                              <Target className="h-4 w-4 text-white" />
+                            </div>
+                            <h4 className="text-lg font-semibold text-slate-900">Personalized Recommendations</h4>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {recommendations.filter(r => r.type === 'shopping_guide').slice(0, 4).map((rec, index) => (
+                              <div key={index} className="flex items-start space-x-3 bg-white/50 rounded-lg p-3">
+                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                <p className="text-sm text-slate-600">{rec.recommendation}</p>
+                              </div>
+                            ))}
+                            {recommendations.filter(r => r.type === 'shopping_guide').length === 0 && (
+                              <div className="col-span-2 text-center text-slate-500 text-sm">
+                                Complete your Style DNA analysis to see personalized recommendations
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
 
                   {/* User Options */}
                   <div className="text-center space-y-4">
