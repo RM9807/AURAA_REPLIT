@@ -63,7 +63,8 @@ export default function PersonalStyleDiagnosis() {
     setStyleDNAResults(null);
     setAnalysisComplete(false);
     // Clear cache for recommendations to ensure fresh data
-    queryClient.removeQueries({ queryKey: ['/api/users', user?.id || 1, 'recommendations'] });
+    const userId = (user as any)?.id || 1;
+    queryClient.removeQueries({ queryKey: ['/api/users', userId, 'recommendations'] });
   }, []); // Empty dependency array to run only on mount
   const [quizData, setQuizData] = useState<StyleQuizData>({
     gender: '',
@@ -103,7 +104,7 @@ export default function PersonalStyleDiagnosis() {
 
   const totalSteps = quizSteps.length;
 
-  const userId = user?.id || 1;
+  const userId = (user as any)?.id || 1;
 
   // Mutation to save user profile
   const saveProfileMutation = useMutation({
