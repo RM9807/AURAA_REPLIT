@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 
 interface OnboardingRouterProps {
@@ -9,11 +10,14 @@ interface OnboardingRouterProps {
 
 export default function OnboardingRouter({ children }: OnboardingRouterProps) {
   const [location, setLocation] = useLocation();
-  const userId = 1; // In a real app, this would come from auth context
-
-  // Check if user has completed personal style diagnosis
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  
+  const userId = (user as any)?.id || 1; // Demo user ID fallback
+  
+  // Only query user data if authenticated
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['/api/users', userId, 'profile'],
+    enabled: isAuthenticated,
     retry: false,
     refetchOnWindowFocus: true,
     staleTime: 0, // Always refetch to get latest data
@@ -22,49 +26,64 @@ export default function OnboardingRouter({ children }: OnboardingRouterProps) {
   // Check if user has any wardrobe items
   const { data: wardrobe, isLoading: wardrobeLoading } = useQuery({
     queryKey: ['/api/users', userId, 'wardrobe'],
+    enabled: isAuthenticated,
     retry: false,
   });
 
   // Check if user has any outfits
   const { data: outfits, isLoading: outfitsLoading } = useQuery({
     queryKey: ['/api/users', userId, 'outfits'],
+    enabled: isAuthenticated,
     retry: false,
   });
 
-  const isLoading = profileLoading || wardrobeLoading || outfitsLoading;
+  const isLoading = authLoading || (isAuthenticated && (profileLoading || wardrobeLoading || outfitsLoading));
 
   useEffect(() => {
     // Don't redirect if we're still loading
     if (isLoading) return;
     
-    // If user is on landing page, let them through
-    if (location === '/landing') return;
+    // If user is not authenticated, only allow landing page
+    if (!isAuthenticated) {
+      if (location !== '/' && location !== '/landing') {
+        setLocation('/');
+        return;
+      }
+      return; // Let unauthenticated users stay on landing page
+    }
+    
+    // If user is authenticated but on landing page, redirect based on profile status
+    if (isAuthenticated && (location === '/' || location === '/landing')) {
+      const isNewUser = !profile || !(profile as any)?.bodyType || !(profile as any)?.dailyActivity;
+      
+      if (isNewUser) {
+        setLocation('/personal-style-diagnosis');
+      } else {
+        setLocation('/dashboard');
+      }
+      return;
+    }
     
     // If user is accessing personal style diagnosis directly, let them through
     if (location === '/personal-style-diagnosis') return;
     
-    // Check if user is new (no profile completed)
-    const isNewUser = !profile || !profile.bodyType || !profile.dailyActivity;
-    
-    // NEW USER JOURNEY: Direct new users to personal style diagnosis first
-    if (isNewUser) {
-      // Redirect ALL authenticated new users to complete diagnosis first
-      if (location === '/' || location === '/dashboard' || location === '/digital-wardrobe' || location === '/outfit-builder' || location === '/home') {
-        setLocation('/personal-style-diagnosis');
-        return;
+    // For authenticated users, check if they're new and redirect accordingly
+    if (isAuthenticated) {
+      const isNewUser = !profile || !(profile as any)?.bodyType || !(profile as any)?.dailyActivity;
+      
+      // NEW USER JOURNEY: Direct new users to personal style diagnosis first
+      if (isNewUser) {
+        if (location === '/dashboard' || location === '/digital-wardrobe' || location === '/outfit-builder' || location === '/home') {
+          setLocation('/personal-style-diagnosis');
+          return;
+        }
       }
+      
+      // EXISTING USER JOURNEY: Let existing users access any authenticated route
+      // No additional redirects needed for existing users
     }
     
-    // EXISTING USER JOURNEY: Direct existing users to dashboard 
-    if (!isNewUser) {
-      // If existing user tries to access root or home, send them to dashboard
-      if (location === '/' || location === '/home') {
-        setLocation('/dashboard');
-        return;
-      }
-    }
-    
-  }, [isLoading, profile, location, setLocation]);
+  }, [isLoading, isAuthenticated, profile, location, setLocation]);
 
   // Show loading spinner while checking user status
   if (isLoading && (location === '/dashboard' || location === '/digital-wardrobe' || location === '/outfit-builder')) {
