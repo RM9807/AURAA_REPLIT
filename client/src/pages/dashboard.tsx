@@ -322,11 +322,11 @@ export default function Dashboard() {
                       </div>
 
                       {/* AI Recommendations */}
-                      <Card className="border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+                      <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20">
                         <CardContent className="p-6">
                           <div className="flex items-center space-x-3 mb-4">
-                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                              <Target className="h-4 w-4 text-white" />
+                            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                              <Sparkles className="h-4 w-4 text-white" />
                             </div>
                             <h4 className="text-lg font-semibold text-slate-900">Just For You - Styling Secrets 💡</h4>
                           </div>
@@ -355,9 +355,8 @@ export default function Dashboard() {
                               }
                               
                               return allTips.map((tip: string, index: number) => (
-                                <div key={index} className="flex items-start space-x-3 bg-white/50 rounded-lg p-3">
-                                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                  <p className="text-sm text-slate-600 leading-relaxed">{tip}</p>
+                                <div key={index} className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg p-4">
+                                  <p className="text-sm text-slate-600 dark:text-slate-400">{tip}</p>
                                 </div>
                               ));
                             })()}

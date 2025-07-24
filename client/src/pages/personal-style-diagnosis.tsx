@@ -1329,10 +1329,10 @@ export default function PersonalStyleDiagnosis() {
                       </div>
                       <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6">
                         <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                          {styleDNAResults.styleArchetype.name}
+                          {styleDNAResults.styleDNA?.primaryStyle || styleDNAResults.styleArchetype.name}
                         </h4>
                         <p className="text-slate-600 dark:text-slate-400">
-                          {styleDNAResults.styleArchetype.description}
+                          {styleDNAResults.styleDNA?.styleDescription || styleDNAResults.styleArchetype.description}
                         </p>
                       </div>
                     </div>
@@ -1443,7 +1443,7 @@ export default function PersonalStyleDiagnosis() {
                         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Just For You - Styling Secrets 💡</h3>
                       </div>
                       <div className="space-y-3">
-                        {styleDNAResults.personalizedTips.map((tip: string, index: number) => (
+                        {(styleDNAResults.personalizedTips?.stylingTips || styleDNAResults.personalizedTips || []).map((tip: string, index: number) => (
                           <div key={index} className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg p-4">
                             <p className="text-sm text-slate-600 dark:text-slate-400">{tip}</p>
                           </div>
@@ -1463,7 +1463,7 @@ export default function PersonalStyleDiagnosis() {
                         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Your Smart Shopping List 🛍️</h3>
                       </div>
                       <div className="space-y-2">
-                        {styleDNAResults.shoppingGuide.map((item: string, index: number) => (
+                        {(styleDNAResults.personalizedTips?.shoppingGuide || styleDNAResults.shoppingGuide || []).map((item: string, index: number) => (
                           <div key={index} className="flex items-center space-x-3 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg p-3">
                             <span className="text-sm font-medium text-violet-600 dark:text-violet-400">
                               {index + 1}.
