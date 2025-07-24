@@ -253,7 +253,36 @@ export default function PersonalStyleDiagnosis() {
           name: analysisResult.styleDNA?.primaryStyle || 'Classic Elegance',
           description: analysisResult.styleDNA?.styleDescription || 'Timeless pieces with clean lines and sophisticated details'
         },
-        colorPalette: analysisResult.styleDNA?.colorPalette?.bestColors || ['#2F4F4F', '#8FBC8F', '#F5F5DC', '#DDA0DD', '#CD853F'],
+        colorPalette: analysisResult.styleDNA?.colorPalette?.bestColors || 
+          // Generate comprehensive palette based on user preferences
+          (() => {
+            const baseColors = ['#2F4F4F', '#8FBC8F', '#F5F5DC', '#DDA0DD', '#CD853F'];
+            const extendedColors = [];
+            
+            // Add colors based on user preferences
+            if (quizData.colorPreferences.includes('neutrals')) {
+              extendedColors.push('#8B7D6B', '#A9A9A9', '#D3D3D3', '#F5F5F5');
+            }
+            if (quizData.colorPreferences.includes('earth-tones')) {
+              extendedColors.push('#DEB887', '#CD853F', '#D2691E', '#A0522D');
+            }
+            if (quizData.colorPreferences.includes('jewel-tones')) {
+              extendedColors.push('#4169E1', '#8A2BE2', '#DC143C', '#228B22');
+            }
+            if (quizData.colorPreferences.includes('pastels')) {
+              extendedColors.push('#DDA0DD', '#FFB6C1', '#98FB98', '#87CEEB');
+            }
+            if (quizData.colorPreferences.includes('bold-bright')) {
+              extendedColors.push('#FF6347', '#FF69B4', '#00CED1', '#FFD700');
+            }
+            if (quizData.colorPreferences.includes('monochrome')) {
+              extendedColors.push('#2F2F2F', '#696969', '#A9A9A9', '#D3D3D3');
+            }
+            
+            // Combine and ensure we have at least 8 colors
+            const allColors = [...baseColors, ...extendedColors];
+            return allColors.slice(0, Math.max(8, allColors.length));
+          })(),
         bodyAnalysis: {
           bodyType: quizData.bodyType,
           recommendations: Array.isArray(analysisResult.styleDNA?.bodyAnalysis?.bestSilhouettes) ? 
@@ -1240,6 +1269,26 @@ export default function PersonalStyleDiagnosis() {
                     <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
                       Based on your photos and preferences, we've created your personalized style profile with AI-powered insights.
                     </p>
+                    
+                    {/* Display Current User Inputs */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 text-sm">
+                      <div className="bg-white/50 rounded-lg p-3">
+                        <div className="font-medium text-slate-700">Body Type</div>
+                        <div className="text-slate-600 capitalize">{quizData.bodyType}</div>
+                      </div>
+                      <div className="bg-white/50 rounded-lg p-3">
+                        <div className="font-medium text-slate-700">Age Range</div>
+                        <div className="text-slate-600">{quizData.age}</div>
+                      </div>
+                      <div className="bg-white/50 rounded-lg p-3">
+                        <div className="font-medium text-slate-700">Lifestyle</div>
+                        <div className="text-slate-600 capitalize">{quizData.dailyActivity}</div>
+                      </div>
+                      <div className="bg-white/50 rounded-lg p-3">
+                        <div className="font-medium text-slate-700">Style Inspiration</div>
+                        <div className="text-slate-600 capitalize">{quizData.styleInspirations}</div>
+                      </div>
+                    </div>
                     <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-4 inline-block">
                       <div className="flex items-center space-x-2">
                         <CheckCircle className="h-5 w-5 text-green-500" />
@@ -1286,19 +1335,29 @@ export default function PersonalStyleDiagnosis() {
                         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Your Color Palette</h3>
                       </div>
                       <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg p-6">
-                        <div className="flex space-x-3 mb-4">
+                        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 mb-4">
                           {styleDNAResults.colorPalette.map((color: string, index: number) => (
-                            <div
-                              key={index}
-                              className="w-12 h-12 rounded-full border-2 border-white shadow-lg"
-                              style={{ backgroundColor: color }}
-                              title={color}
-                            />
+                            <div key={index} className="flex flex-col items-center space-y-1">
+                              <div
+                                className="w-12 h-12 rounded-full border-2 border-white shadow-lg hover:scale-110 transition-transform"
+                                style={{ backgroundColor: color }}
+                                title={color}
+                              />
+                              <span className="text-xs text-slate-500 font-mono">{color}</span>
+                            </div>
                           ))}
                         </div>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          These colors complement your natural features and personal style preferences.
-                        </p>
+                        <div className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
+                          <p>These colors complement your natural features and personal style preferences.</p>
+                          <div className="flex flex-wrap gap-2">
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                              {styleDNAResults.colorPalette.length} colors total
+                            </span>
+                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                              Based on: {quizData.colorPreferences.join(', ') || 'Color analysis'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -1317,10 +1376,13 @@ export default function PersonalStyleDiagnosis() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6">
-                        <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Recommendations</h4>
-                        <p className="text-slate-600 dark:text-slate-400 text-sm">
-                          {styleDNAResults.bodyAnalysis.recommendations}
-                        </p>
+                        <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Your Body Type</h4>
+                        <div className="space-y-2">
+                          <p className="text-lg font-medium text-slate-800 capitalize">{quizData.bodyType}</p>
+                          <p className="text-slate-600 dark:text-slate-400 text-sm">
+                            {styleDNAResults.bodyAnalysis.recommendations}
+                          </p>
+                        </div>
                       </div>
                       <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6">
                         <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Perfect Fits</h4>
