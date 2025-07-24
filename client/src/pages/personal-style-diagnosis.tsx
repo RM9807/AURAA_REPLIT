@@ -178,44 +178,100 @@ export default function PersonalStyleDiagnosis() {
     // Show AI Style DNA analysis step
     setCurrentStep(7); // Move to AI analysis step
     
-    // Prepare profile data for database
-    const profileData = {
-      bodyType: quizData.bodyType || 'hourglass',
-      dailyActivity: quizData.dailyActivity,
-      comfortLevel: quizData.comfortLevel,
-      occasions: quizData.occasions,
-      styleInspirations: quizData.styleInspirations,
-      colorPreferences: quizData.colorPreferences,
-      colorAvoidances: quizData.colorAvoidances,
-      lifestyle: quizData.lifestyle,
-      budget: quizData.budget,
-      goals: quizData.goals,
-      age: quizData.age,
-      height: quizData.height,
-    };
-    
     try {
-      // Simulate AI processing with multiple stages
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      // Prepare analysis input for OpenAI
+      const analysisInput = {
+        gender: 'female', // Can be added to form if needed
+        age: quizData.age || '25',
+        height: quizData.height || '5\'5"',
+        bodyType: quizData.bodyType || 'hourglass',
+        dailyActivity: quizData.dailyActivity,
+        comfortLevel: quizData.comfortLevel,
+        lifestyle: quizData.lifestyle,
+        occasions: quizData.occasions,
+        styleInspirations: quizData.styleInspirations,
+        budget: quizData.budget,
+        colorPreferences: quizData.colorPreferences,
+        colorAvoidances: quizData.colorAvoidances,
+        goals: quizData.goals,
+      };
+
+      // Add photo analysis if face photo is uploaded
+      if (photoUploads.facePhoto) {
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve) => {
+          reader.onload = () => {
+            const base64 = (reader.result as string).split(',')[1];
+            resolve(base64);
+          };
+          reader.readAsDataURL(photoUploads.facePhoto!);
+        });
+        
+        const base64Image = await base64Promise;
+        
+        // Analyze photo for color recommendations
+        const photoAnalysisResponse = await fetch(`/api/users/1/analyze-photos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageData: base64Image })
+        });
+        
+        if (photoAnalysisResponse.ok) {
+          const photoAnalysis = await photoAnalysisResponse.json();
+          analysisInput.skinTone = photoAnalysis.colorAnalysis.skinTone;
+          analysisInput.hairColor = photoAnalysis.colorAnalysis.hairColor;
+          analysisInput.eyeColor = photoAnalysis.colorAnalysis.eyeColor;
+        }
+      }
+
+      // Call OpenAI Style Analysis API
+      const analysisResponse = await fetch(`/api/users/1/analyze-style`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(analysisInput)
+      });
+
+      if (!analysisResponse.ok) {
+        throw new Error('Failed to analyze style');
+      }
+
+      const analysisResult = await analysisResponse.json();
       
-      // Generate Style DNA results based on user input
-      const generatedResults = generateStyleDNAResults(quizData, photoUploads);
-      setStyleDNAResults(generatedResults);
+      // Convert OpenAI results to our format
+      const styleDNAResults = {
+        styleArchetype: {
+          name: analysisResult.styleDNA.primaryStyle,
+          description: analysisResult.styleDNA.styleDescription
+        },
+        colorPalette: analysisResult.styleDNA.colorPalette?.bestColors || [],
+        bodyAnalysis: {
+          bodyType: quizData.bodyType,
+          recommendations: analysisResult.styleDNA.bodyAnalysis?.bestSilhouettes || [],
+          fitTips: analysisResult.styleDNA.bodyAnalysis?.fitGuidance || []
+        },
+        personalizedTips: analysisResult.styleDNA.personalizedTips?.stylingTips || [],
+        shoppingGuide: analysisResult.styleDNA.personalizedTips?.shoppingGuide || [],
+        confidenceScore: Math.round((analysisResult.styleDNA?.confidenceScore || 0.85) * 100)
+      };
       
-      // Save profile to database
-      await saveProfileMutation.mutateAsync(profileData);
-      
+      setStyleDNAResults(styleDNAResults);
       setIsProcessing(false);
       setAnalysisComplete(true);
       
       // Move to results step
       setCurrentStep(8);
       
+      toast({
+        title: "Analysis Complete!",
+        description: "Your personalized Style DNA has been generated.",
+      });
+      
     } catch (error) {
       setIsProcessing(false);
+      console.error('Style analysis error:', error);
       toast({
-        title: "Error",
-        description: "Failed to save your profile. Please try again.",
+        title: "Analysis Error",
+        description: "Failed to complete style analysis. Please try again.",
         variant: "destructive",
       });
     }

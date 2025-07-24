@@ -11,6 +11,12 @@ import {
   insertUserAnalyticsSchema,
 } from "@shared/schema";
 import { z } from "zod";
+import { 
+  analyzeStyleProfile, 
+  analyzePhotosForColorAnalysis, 
+  generateStyleRecommendations,
+  type StyleAnalysisInput 
+} from "./ai-analysis";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware
@@ -272,6 +278,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating analytics:", error);
       res.status(400).json({ message: "Failed to update analytics" });
+    }
+  });
+
+  // AI Analysis Routes
+  app.post('/api/users/:id/analyze-style', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const analysisInput: StyleAnalysisInput = req.body;
+      
+      // Generate AI analysis
+      const styleDNA = await analyzeStyleProfile(analysisInput);
+      
+      // Create or update user profile with analysis results
+      const profileData = {
+        userId,
+        bodyType: analysisInput.bodyType,
+        height: analysisInput.height,
+        age: parseInt(analysisInput.age),
+        dailyActivity: analysisInput.dailyActivity,
+        comfortLevel: analysisInput.comfortLevel,
+        occasions: analysisInput.occasions,
+        goals: analysisInput.goals,
+        colorPreferences: analysisInput.colorPreferences,
+        colorAvoidances: analysisInput.colorAvoidances,
+        styleInspirations: analysisInput.styleInspirations,
+        budget: analysisInput.budget,
+        skinTone: analysisInput.skinTone,
+        hairColor: analysisInput.hairColor,
+        eyeColor: analysisInput.eyeColor,
+      };
+
+      // Check if profile exists
+      const existingProfile = await storage.getUserProfile(userId);
+      let profile;
+      
+      if (existingProfile) {
+        profile = await storage.updateUserProfile(userId, profileData);
+      } else {
+        profile = await storage.createUserProfile(profileData);
+      }
+
+      // Store AI recommendations
+      const recommendations = [
+        {
+          userId,
+          recommendation: `Style DNA: ${styleDNA.styleDNA.primaryStyle} with ${styleDNA.styleDNA.secondaryStyle} influences`,
+          type: 'style_analysis',
+          confidence: styleDNA.styleDNA.confidenceScore.toString(),
+          reasoning: styleDNA.styleDNA.styleDescription,
+          metadata: { styleDNA: styleDNA.styleDNA }
+        },
+        ...styleDNA.personalizedTips.shoppingGuide.map(tip => ({
+          userId,
+          recommendation: tip,
+          type: 'shopping_guide',
+          confidence: '0.8',
+          reasoning: 'AI-generated shopping recommendation',
+          metadata: {}
+        }))
+      ];
+
+      for (const rec of recommendations) {
+        await storage.createRecommendation(rec);
+      }
+
+      res.json({
+        profile,
+        styleDNA,
+        success: true,
+        message: 'Style analysis completed successfully'
+      });
+
+    } catch (error) {
+      console.error("Error analyzing style:", error);
+      res.status(500).json({ 
+        message: "Failed to analyze style",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.post('/api/users/:id/analyze-photos', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { imageData } = req.body; // Base64 encoded image
+      
+      if (!imageData) {
+        return res.status(400).json({ message: "Image data is required" });
+      }
+
+      const colorAnalysis = await analyzePhotosForColorAnalysis(imageData);
+      
+      res.json({
+        colorAnalysis,
+        success: true,
+        message: 'Photo analysis completed successfully'
+      });
+
+    } catch (error) {
+      console.error("Error analyzing photos:", error);
+      res.status(500).json({ 
+        message: "Failed to analyze photos",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.post('/api/users/:id/generate-recommendations', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { styleGoals = [] } = req.body;
+      
+      // Get user profile and wardrobe
+      const profile = await storage.getUserProfile(userId);
+      const wardrobe = await storage.getUserWardrobe(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "User profile not found" });
+      }
+
+      const recommendations = await generateStyleRecommendations(
+        profile,
+        wardrobe,
+        styleGoals
+      );
+
+      // Store recommendations in database
+      for (const rec of recommendations.recommendations) {
+        await storage.createRecommendation({
+          userId,
+          recommendation: rec.title,
+          type: rec.type,
+          confidence: rec.confidence.toString(),
+          reasoning: rec.reasoning,
+          metadata: { 
+            description: rec.description,
+            priority: rec.priority 
+          }
+        });
+      }
+
+      res.json({
+        recommendations: recommendations.recommendations,
+        success: true,
+        message: 'Recommendations generated successfully'
+      });
+
+    } catch (error) {
+      console.error("Error generating recommendations:", error);
+      res.status(500).json({ 
+        message: "Failed to generate recommendations",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
