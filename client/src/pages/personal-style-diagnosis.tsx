@@ -203,7 +203,7 @@ export default function PersonalStyleDiagnosis() {
     try {
       // Prepare analysis input for OpenAI
       const analysisInput: any = {
-        gender: 'female', // Can be added to form if needed
+        gender: quizData.gender || 'female',
         age: quizData.age || '25',
         height: quizData.height || '5\'5"',
         bodyType: quizData.bodyType || 'hourglass',
@@ -1293,7 +1293,10 @@ export default function PersonalStyleDiagnosis() {
                       ✨ Your Personalized Style DNA is Ready!
                     </h2>
                     <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-                      Hello beautiful! Based on your photos and style preferences, I've crafted a personalized style guide that celebrates your unique {quizData.gender} beauty and fits perfectly with your {quizData.lifestyle} lifestyle.
+                      {quizData.gender === 'male' || quizData.gender === 'man' ? 
+                        `Looking sharp! Based on your photos and style preferences, I've crafted a personalized style guide that enhances your ${quizData.gender} sophistication and fits perfectly with your ${quizData.lifestyle} lifestyle.` :
+                        `Hello beautiful! Based on your photos and style preferences, I've crafted a personalized style guide that celebrates your unique ${quizData.gender} beauty and fits perfectly with your ${quizData.lifestyle} lifestyle.`
+                      }
                     </p>
                     
                     {/* Display Current User Inputs */}
