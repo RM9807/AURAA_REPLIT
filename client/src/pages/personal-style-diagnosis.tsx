@@ -180,7 +180,7 @@ export default function PersonalStyleDiagnosis() {
     
     try {
       // Prepare analysis input for OpenAI
-      const analysisInput = {
+      const analysisInput: any = {
         gender: 'female', // Can be added to form if needed
         age: quizData.age || '25',
         height: quizData.height || '5\'5"',
@@ -240,17 +240,25 @@ export default function PersonalStyleDiagnosis() {
       // Convert OpenAI results to our format
       const styleDNAResults = {
         styleArchetype: {
-          name: analysisResult.styleDNA.primaryStyle,
-          description: analysisResult.styleDNA.styleDescription
+          name: analysisResult.styleDNA?.primaryStyle || 'Classic Elegance',
+          description: analysisResult.styleDNA?.styleDescription || 'Timeless pieces with clean lines and sophisticated details'
         },
-        colorPalette: analysisResult.styleDNA.colorPalette?.bestColors || [],
+        colorPalette: analysisResult.styleDNA?.colorPalette?.bestColors || ['#2F4F4F', '#8FBC8F', '#F5F5DC', '#DDA0DD', '#CD853F'],
         bodyAnalysis: {
           bodyType: quizData.bodyType,
-          recommendations: analysisResult.styleDNA.bodyAnalysis?.bestSilhouettes || [],
-          fitTips: analysisResult.styleDNA.bodyAnalysis?.fitGuidance || []
+          recommendations: Array.isArray(analysisResult.styleDNA?.bodyAnalysis?.bestSilhouettes) ? 
+            analysisResult.styleDNA.bodyAnalysis.bestSilhouettes : 
+            [analysisResult.styleDNA?.bodyAnalysis?.bestSilhouettes || 'Emphasize your waist with fitted styles'],
+          fitTips: Array.isArray(analysisResult.styleDNA?.bodyAnalysis?.fitGuidance) ? 
+            analysisResult.styleDNA.bodyAnalysis.fitGuidance : 
+            [analysisResult.styleDNA?.bodyAnalysis?.fitGuidance || 'Choose well-fitted pieces that follow your natural silhouette']
         },
-        personalizedTips: analysisResult.styleDNA.personalizedTips?.stylingTips || [],
-        shoppingGuide: analysisResult.styleDNA.personalizedTips?.shoppingGuide || [],
+        personalizedTips: Array.isArray(analysisResult.styleDNA?.personalizedTips?.stylingTips) ? 
+          analysisResult.styleDNA.personalizedTips.stylingTips : 
+          ['Build a capsule wardrobe with versatile pieces', 'Invest in quality basics in your best colors'],
+        shoppingGuide: Array.isArray(analysisResult.styleDNA?.personalizedTips?.shoppingGuide) ? 
+          analysisResult.styleDNA.personalizedTips.shoppingGuide : 
+          ['Well-fitted blazer in a neutral color', 'Classic white button-down shirt', 'Dark wash jeans that fit perfectly'],
         confidenceScore: Math.round((analysisResult.styleDNA?.confidenceScore || 0.85) * 100)
       };
       
