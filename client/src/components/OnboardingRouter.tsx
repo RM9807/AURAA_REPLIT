@@ -37,7 +37,7 @@ export default function OnboardingRouter({ children }: OnboardingRouterProps) {
     retry: false,
   });
 
-  const isLoading = authLoading || (isAuthenticated && (profileLoading || wardrobeLoading || outfitsLoading));
+  const isLoading = authLoading;
 
   useEffect(() => {
     // Don't redirect if we're still loading

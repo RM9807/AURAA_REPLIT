@@ -1,12 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { queryClient } from "@/lib/queryClient";
 import { LogOut, User, Settings } from "lucide-react";
 
 export default function AuthenticatedNav() {
   const { user } = useAuth();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Clear all React Query cache
+    queryClient.clear();
+    
+    // Navigate to logout endpoint
     window.location.href = '/api/logout';
   };
 

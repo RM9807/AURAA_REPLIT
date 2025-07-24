@@ -4,13 +4,15 @@ export function useAuth() {
   const { data: user, isLoading, error } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
-    refetchInterval: false,
-    staleTime: 30000,
+    refetchInterval: 10000, // Check auth status every 10 seconds
+    staleTime: 5000, // Consider data fresh for 5 seconds
+    refetchOnWindowFocus: true, // Refetch when window gets focus
+    refetchOnMount: true, // Always refetch on component mount
   });
 
   return {
     user,
-    isLoading: false, // Disable loading state completely
-    isAuthenticated: !!user,
+    isLoading,
+    isAuthenticated: !!user && !error,
   };
 }
