@@ -25,7 +25,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.get('/api/auth/user', async (req: any, res) => {
     try {
-      // For demo mode, return a default user
+      // Check if user is authenticated (has active session)
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // For demo mode, return a default user if authenticated
       const user = await storage.getUser(1) || {
         id: 1,
         username: "demo@example.com",
@@ -36,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      res.status(401).json({ message: "Unauthorized" });
     }
   });
 

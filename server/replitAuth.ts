@@ -102,7 +102,13 @@ export async function setupAuth(app: Express) {
 
     app.get("/api/logout", (req, res) => {
       req.logout(() => {
-        res.redirect("/");
+        req.session.destroy((err) => {
+          if (err) {
+            console.error("Session destruction error:", err);
+          }
+          res.clearCookie('connect.sid'); // Clear session cookie
+          res.redirect("/");
+        });
       });
     });
   } else {
