@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -57,6 +57,14 @@ export default function PersonalStyleDiagnosis() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [styleDNAResults, setStyleDNAResults] = useState<any>(null);
+
+  // Reset analysis results on component mount to ensure fresh results
+  useEffect(() => {
+    setStyleDNAResults(null);
+    setAnalysisComplete(false);
+    // Clear cache for recommendations to ensure fresh data
+    queryClient.removeQueries({ queryKey: ['/api/users', user?.id || 1, 'recommendations'] });
+  }, []); // Empty dependency array to run only on mount
   const [quizData, setQuizData] = useState<StyleQuizData>({
     gender: '',
     age: '',
@@ -109,6 +117,8 @@ export default function PersonalStyleDiagnosis() {
     onSuccess: () => {
       // Invalidate all profile-related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'recommendations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'analytics'] });
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId] });
       
       // Refetch profile data to get the latest saved information
@@ -265,6 +275,16 @@ export default function PersonalStyleDiagnosis() {
       setStyleDNAResults(styleDNAResults);
       setIsProcessing(false);
       setAnalysisComplete(true);
+      
+      // Invalidate and refetch all related queries to show fresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'recommendations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId] });
+      
+      // Refetch the data to ensure it's updated
+      await queryClient.refetchQueries({ queryKey: ['/api/users', userId, 'recommendations'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/users', userId, 'profile'] });
       
       // Move to results step
       setCurrentStep(8);
