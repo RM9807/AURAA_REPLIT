@@ -86,7 +86,7 @@ export default function OutfitCombinationAI() {
   const userId = 1;
   const queryClient = useQueryClient();
 
-  const { data: outfitSuggestions, isLoading: suggestionsLoading } = useQuery({
+  const { data: outfitSuggestions, isLoading: suggestionsLoading } = useQuery<OutfitSuggestion[]>({
     queryKey: ['/api/users', userId, 'outfit-suggestions'],
   });
 
@@ -360,7 +360,7 @@ export default function OutfitCombinationAI() {
                     <div className="flex items-center justify-center p-8">
                       <RefreshCw className="h-8 w-8 animate-spin text-gradient-blue-teal" />
                     </div>
-                  ) : outfitSuggestions?.length > 0 ? (
+                  ) : outfitSuggestions && outfitSuggestions.length > 0 ? (
                     <div className="space-y-4">
                       {outfitSuggestions.map((suggestion: OutfitSuggestion) => (
                         <Card key={suggestion.id} className="border-l-4 border-l-gradient-blue-teal">

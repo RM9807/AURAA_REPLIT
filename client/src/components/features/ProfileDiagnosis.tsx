@@ -15,30 +15,39 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useLocation } from "wouter";
+import type { UserProfile, UserAnalytics } from "@shared/schema";
 
-interface UserProfile {
-  id: number;
-  userId: number;
-  bodyType: string;
-  skinTone: string;
-  seasonType: string;
-  stylePersonality: string;
-  budget: string;
-  lifestyle: string;
-  completedOnboarding: boolean;
-  lastUpdated: string;
-  createdAt: string;
+// Function to calculate profile completion score
+function calculateCompletionScore(profile?: UserProfile, analytics?: UserAnalytics): number {
+  if (!profile) return 0;
+  
+  let score = 0;
+  const fields = [
+    profile.bodyType, profile.height, profile.weight, profile.age,
+    profile.skinTone, profile.hairColor, profile.eyeColor,
+    profile.dailyActivity, profile.comfortLevel, profile.budget
+  ];
+  
+  fields.forEach(field => {
+    if (field) score += 10;
+  });
+  
+  if (profile.occasions && Array.isArray(profile.occasions)) score += 10;
+  if (profile.goals && Array.isArray(profile.goals)) score += 10;
+  if (profile.colorPreferences && Array.isArray(profile.colorPreferences)) score += 10;
+  
+  return Math.min(score, 100);
 }
 
 export default function ProfileDiagnosis() {
   const [, setLocation] = useLocation();
   const userId = 1;
 
-  const { data: profile } = useQuery({
+  const { data: profile } = useQuery<UserProfile>({
     queryKey: ['/api/users', userId, 'profile'],
   });
 
-  const { data: analytics } = useQuery({
+  const { data: analytics } = useQuery<UserAnalytics>({
     queryKey: ['/api/users', userId, 'analytics'],
   });
 
@@ -46,7 +55,7 @@ export default function ProfileDiagnosis() {
     return null;
   }
 
-  const profileAge = Math.floor((Date.now() - new Date(profile.lastUpdated || profile.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+  const profileAge = Math.floor((Date.now() - new Date(profile.updatedAt || profile.createdAt || new Date()).getTime()) / (1000 * 60 * 60 * 24));
   const isProfileFresh = profileAge < 90; // Fresh if updated within 3 months
   const completionScore = calculateCompletionScore(profile, analytics);
 
@@ -121,16 +130,16 @@ export default function ProfileDiagnosis() {
             </h5>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-600">Season Type</span>
-                <Badge variant="outline">{profile.seasonType || 'Not set'}</Badge>
-              </div>
-              <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-600">Skin Tone</span>
                 <Badge variant="outline">{profile.skinTone || 'Not analyzed'}</Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-600">Style DNA</span>
-                <Badge variant="outline">{profile.stylePersonality || 'Not defined'}</Badge>
+                <span className="text-sm text-slate-600">Hair Color</span>
+                <Badge variant="outline">{profile.hairColor || 'Not set'}</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-600">Eye Color</span>
+                <Badge variant="outline">{profile.eyeColor || 'Not set'}</Badge>
               </div>
             </div>
           </div>
@@ -146,8 +155,8 @@ export default function ProfileDiagnosis() {
                 <Badge variant="outline">{profile.bodyType || 'Not analyzed'}</Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-slate-600">Lifestyle</span>
-                <Badge variant="outline">{profile.lifestyle || 'Not set'}</Badge>
+                <span className="text-sm text-slate-600">Daily Activity</span>
+                <Badge variant="outline">{profile.dailyActivity || 'Not set'}</Badge>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-slate-600">Budget Range</span>
@@ -178,7 +187,7 @@ export default function ProfileDiagnosis() {
                 <div className="text-xs text-slate-600">Items Cataloged</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-slate-800">{analytics.avgOutfitRating || 0}</div>
+                <div className="text-2xl font-bold text-slate-800">{analytics.averageOutfitRating || 0}</div>
                 <div className="text-xs text-slate-600">Avg Rating</div>
               </div>
             </div>
@@ -209,27 +218,3 @@ export default function ProfileDiagnosis() {
   );
 }
 
-function calculateCompletionScore(profile: UserProfile, analytics: any): number {
-  let score = 0;
-  const maxScore = 100;
-  
-  // Basic profile completion (40 points)
-  if (profile.bodyType) score += 10;
-  if (profile.skinTone) score += 10;
-  if (profile.seasonType) score += 10;
-  if (profile.stylePersonality) score += 10;
-  
-  // Lifestyle details (30 points)
-  if (profile.lifestyle) score += 10;
-  if (profile.budget) score += 10;
-  if (profile.completedOnboarding) score += 10;
-  
-  // Active usage (30 points)
-  if (analytics) {
-    if (analytics.totalOutfits > 0) score += 10;
-    if (analytics.totalWardrobeItems > 5) score += 10;
-    if (analytics.styleScore > 50) score += 10;
-  }
-  
-  return Math.min(score, maxScore);
-}
