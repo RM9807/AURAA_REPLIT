@@ -328,6 +328,37 @@ export default function PersonalStyleDiagnosis() {
       };
       
       setStyleDNAResults(styleDNAResults);
+      
+      // IMPORTANT: Save the profile data to database so OnboardingRouter recognizes user as completed
+      const profileData = {
+        // Basic Info
+        age: parseInt(quizData.age) || 25,
+        height: quizData.height || "5'5\"",
+        bodyType: quizData.bodyType || 'hourglass',
+        
+        // Lifestyle & Activity
+        dailyActivity: quizData.dailyActivity,
+        comfortLevel: quizData.comfortLevel,
+        
+        // Style Preferences  
+        occasions: quizData.occasions,
+        budget: quizData.budget,
+        
+        // Color Preferences
+        colorPreferences: quizData.colorPreferences,
+        
+        // Goals
+        goals: quizData.goals,
+        
+        // AI Analysis Results
+        skinTone: analysisInput.skinTone,
+        hairColor: analysisInput.hairColor,
+        eyeColor: analysisInput.eyeColor,
+      };
+      
+      // Save profile data using the mutation
+      await saveProfileMutation.mutateAsync(profileData);
+      
       setIsProcessing(false);
       setAnalysisComplete(true);
       
@@ -1543,7 +1574,16 @@ export default function PersonalStyleDiagnosis() {
                       Your personalized Style DNA is now saved! Ready to build a wardrobe that makes you feel absolutely amazing? Let's make it happen together! 
                     </p>
                     <Button
-                      onClick={() => setLocation('/dashboard')}
+                      onClick={async () => {
+                        // Ensure all queries are invalidated and data is fresh
+                        queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'profile'] });
+                        queryClient.invalidateQueries({ queryKey: ['/api/users', userId] });
+                        
+                        // Wait a moment for cache invalidation
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                        setLocation('/dashboard');
+                      }}
                       className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
                       size="lg"
                     >
