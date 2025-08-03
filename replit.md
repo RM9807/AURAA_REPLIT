@@ -37,7 +37,7 @@ The design emphasizes a modern, clean aesthetic with smooth animations and inter
 - **Full-stack Hot Reloading**: Vite integration ensures a smooth development experience with synchronized frontend and backend changes.
 - **Type Safety**: Comprehensive TypeScript usage across both frontend and backend, including Zod for API validation and Drizzle ORM for database interactions.
 - **Modular Design**: Clear separation of concerns with abstracted storage layers and centralized route management.
-- **Authentication**: Supports multi-provider authentication (Google, Facebook, mobile OTP) with secure session management and route protection.
+- **Authentication**: Username/password authentication with secure bcrypt password hashing, session management, and route protection.
 - **AI Integration**: Features include AI analysis for body shape and color, wardrobe gap analysis, declutter recommendations, and weather-based outfit suggestions with confidence scoring.
 
 ## External Dependencies
