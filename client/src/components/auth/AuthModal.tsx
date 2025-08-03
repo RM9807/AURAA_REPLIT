@@ -3,9 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { X, Mail, Phone, Chrome } from "lucide-react";
-import { FaFacebook, FaGoogle } from "react-icons/fa";
+import { X, User, Mail, Lock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,61 +12,123 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [authMode, setAuthMode] = useState<'login' | 'signup' | 'otp'>('login');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [email, setEmail] = useState('');
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSocialLogin = (provider: 'google' | 'facebook' | 'replit') => {
-    if (provider === 'google') {
-      // Redirect to Google OAuth
-      window.location.href = `/api/auth/google`;
-    } else if (provider === 'facebook') {
-      // Redirect to Facebook OAuth
-      window.location.href = `/api/auth/facebook`;
-    } else {
-      // Use Replit Auth for development
-      window.location.href = '/api/login';
-    }
+  // Form data
+  const [formData, setFormData] = useState({
+    usernameOrEmail: '',
+    username: '',
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
-  const handleOTPRequest = async () => {
-    try {
-      const response = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber })
+  const handleLogin = async () => {
+    if (!formData.usernameOrEmail || !formData.password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
       });
-      
-      if (response.ok) {
-        console.log('Sending OTP to:', phoneNumber);
-        setAuthMode('otp');
-      } else {
-        console.error('Failed to send OTP');
-      }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
+      return;
     }
-  };
 
-  const handleOTPVerify = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/verify-otp', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, otpCode })
+        body: JSON.stringify({
+          usernameOrEmail: formData.usernameOrEmail,
+          password: formData.password,
+        })
       });
       
       const data = await response.json();
       
-      if (response.ok && data.success) {
-        console.log('Verifying OTP:', otpCode);
-        window.location.href = data.redirectUrl || '/dashboard';
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Login successful!",
+        });
+        window.location.href = '/dashboard';
       } else {
-        console.error('OTP verification failed:', data.message);
+        toast({
+          title: "Error",
+          description: data.message || "Login failed",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Error verifying OTP:', error);
+      console.error('Login error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!formData.username || !formData.email || !formData.password || !formData.firstName || !formData.lastName) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Registration successful! Welcome!",
+        });
+        window.location.href = '/dashboard';
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Registration failed",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,9 +138,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold text-navy">
-              {authMode === 'login' ? 'Welcome Back!' : 
-               authMode === 'signup' ? 'Get Started' : 
-               'Verify Your Phone'}
+              {authMode === 'login' ? 'Welcome Back!' : 'Get Started'}
             </DialogTitle>
             <Button
               variant="ghost"
@@ -93,108 +152,159 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </DialogHeader>
 
         <div className="space-y-4">
-          {authMode === 'otp' ? (
+          {authMode === 'login' ? (
             <div className="space-y-4">
-              <div className="text-center text-sm text-gray-600">
-                We've sent a verification code to {phoneNumber}
-              </div>
-              
               <div className="space-y-2">
-                <Label htmlFor="otp">Verification Code</Label>
-                <Input
-                  id="otp"
-                  placeholder="Enter 6-digit code"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  maxLength={6}
-                />
+                <Label htmlFor="usernameOrEmail">Username or Email</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="usernameOrEmail"
+                    name="usernameOrEmail"
+                    placeholder="Enter username or email"
+                    value={formData.usernameOrEmail}
+                    onChange={handleInputChange}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Enter password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="pl-10"
+                  />
+                </div>
               </div>
 
               <Button 
-                onClick={handleOTPVerify}
+                onClick={handleLogin}
                 className="w-full bg-gradient-purple-pink text-white"
-                disabled={otpCode.length !== 6}
+                disabled={isLoading}
               >
-                Verify & Continue
+                {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
 
-              <Button
-                variant="ghost"
-                onClick={() => setAuthMode('login')}
-                className="w-full text-sm"
-              >
-                Back to login options
-              </Button>
+              <div className="text-center text-sm">
+                Don't have an account?{' '}
+                <button
+                  onClick={() => setAuthMode('signup')}
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  Sign up
+                </button>
+              </div>
             </div>
           ) : (
-            <>
-              {/* Social Login Options */}
-              <div className="space-y-3">
-                <Button
-                  onClick={() => handleSocialLogin('google')}
-                  variant="outline"
-                  className="w-full flex items-center gap-3 py-6 border-2 hover:bg-gray-50"
-                >
-                  <FaGoogle className="h-5 w-5 text-red-500" />
-                  <span className="font-medium">Continue with Google</span>
-                </Button>
-
-                <Button
-                  onClick={() => handleSocialLogin('facebook')}
-                  variant="outline"
-                  className="w-full flex items-center gap-3 py-6 border-2 hover:bg-gray-50"
-                >
-                  <FaFacebook className="h-5 w-5 text-blue-600" />
-                  <span className="font-medium">Continue with Facebook</span>
-                </Button>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Or</span>
-                </div>
-              </div>
-
-              {/* Phone OTP Option */}
-              <div className="space-y-3">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+1 (555) 123-4567"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={handleOTPRequest}
-                      disabled={!phoneNumber}
-                      className="px-6 bg-gradient-blue-teal text-white"
-                    >
-                      <Phone className="h-4 w-4 mr-2" />
-                      Send OTP
-                    </Button>
-                  </div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    name="firstName"
+                    placeholder="First name"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    placeholder="Last name"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
 
-              <div className="text-center text-xs text-gray-500">
-                By continuing, you agree to our{' '}
-                <a href="#" className="text-blue-600 hover:underline">
-                  Terms of Service
-                </a>{' '}
-                and{' '}
-                <a href="#" className="text-blue-600 hover:underline">
-                  Privacy Policy
-                </a>
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="username"
+                    name="username"
+                    placeholder="Choose a username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-            </>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Create a password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleRegister}
+                className="w-full bg-gradient-purple-pink text-white"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Creating Account...' : 'Create Account'}
+              </Button>
+
+              <div className="text-center text-sm">
+                Already have an account?{' '}
+                <button
+                  onClick={() => setAuthMode('login')}
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  Sign in
+                </button>
+              </div>
+            </div>
           )}
+
+          <div className="text-center text-xs text-gray-500">
+            By continuing, you agree to our{' '}
+            <a href="#" className="text-blue-600 hover:underline">
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a href="#" className="text-blue-600 hover:underline">
+              Privacy Policy
+            </a>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

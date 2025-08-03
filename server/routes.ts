@@ -9,6 +9,8 @@ import {
   insertOutfitSchema,
   insertStyleRecommendationSchema,
   insertUserAnalyticsSchema,
+  registerUserSchema,
+  loginUserSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { 
@@ -30,115 +32,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // For demo mode, return a default user if authenticated
-      const user = await storage.getUser(1) || {
-        id: 1,
-        username: "demo@example.com",
-        firstName: "Demo",
-        lastName: "User",
-        email: "demo@example.com"
-      };
-      res.json(user);
+      // Get the authenticated user's data
+      const user = req.user;
+      if (user && user.id) {
+        const userData = await storage.getUser(user.id);
+        if (userData) {
+          // Return user data without password
+          const { password, ...userWithoutPassword } = userData;
+          res.json(userWithoutPassword);
+          return;
+        }
+      }
+
+      res.status(401).json({ message: "Unauthorized" });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(401).json({ message: "Unauthorized" });
     }
   });
 
-  app.get('/api/login', async (req: any, res) => {
-    res.redirect('/dashboard');
-  });
-
-  // Google OAuth routes
-  app.get('/api/auth/google', async (req: any, res) => {
-    // For demo, simulate Google OAuth by creating a demo user
-    const user = {
-      claims: {
-        sub: "1",
-        email: "demo@gmail.com", 
-        first_name: "Demo",
-        last_name: "User",
-        profile_image_url: "https://images.unsplash.com/photo-1494790108755-2616b6e13468?w=150&h=150&fit=crop&crop=face"
-      },
-      expires_at: Math.floor(Date.now() / 1000) + 86400
-    };
-
-    req.login(user, (err: any) => {
-      if (err) {
-        return res.status(500).json({ error: "Login failed" });
-      }
-      res.redirect("/dashboard");
-    });
-  });
-
-  // Facebook OAuth routes  
-  app.get('/api/auth/facebook', async (req: any, res) => {
-    // For demo, simulate Facebook OAuth by creating a demo user
-    const user = {
-      claims: {
-        sub: "1",
-        email: "demo@facebook.com",
-        first_name: "Demo", 
-        last_name: "User",
-        profile_image_url: "https://images.unsplash.com/photo-1494790108755-2616b6e13468?w=150&h=150&fit=crop&crop=face"
-      },
-      expires_at: Math.floor(Date.now() / 1000) + 86400
-    };
-
-    req.login(user, (err: any) => {
-      if (err) {
-        return res.status(500).json({ error: "Login failed" });
-      }
-      res.redirect("/dashboard");
-    });
-  });
-
-  // Mobile OTP routes
-  app.post('/api/auth/send-otp', async (req, res) => {
+  // User registration endpoint
+  app.post('/api/auth/register', async (req, res) => {
     try {
-      const { phoneNumber } = req.body;
-      
-      // For demo, just return success
-      // In production, integrate with Twilio to send real OTP
-      console.log(`Sending OTP to ${phoneNumber}`);
-      
-      res.json({ success: true, message: "OTP sent successfully" });
-    } catch (error) {
-      console.error("Error sending OTP:", error);
-      res.status(500).json({ message: "Failed to send OTP" });
-    }
-  });
-
-  app.post('/api/auth/verify-otp', async (req, res) => {
-    try {
-      const { phoneNumber, otpCode } = req.body;
-      
-      // For demo, accept any 6-digit code
-      if (otpCode && otpCode.length === 6) {
-        const user = {
-          claims: {
-            sub: "1",
-            email: `${phoneNumber}@phone.com`,
-            first_name: "Demo",
-            last_name: "User", 
-            profile_image_url: "https://images.unsplash.com/photo-1494790108755-2616b6e13468?w=150&h=150&fit=crop&crop=face"
-          },
-          expires_at: Math.floor(Date.now() / 1000) + 86400
-        };
-
-        req.login(user, (err: any) => {
-          if (err) {
-            return res.status(500).json({ error: "Login failed" });
-          }
-          res.json({ success: true, redirectUrl: "/dashboard" });
+      const validation = registerUserSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validation.error.flatten().fieldErrors 
         });
-      } else {
-        res.status(400).json({ message: "Invalid OTP code" });
       }
+
+      const { username, email, password, firstName, lastName } = validation.data;
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsernameOrEmail(username);
+      if (existingUser) {
+        return res.status(409).json({ message: "Username or email already exists" });
+      }
+
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(409).json({ message: "Email already exists" });
+      }
+
+      // Create new user
+      const newUser = await storage.createUser({
+        username,
+        email,
+        password,
+        firstName,
+        lastName,
+      });
+
+      // Log the user in
+      req.login({ id: newUser.id, username: newUser.username }, (err: any) => {
+        if (err) {
+          return res.status(500).json({ error: "Registration successful but login failed" });
+        }
+        
+        // Return user data without password
+        const { password: _, ...userWithoutPassword } = newUser;
+        res.status(201).json({ 
+          message: "Registration successful", 
+          user: userWithoutPassword 
+        });
+      });
     } catch (error) {
-      console.error("Error verifying OTP:", error);
-      res.status(500).json({ message: "Failed to verify OTP" });
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
+  });
+
+  // User login endpoint  
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const validation = loginUserSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validation.error.flatten().fieldErrors 
+        });
+      }
+
+      const { usernameOrEmail, password } = validation.data;
+
+      // Find user by username or email
+      const user = await storage.getUserByUsernameOrEmail(usernameOrEmail);
+      if (!user || !user.password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Verify password
+      const isPasswordValid = await storage.verifyPassword(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Log the user in
+      req.login({ id: user.id, username: user.username }, (err: any) => {
+        if (err) {
+          return res.status(500).json({ error: "Login failed" });
+        }
+        
+        // Return user data without password
+        const { password: _, ...userWithoutPassword } = user;
+        res.json({ 
+          message: "Login successful", 
+          user: userWithoutPassword 
+        });
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Logout endpoint
+  app.post('/api/auth/logout', (req, res) => {
+    req.logout(() => {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Session destruction error:", err);
+          return res.status(500).json({ message: "Logout failed" });
+        }
+        res.clearCookie('connect.sid');
+        res.json({ message: "Logout successful" });
+      });
+    });
   });
 
   // User Management Routes
