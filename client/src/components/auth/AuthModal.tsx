@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, User, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { queryClient } from "@/lib/queryClient";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   // Form data
   const [formData, setFormData] = useState({
@@ -57,11 +60,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       const data = await response.json();
       
       if (response.ok) {
+        // Invalidate all auth-related queries to fetch fresh data
+        queryClient.invalidateQueries({ queryKey: ["/api/auth"] });
+        queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
+        
         toast({
           title: "Success",
           description: "Login successful!",
         });
-        window.location.href = '/dashboard';
+        
+        onClose(); // Close the modal
+        // Let OnboardingRouter handle navigation based on profile status
       } else {
         toast({
           title: "Error",
@@ -108,11 +117,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       const data = await response.json();
       
       if (response.ok) {
+        // Invalidate auth cache to fetch fresh user data
+        queryClient.invalidateQueries({ queryKey: ["/api/auth"] });
+        queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
+        
         toast({
           title: "Success",
           description: "Registration successful! Welcome!",
         });
-        window.location.href = '/dashboard';
+        
+        onClose(); // Close the modal
+        // Let OnboardingRouter handle navigation based on profile status
       } else {
         toast({
           title: "Error",

@@ -17,30 +17,16 @@ export default function OnboardingRouter({ children }: OnboardingRouterProps) {
   // Only query user data if authenticated
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['/api/users', userId, 'profile'],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !!userId,
     retry: false,
-    refetchOnWindowFocus: true,
-    staleTime: 0, // Always refetch to get latest data
+    refetchOnWindowFocus: false,
+    staleTime: 60000, // Keep data fresh for 1 minute
   });
 
-  // Check if user has any wardrobe items
-  const { data: wardrobe, isLoading: wardrobeLoading } = useQuery({
-    queryKey: ['/api/users', userId, 'wardrobe'],
-    enabled: isAuthenticated,
-    retry: false,
-  });
-
-  // Check if user has any outfits
-  const { data: outfits, isLoading: outfitsLoading } = useQuery({
-    queryKey: ['/api/users', userId, 'outfits'],
-    enabled: isAuthenticated,
-    retry: false,
-  });
-
-  const isLoading = authLoading;
+  const isLoading = authLoading || (isAuthenticated && profileLoading);
 
   useEffect(() => {
-    // Don't redirect if we're still loading
+    // Don't redirect if we're still loading auth or profile data
     if (isLoading) return;
     
     // If user is not authenticated, only allow landing page
