@@ -84,6 +84,9 @@ export default function WardrobeDigitizer() {
     queryKey: ['/api/users', userId, 'wardrobe'],
   });
 
+  // Type the wardrobe data properly
+  const wardrobeItems = (wardrobe as WardrobeItem[]) || [];
+
   const { data: profile } = useQuery({
     queryKey: ['/api/users', userId, 'profile'],
   });
@@ -415,7 +418,7 @@ export default function WardrobeDigitizer() {
                 ))}
               </div>
               
-              {(!wardrobe || wardrobe.length === 0) && (
+              {(!wardrobe || wardrobeItems.length === 0) && (
                 <div className="text-center py-12">
                   <Camera className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -444,7 +447,7 @@ export default function WardrobeDigitizer() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {(!wardrobe || wardrobe.length === 0) ? (
+                  {(!wardrobe || wardrobeItems.length === 0) ? (
                     <div className="text-center py-8">
                       <ShoppingBag className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">

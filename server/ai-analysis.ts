@@ -80,6 +80,152 @@ export interface StyleDNAResult {
   overallRecommendation: string;
 }
 
+// Wardrobe Analysis Types
+export interface WardrobeItem {
+  id: number;
+  itemName: string;
+  category: string;
+  color: string | null;
+  pattern?: string | null;
+  material?: string | null;
+  brand?: string | null;
+  season?: string | null;
+  notes?: string | null;
+  imageUrl?: string | null;
+}
+
+export interface WardrobeAnalysisResult {
+  itemAnalysis: {
+    id: number;
+    styleAlignment: number; // 1-100 score
+    colorMatch: number; // 1-100 score
+    versatility: number; // 1-100 score
+    quality: number; // 1-100 score
+    fitAssessment: string;
+    recommendation: 'keep' | 'alter' | 'donate';
+    reason: string;
+    improvementSuggestions?: string[];
+    outfitPairings?: string[];
+  }[];
+  wardrobeOverview: {
+    totalItems: number;
+    keepItems: number;
+    alterItems: number;
+    donateItems: number;
+    gapAnalysis: string[];
+    priorityPurchases: string[];
+    overallScore: number;
+    styleConsistency: number;
+  };
+  recommendations: {
+    declutterPlan: string[];
+    organizationTips: string[];
+    seasonalRotation: string[];
+    budgetOptimization: string[];
+  };
+}
+
+export async function analyzeWardrobe(
+  items: WardrobeItem[], 
+  userProfile: StyleAnalysisInput
+): Promise<WardrobeAnalysisResult> {
+  try {
+    const itemDescriptions = items.map(item => ({
+      id: item.id,
+      name: item.itemName,
+      category: item.category,
+      color: item.color,
+      pattern: item.pattern || 'solid',
+      material: item.material || 'unknown',
+      brand: item.brand || 'unspecified',
+      season: item.season || 'all-season'
+    }));
+
+    const prompt = `Expert wardrobe consultant with 15+ years experience. Analyze this ${userProfile.gender}'s wardrobe for style optimization and decluttering guidance.
+
+USER PROFILE:
+- Gender: ${userProfile.gender}
+- Age: ${userProfile.age}
+- Body Type: ${userProfile.bodyType}
+- Lifestyle: ${userProfile.lifestyle}
+- Daily Activity: ${userProfile.dailyActivity}
+- Budget: ${userProfile.budget}
+- Style Goals: ${userProfile.goals.join(', ')}
+- Preferred Colors: ${userProfile.colorPreferences.join(', ')}
+- Color Avoidances: ${userProfile.colorAvoidances.join(', ')}
+- Occasions: ${userProfile.occasions.join(', ')}
+
+WARDROBE INVENTORY (${items.length} items):
+${JSON.stringify(itemDescriptions, null, 2)}
+
+ANALYSIS INSTRUCTIONS:
+1. Evaluate each item for style alignment, color match, versatility, and quality
+2. Give specific keep/alter/donate recommendations with clear reasoning
+3. Identify wardrobe gaps and priority purchases
+4. Provide organization and budgeting strategies
+
+Score items 1-100 on style alignment, color match, versatility, and quality.
+Be practical and goal-focused in recommendations.
+
+Respond in this EXACT JSON format:
+{
+  "itemAnalysis": [
+    {
+      "id": number,
+      "styleAlignment": number,
+      "colorMatch": number, 
+      "versatility": number,
+      "quality": number,
+      "fitAssessment": "excellent/good/needs_alteration/poor",
+      "recommendation": "keep/alter/donate",
+      "reason": "specific explanation",
+      "improvementSuggestions": ["suggestion1", "suggestion2"],
+      "outfitPairings": ["pairing1", "pairing2"]
+    }
+  ],
+  "wardrobeOverview": {
+    "totalItems": ${items.length},
+    "keepItems": number,
+    "alterItems": number, 
+    "donateItems": number,
+    "gapAnalysis": ["gap1", "gap2"],
+    "priorityPurchases": ["item1", "item2"],
+    "overallScore": number,
+    "styleConsistency": number
+  },
+  "recommendations": {
+    "declutterPlan": ["step1", "step2"],
+    "organizationTips": ["tip1", "tip2"],
+    "seasonalRotation": ["rotation1", "rotation2"],
+    "budgetOptimization": ["strategy1", "strategy2"]
+  }
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert wardrobe consultant and personal stylist. Provide detailed, actionable analysis focused on style optimization and practical recommendations."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+    });
+
+    const analysisResult = JSON.parse(response.choices[0].message.content!);
+    return analysisResult as WardrobeAnalysisResult;
+
+  } catch (error) {
+    console.error("Error analyzing wardrobe:", error);
+    throw new Error("Failed to analyze wardrobe");
+  }
+}
+
 export async function analyzeStyleProfile(input: StyleAnalysisInput): Promise<StyleDNAResult> {
   try {
     const genderGreeting = input.gender === 'male' || input.gender === 'man' ? 'Looking sharp!' : 'Hello beautiful!';

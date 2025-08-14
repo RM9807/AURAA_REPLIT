@@ -279,6 +279,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI-powered wardrobe analysis
+  app.post('/api/users/:id/wardrobe/analyze', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Get user's wardrobe and profile
+      const wardrobe = await storage.getUserWardrobe(userId);
+      const profile = await storage.getUserProfile(userId);
+      
+      if (!profile || !profile.bodyType) {
+        return res.status(400).json({ 
+          message: "Please complete your style profile first to analyze your wardrobe." 
+        });
+      }
+      
+      if (!wardrobe || wardrobe.length === 0) {
+        return res.status(400).json({ 
+          message: "Please add items to your wardrobe before analyzing." 
+        });
+      }
+
+      // Convert profile to the format expected by AI analysis
+      const styleInput = {
+        gender: (profile as any).gender || 'female',
+        age: profile.age?.toString() || '25',
+        height: profile.height?.toString() || '5\'6"',
+        bodyType: profile.bodyType,
+        dailyActivity: profile.dailyActivity || 'moderate',
+        comfortLevel: profile.comfortLevel || 'moderately comfortable',
+        lifestyle: (profile as any).lifestyle || 'casual',
+        occasions: Array.isArray(profile.occasions) ? profile.occasions : ['work', 'casual', 'social'],
+        styleInspirations: profile.styleInspirations || 'classic and comfortable',
+        budget: profile.budget || 'moderate',
+        colorPreferences: Array.isArray(profile.colorPreferences) ? profile.colorPreferences : ['navy', 'white', 'black'],
+        colorAvoidances: Array.isArray(profile.colorAvoidances) ? profile.colorAvoidances : [],
+        goals: Array.isArray(profile.goals) ? profile.goals : ['look put-together', 'feel confident']
+      };
+
+      // Import AI analysis function
+      const { analyzeWardrobe } = await import('./ai-analysis.js');
+      
+      // Run AI analysis
+      const analysisResult = await analyzeWardrobe(wardrobe, styleInput);
+      
+      res.json(analysisResult);
+    } catch (error) {
+      console.error("Error analyzing wardrobe:", error);
+      res.status(500).json({ 
+        message: "Failed to analyze wardrobe. Please try again." 
+      });
+    }
+  });
+
   // Outfit Routes
   app.get('/api/users/:id/outfits', async (req, res) => {
     try {

@@ -94,6 +94,9 @@ export default function DigitalWardrobe() {
     queryKey: ['/api/users', userId, 'wardrobe'],
   });
 
+  // Type the wardrobe data properly
+  const wardrobeItems = (wardrobe as WardrobeItem[]) || [];
+
   // Upload mutation - Fixed to send JSON instead of FormData
   const uploadMutation = useMutation({
     mutationFn: async (data: typeof currentUpload) => {
@@ -163,20 +166,42 @@ export default function DigitalWardrobe() {
     uploadMutation.mutate(currentUpload);
   };
 
-  const handleAnalyzeWardrobe = () => {
-    setIsAnalyzing(true);
-    setAnalysisProgress(0);
-    const interval = setInterval(() => {
-      setAnalysisProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsAnalyzing(false);
-          setCurrentStep(3);
-          return 100;
-        }
-        return prev + 10;
+  // AI Analysis mutation
+  const analyzeMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(`/api/users/${userId}/wardrobe/analyze`, {
+        method: 'POST',
       });
-    }, 300);
+    },
+    onSuccess: (response) => {
+      const analysisResult = response.json();
+      // Update wardrobe items with AI analysis results
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'wardrobe'] });
+      toast({
+        title: "Analysis Complete",
+        description: "Your wardrobe has been analyzed with AI recommendations.",
+      });
+      setCurrentStep(3);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Analysis Failed",
+        description: error.message || "Failed to analyze wardrobe. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleAnalyzeWardrobe = () => {
+    if (wardrobeItems.length === 0) {
+      toast({
+        title: "No Items to Analyze",
+        description: "Please add some wardrobe items first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    analyzeMutation.mutate();
   };
 
   const generateMockAnalysis = (item: WardrobeItem) => {
@@ -232,20 +257,20 @@ export default function DigitalWardrobe() {
     { number: 5, title: "Complete", description: "Updated closet" }
   ];
 
-  const keepItems = wardrobe?.filter(item => {
+  const keepItems = wardrobeItems.filter(item => {
     const analysis = item.aiAnalysis || generateMockAnalysis(item);
     return analysis.recommendation === 'keep' || declutterDecisions[item.id] === 'keep';
-  }) || [];
+  });
   
-  const alterItems = wardrobe?.filter(item => {
+  const alterItems = wardrobeItems.filter(item => {
     const analysis = item.aiAnalysis || generateMockAnalysis(item);
     return analysis.recommendation === 'alter' || declutterDecisions[item.id] === 'alter';
-  }) || [];
+  });
   
-  const donateItems = wardrobe?.filter(item => {
+  const donateItems = wardrobeItems.filter(item => {
     const analysis = item.aiAnalysis || generateMockAnalysis(item);
     return analysis.recommendation === 'donate' || declutterDecisions[item.id] === 'donate';
-  }) || [];
+  });
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950">
@@ -314,7 +339,7 @@ export default function DigitalWardrobe() {
         {currentStep === 1 && (
           <div className="space-y-8">
             {/* Welcome Section */}
-            {wardrobe && wardrobe.length === 0 && (
+            {wardrobeItems.length === 0 && (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-violet-100 dark:bg-violet-950/30 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Sparkles className="h-8 w-8 text-violet-500" />
@@ -452,10 +477,10 @@ export default function DigitalWardrobe() {
                       <Loader2 className="h-8 w-8 animate-spin text-violet-500 mx-auto mb-4" />
                       <p className="text-slate-600 dark:text-slate-400">Loading...</p>
                     </div>
-                  ) : wardrobe && wardrobe.length > 0 ? (
+                  ) : wardrobeItems.length > 0 ? (
                     <div className="space-y-4">
                       <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {wardrobe.map((item: WardrobeItem) => (
+                        {wardrobeItems.map((item: WardrobeItem) => (
                           <div key={item.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                             <div className="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded flex items-center justify-center">
                               <span className="text-lg">👕</span>
@@ -468,7 +493,7 @@ export default function DigitalWardrobe() {
                         ))}
                       </div>
                       
-                      {wardrobe.length >= 3 && (
+                      {wardrobeItems.length >= 3 && (
                         <Button
                           onClick={() => setCurrentStep(2)}
                           className="w-full bg-violet-500 hover:bg-violet-600"
@@ -478,10 +503,10 @@ export default function DigitalWardrobe() {
                         </Button>
                       )}
                       
-                      {wardrobe.length < 3 && (
+                      {wardrobeItems.length < 3 && (
                         <div className="text-center py-4">
                           <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Add {3 - wardrobe.length} more items to start AI analysis
+                            Add {3 - wardrobeItems.length} more items to start AI analysis
                           </p>
                         </div>
                       )}
