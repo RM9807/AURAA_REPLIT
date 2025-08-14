@@ -20,9 +20,13 @@ import {
   Sparkles,
   TrendingUp,
   Heart,
-  ShoppingBag
+  ShoppingBag,
+  Image as ImageIcon,
+  Loader2
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from '@uppy/core';
 
 interface WardrobeItem {
   id: number;
@@ -60,6 +64,7 @@ interface UploadFormData {
   season: string;
   notes: string;
   imageFile: File | null;
+  imageUrl?: string;
 }
 
 export default function WardrobeDigitizer() {
@@ -73,7 +78,8 @@ export default function WardrobeDigitizer() {
     brand: '',
     season: '',
     notes: '',
-    imageFile: null
+    imageFile: null,
+    imageUrl: ''
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
@@ -96,7 +102,10 @@ export default function WardrobeDigitizer() {
       return await apiRequest(`/api/users/${userId}/wardrobe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(itemData),
+        body: JSON.stringify({
+          ...itemData,
+          imageUrl: itemData.imageUrl || null
+        }),
       });
     },
     onSuccess: () => {
@@ -110,71 +119,89 @@ export default function WardrobeDigitizer() {
         brand: '',
         season: '',
         notes: '',
-        imageFile: null
+        imageFile: null,
+        imageUrl: ''
       });
     },
   });
 
-  const analyzeWardrobeMutation = useMutation({
-    mutationFn: async () => {
-      setIsAnalyzing(true);
-      // Simulate AI analysis process
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Mock AI analysis results
-      const analysisResults = wardrobe?.map((item: WardrobeItem) => {
-        const styleAlignment = Math.floor(Math.random() * 40) + 60; // 60-100
-        const colorMatch = Math.floor(Math.random() * 30) + 70; // 70-100
-        const recommendations = ['keep', 'alter', 'donate'];
-        const recommendation = recommendations[Math.floor(Math.random() * recommendations.length)] as 'keep' | 'alter' | 'donate';
-        
-        const reasons = {
-          keep: [
-            "Perfect color match for your skin tone",
-            "Excellent fit for your body type",
-            "Aligns perfectly with your style DNA",
-            "Versatile piece that works for multiple occasions"
-          ],
-          alter: [
-            "Great style match but could use better fit",
-            "Perfect color but needs tailoring for optimal silhouette",
-            "Good piece that would benefit from hemming",
-            "Nice item that would look better with minor adjustments"
-          ],
-          donate: [
-            "This color washes out your skin tone",
-            "The cut doesn't flatter your shoulder line",
-            "Style doesn't align with your personal aesthetic",
-            "Poor fit that can't be easily altered"
-          ]
-        };
-        
-        return {
-          ...item,
-          aiAnalysis: {
-            styleAlignment,
-            colorMatch,
-            fitAssessment: recommendation === 'keep' ? 'Excellent' : recommendation === 'alter' ? 'Good with adjustments' : 'Poor fit',
-            recommendation,
-            reason: reasons[recommendation][Math.floor(Math.random() * reasons[recommendation].length)]
-          }
-        };
-      });
-      
-      return analysisResults;
-    },
-    onSuccess: () => {
-      setIsAnalyzing(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'wardrobe'] });
-    },
-  });
+  // Handle image upload and processing
+  const handleGetUploadParameters = async () => {
+    const response = await apiRequest('/api/objects/upload', {
+      method: 'POST',
+    });
+    return {
+      method: 'PUT' as const,
+      url: response.uploadURL,
+    };
+  };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setUploadForm(prev => ({ ...prev, imageFile: file }));
+  const handleImageUploadComplete = async (result: UploadResult) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const imageURL = uploadedFile.uploadURL;
+      
+      // Process the uploaded image URL
+      try {
+        const response = await apiRequest('/api/wardrobe-images', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageURL }),
+        });
+        
+        // Update the form with the processed image path
+        setUploadForm(prev => ({
+          ...prev,
+          imageUrl: response.objectPath
+        }));
+      } catch (error) {
+        console.error('Error processing uploaded image:', error);
+      }
     }
   };
+
+  const analyzeWardrobeMutation = useMutation({
+    mutationFn: async ({ ethnicity, culturalBackground, region }: { 
+      ethnicity?: string; 
+      culturalBackground?: string; 
+      region?: string; 
+    } = {}) => {
+      setIsAnalyzing(true);
+      
+      // Call the real AI analysis endpoint with cultural context
+      const response = await apiRequest(`/api/users/${userId}/wardrobe/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ethnicity: ethnicity || '',
+          culturalBackground: culturalBackground || '',
+          region: region || ''
+        }),
+      });
+      
+      setAnalysisResults(response.itemAnalysis || []);
+      setIsAnalyzing(false);
+      return response;
+    },
+    onError: (error) => {
+      console.error('AI analysis failed:', error);
+      setIsAnalyzing(false);
+    }
+  });
+  
+  // Helper function to trigger analysis with cultural context
+  const handleAnalyzeWardrobe = (culturalData?: { ethnicity?: string; culturalBackground?: string; region?: string }) => {
+    analyzeWardrobeMutation.mutate(culturalData);
+  };
+
+  // Cultural context state for AI analysis
+  const [culturalContext, setCulturalContext] = useState({
+    ethnicity: '',
+    culturalBackground: '',
+    region: ''
+  });
+
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -330,29 +357,33 @@ export default function WardrobeDigitizer() {
                     
                     <div className="space-y-2">
                       <Label htmlFor="image">Upload Photo</Label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        <input
-                          type="file"
-                          id="image"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                        <label htmlFor="image" className="cursor-pointer">
-                          <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                          <p className="text-sm text-gray-600">
-                            Click to upload or drag and drop
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            PNG, JPG, GIF up to 10MB
-                          </p>
-                        </label>
-                        {uploadForm.imageFile && (
-                          <p className="mt-2 text-sm text-green-600">
-                            {uploadForm.imageFile.name}
-                          </p>
+                      <div className="flex items-center gap-4">
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={10485760}
+                          onGetUploadParameters={handleGetUploadParameters}
+                          onComplete={handleImageUploadComplete}
+                          buttonClassName="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                        >
+                          <Camera className="h-4 w-4 mr-2" />
+                          Upload Photo
+                        </ObjectUploader>
+                        {uploadForm.imageUrl && (
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="h-4 w-4 text-green-600" />
+                            <span className="text-sm text-green-600">Photo uploaded successfully</span>
+                          </div>
                         )}
                       </div>
+                      {uploadForm.imageUrl && (
+                        <div className="mt-2">
+                          <img 
+                            src={uploadForm.imageUrl} 
+                            alt="Preview" 
+                            className="w-32 h-32 object-cover rounded-lg border"
+                          />
+                        </div>
+                      )}
                     </div>
                     
                     <div className="space-y-2">
@@ -388,7 +419,7 @@ export default function WardrobeDigitizer() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {wardrobe?.map((item: WardrobeItem) => (
+                {wardrobeItems?.map((item: WardrobeItem) => (
                   <Card key={item.id} className="overflow-hidden">
                     <div className="aspect-square bg-gray-100 flex items-center justify-center">
                       {item.imageUrl ? (
@@ -418,7 +449,7 @@ export default function WardrobeDigitizer() {
                 ))}
               </div>
               
-              {(!wardrobe || wardrobeItems.length === 0) && (
+              {(!wardrobe || wardrobe.length === 0) && (
                 <div className="text-center py-12">
                   <Camera className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -462,14 +493,59 @@ export default function WardrobeDigitizer() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm">Cultural Context (Optional)</CardTitle>
+                          <CardDescription className="text-xs">
+                            Help our AI provide more culturally-aware styling recommendations
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="ethnicity" className="text-xs">Ethnicity</Label>
+                              <Input
+                                id="ethnicity"
+                                value={culturalContext.ethnicity}
+                                onChange={(e) => setCulturalContext(prev => ({ ...prev, ethnicity: e.target.value }))}
+                                placeholder="e.g., South Asian, African American"
+                                className="text-sm"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="culturalBackground" className="text-xs">Cultural Background</Label>
+                              <Input
+                                id="culturalBackground"
+                                value={culturalContext.culturalBackground}
+                                onChange={(e) => setCulturalContext(prev => ({ ...prev, culturalBackground: e.target.value }))}
+                                placeholder="e.g., Indian, Nigerian, Mexican"
+                                className="text-sm"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="region" className="text-xs">Region</Label>
+                              <Input
+                                id="region"
+                                value={culturalContext.region}
+                                onChange={(e) => setCulturalContext(prev => ({ ...prev, region: e.target.value }))}
+                                placeholder="e.g., US West Coast, London"
+                                className="text-sm"
+                              />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
                       <Button 
-                        onClick={() => analyzeWardrobeMutation.mutate()}
+                        onClick={() => handleAnalyzeWardrobe(culturalContext)}
                         disabled={analyzeWardrobeMutation.isPending || isAnalyzing}
                         className="w-full bg-gradient-purple-pink text-white"
                       >
                         <Sparkles className="h-4 w-4 mr-2" />
-                        {analyzeWardrobeMutation.isPending || isAnalyzing ? 'Analyzing Wardrobe...' : 'Analyze My Wardrobe'}
+                        {analyzeWardrobeMutation.isPending || isAnalyzing ? 'Analyzing Wardrobe...' : 'Start AI Analysis'}
                       </Button>
                       
                       {isAnalyzing && (
@@ -479,7 +555,7 @@ export default function WardrobeDigitizer() {
                         </div>
                       )}
                       
-                      {wardrobe?.some((item: WardrobeItem) => item.aiAnalysis) && (
+                      {analysisResults && analysisResults.length > 0 && (
                         <div className="space-y-6">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {['keep', 'alter', 'donate'].map((recommendation) => (
@@ -492,17 +568,17 @@ export default function WardrobeDigitizer() {
                                 </CardHeader>
                                 <CardContent>
                                   <div className="space-y-2">
-                                    {wardrobe?.filter((item: WardrobeItem) => item.aiAnalysis?.recommendation === recommendation)
-                                      .map((item: WardrobeItem) => (
+                                    {analysisResults?.filter((item: any) => item.recommendation === recommendation)
+                                      .map((item: any) => (
                                       <div key={item.id} className="p-3 border rounded-lg">
                                         <div className="flex justify-between items-start mb-2">
                                           <h4 className="font-medium text-sm">{item.itemName}</h4>
                                           <Badge variant="outline" className="text-xs">
-                                            {item.aiAnalysis?.styleAlignment}% match
+                                            {item.styleAlignment}% match
                                           </Badge>
                                         </div>
                                         <p className="text-xs text-gray-600 mb-1">
-                                          {item.aiAnalysis?.reason}
+                                          {item.reason}
                                         </p>
                                         <div className="flex gap-1">
                                           <Badge variant="secondary" className="text-xs">{item.category}</Badge>

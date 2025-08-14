@@ -125,23 +125,50 @@ export interface WardrobeAnalysisResult {
   };
 }
 
+// Enhanced wardrobe analysis with cultural context and category-specific insights
 export async function analyzeWardrobe(
   items: WardrobeItem[], 
-  userProfile: StyleAnalysisInput
+  userProfile: StyleAnalysisInput & { 
+    ethnicity?: string; 
+    culturalBackground?: string; 
+    region?: string;
+  }
 ): Promise<WardrobeAnalysisResult> {
   try {
     const itemDescriptions = items.map(item => ({
       id: item.id,
       name: item.itemName,
-      category: item.category,
-      color: item.color,
+      category: item.category.toLowerCase(),
+      color: item.color || 'not specified',
       pattern: item.pattern || 'solid',
       material: item.material || 'unknown',
       brand: item.brand || 'unspecified',
       season: item.season || 'all-season'
     }));
 
-    const prompt = `Expert wardrobe consultant with 15+ years experience. Analyze this ${userProfile.gender}'s wardrobe for style optimization and decluttering guidance.
+    // Category-specific analysis guidelines
+    const getCategoryGuidelines = (category: string) => {
+      const guidelines = {
+        'tops': 'Focus on fit at shoulders, bust/chest, and waist. Consider neckline flattery, sleeve length, and torso proportions.',
+        'bottoms': 'Analyze fit at waist, hips, thighs, and length. Consider rise (high/low waist), leg cut, and proportional balance.',
+        'dresses': 'Evaluate overall silhouette, waist definition, length, and how it complements body shape. Consider occasion appropriateness.',
+        'outerwear': 'Focus on shoulder fit, arm movement, layering potential, and seasonal appropriateness.',
+        'shoes': 'Consider heel height, foot support, occasion suitability, and how they complement leg line and outfits.',
+        'accessories': 'Evaluate how they enhance outfits, complement face shape/proportions, and align with personal style.'
+      };
+      return guidelines[category] || 'Evaluate overall fit, style alignment, and versatility.';
+    };
+
+    const culturalContext = userProfile.ethnicity || userProfile.culturalBackground 
+      ? `
+CULTURAL CONTEXT:
+- Ethnicity/Background: ${userProfile.ethnicity || userProfile.culturalBackground || 'Not specified'}
+- Region: ${userProfile.region || 'Not specified'}
+
+IMPORTANT: Consider cultural fashion preferences, traditional silhouettes, color significance, and appropriate styling for the user's cultural context. Respect cultural dress codes and traditional aesthetics while providing modern styling advice.`
+      : '';
+
+    const prompt = `Expert international fashion stylist with 15+ years experience across diverse cultures and body types. Analyze this ${userProfile.gender}'s wardrobe with category-specific expertise and cultural awareness.
 
 USER PROFILE:
 - Gender: ${userProfile.gender}
@@ -153,19 +180,29 @@ USER PROFILE:
 - Style Goals: ${userProfile.goals.join(', ')}
 - Preferred Colors: ${userProfile.colorPreferences.join(', ')}
 - Color Avoidances: ${userProfile.colorAvoidances.join(', ')}
-- Occasions: ${userProfile.occasions.join(', ')}
+- Occasions: ${userProfile.occasions.join(', ')}${culturalContext}
 
 WARDROBE INVENTORY (${items.length} items):
 ${JSON.stringify(itemDescriptions, null, 2)}
 
-ANALYSIS INSTRUCTIONS:
-1. Evaluate each item for style alignment, color match, versatility, and quality
-2. Give specific keep/alter/donate recommendations with clear reasoning
-3. Identify wardrobe gaps and priority purchases
-4. Provide organization and budgeting strategies
+CATEGORY-SPECIFIC ANALYSIS GUIDELINES:
+${itemDescriptions.map(item => `${item.category.toUpperCase()}: ${getCategoryGuidelines(item.category)}`).join('\n')}
+
+CRITICAL ANALYSIS REQUIREMENTS:
+1. BE CATEGORY-SPECIFIC: Tailor recommendations to each clothing category
+   - Tops: Focus on shoulder fit, neckline, torso flattery
+   - Bottoms: Analyze waist fit, hip flattery, leg proportions, rise
+   - Dresses: Consider overall silhouette and body shape harmony
+   - Outerwear: Evaluate layering and seasonal functionality
+   - Shoes: Consider heel height, leg line, occasion appropriateness
+   - Accessories: Focus on face/body complement and style cohesion
+
+2. CULTURAL SENSITIVITY: Respect cultural preferences and traditional aesthetics
+3. ACCURATE FIT ASSESSMENT: Give realistic fit evaluations based on category
+4. PRACTICAL RECOMMENDATIONS: Provide actionable advice specific to each item type
 
 Score items 1-100 on style alignment, color match, versatility, and quality.
-Be practical and goal-focused in recommendations.
+Be culturally aware, category-specific, and goal-focused in recommendations.
 
 Respond in this EXACT JSON format:
 {

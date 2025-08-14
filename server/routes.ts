@@ -279,6 +279,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Object storage routes for wardrobe images
+  app.get('/objects/:objectPath(*)', async (req, res) => {
+    const { ObjectStorageService, ObjectNotFoundError } = await import('./objectStorage.js');
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error accessing object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  app.post('/api/objects/upload', async (req, res) => {
+    const { ObjectStorageService } = await import('./objectStorage.js');
+    const objectStorageService = new ObjectStorageService();
+    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+    res.json({ uploadURL });
+  });
+
+  app.put('/api/wardrobe-images', async (req, res) => {
+    if (!req.body.imageURL) {
+      return res.status(400).json({ error: "imageURL is required" });
+    }
+
+    try {
+      const { ObjectStorageService } = await import('./objectStorage.js');
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(req.body.imageURL);
+
+      res.status(200).json({ objectPath });
+    } catch (error) {
+      console.error("Error processing wardrobe image:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // AI-powered wardrobe analysis
   app.post('/api/users/:id/wardrobe/analyze', async (req, res) => {
     try {
@@ -314,7 +354,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         budget: profile.budget || 'moderate',
         colorPreferences: Array.isArray(profile.colorPreferences) ? profile.colorPreferences : ['navy', 'white', 'black'],
         colorAvoidances: Array.isArray(profile.colorAvoidances) ? profile.colorAvoidances : [],
-        goals: Array.isArray(profile.goals) ? profile.goals : ['look put-together', 'feel confident']
+        goals: Array.isArray(profile.goals) ? profile.goals : ['look put-together', 'feel confident'],
+        // Add cultural context from request body or profile
+        ethnicity: req.body.ethnicity || (profile as any).ethnicity,
+        culturalBackground: req.body.culturalBackground || (profile as any).culturalBackground,
+        region: req.body.region || (profile as any).region
       };
 
       // Import AI analysis function
