@@ -83,11 +83,16 @@ export default function WardrobeDigitizer() {
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
-  const userId = 1;
+  // Get authenticated user
+  const { data: authUser } = useQuery({
+    queryKey: ['/api/auth/user'],
+  });
+  const userId = authUser?.id;
   const queryClient = useQueryClient();
 
   const { data: wardrobe, isLoading } = useQuery({
     queryKey: ['/api/users', userId, 'wardrobe'],
+    enabled: !!userId,
   });
 
   // Type the wardrobe data properly
@@ -95,10 +100,13 @@ export default function WardrobeDigitizer() {
 
   const { data: profile } = useQuery({
     queryKey: ['/api/users', userId, 'profile'],
+    enabled: !!userId,
   });
 
   const uploadItemMutation = useMutation({
     mutationFn: async (itemData: Omit<UploadFormData, 'imageFile'>) => {
+      if (!userId) throw new Error('User not authenticated');
+      
       return await apiRequest(`/api/users/${userId}/wardrobe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -231,6 +239,40 @@ export default function WardrobeDigitizer() {
     region: ''
   });
 
+  // State for analysis results
+  const [analysisResults, setAnalysisResults] = useState<any[]>([]);
+  
+  // Helper functions for recommendation styling
+  const getRecommendationColor = (recommendation: string) => {
+    switch (recommendation?.toLowerCase()) {
+      case 'keep':
+        return 'bg-green-100 text-green-800';
+      case 'donate':
+      case 'consider donating':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'discard':
+      case 'remove':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRecommendationIcon = (recommendation: string) => {
+    switch (recommendation?.toLowerCase()) {
+      case 'keep':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'donate':
+      case 'consider donating':
+        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+      case 'discard':
+      case 'remove':
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -243,23 +285,7 @@ export default function WardrobeDigitizer() {
     uploadItemMutation.mutate(itemData);
   };
 
-  const getRecommendationColor = (recommendation: string) => {
-    switch (recommendation) {
-      case 'keep': return 'bg-green-100 text-green-800';
-      case 'alter': return 'bg-yellow-100 text-yellow-800';
-      case 'donate': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
-  const getRecommendationIcon = (recommendation: string) => {
-    switch (recommendation) {
-      case 'keep': return <CheckCircle className="h-4 w-4" />;
-      case 'alter': return <AlertCircle className="h-4 w-4" />;
-      case 'donate': return <XCircle className="h-4 w-4" />;
-      default: return null;
-    }
-  };
 
   return (
     <div className="space-y-6">
