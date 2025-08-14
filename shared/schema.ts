@@ -83,6 +83,7 @@ export const wardrobe = pgTable("wardrobe", {
   isFavorite: boolean("is_favorite").default(false),
   wearCount: integer("wear_count").default(0),
   lastWorn: timestamp("last_worn"),
+  aiAnalysis: jsonb("ai_analysis"), // Store AI analysis results
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

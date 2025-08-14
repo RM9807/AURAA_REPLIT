@@ -291,18 +291,30 @@ export default function DigitalWardrobe() {
   ];
 
   const keepItems = wardrobeItems.filter(item => {
-    const analysis = item.aiAnalysis || generateMockAnalysis(item);
-    return analysis.recommendation === 'keep' || declutterDecisions[item.id] === 'keep';
+    if (declutterDecisions[item.id]) {
+      return declutterDecisions[item.id] === 'keep';
+    }
+    // Use actual AI analysis data if available
+    const recommendation = item.aiAnalysis?.recommendation?.toLowerCase();
+    return recommendation === 'keep';
   });
   
   const alterItems = wardrobeItems.filter(item => {
-    const analysis = item.aiAnalysis || generateMockAnalysis(item);
-    return analysis.recommendation === 'alter' || declutterDecisions[item.id] === 'alter';
+    if (declutterDecisions[item.id]) {
+      return declutterDecisions[item.id] === 'alter';
+    }
+    // Use actual AI analysis data if available  
+    const recommendation = item.aiAnalysis?.recommendation?.toLowerCase();
+    return recommendation === 'alter' || recommendation === 'consider donating';
   });
   
   const donateItems = wardrobeItems.filter(item => {
-    const analysis = item.aiAnalysis || generateMockAnalysis(item);
-    return analysis.recommendation === 'donate' || declutterDecisions[item.id] === 'donate';
+    if (declutterDecisions[item.id]) {
+      return declutterDecisions[item.id] === 'donate';
+    }
+    // Use actual AI analysis data if available
+    const recommendation = item.aiAnalysis?.recommendation?.toLowerCase();
+    return recommendation === 'donate' || recommendation === 'discard' || recommendation === 'remove';
   });
 
   return (
@@ -656,7 +668,7 @@ export default function DigitalWardrobe() {
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.itemName}</p>
                           <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                            {generateMockAnalysis(item).reason}
+                            {item.aiAnalysis?.reason || "Perfect style match"}
                           </p>
                         </div>
                       </div>
@@ -686,7 +698,7 @@ export default function DigitalWardrobe() {
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.itemName}</p>
                           <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                            {generateMockAnalysis(item).reason}
+                            {item.aiAnalysis?.reason || "Needs minor adjustments"}
                           </p>
                         </div>
                       </div>
@@ -716,7 +728,7 @@ export default function DigitalWardrobe() {
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.itemName}</p>
                           <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                            {generateMockAnalysis(item).reason}
+                            {item.aiAnalysis?.reason || "Doesn't align with your style"}
                           </p>
                         </div>
                       </div>
@@ -751,9 +763,9 @@ export default function DigitalWardrobe() {
             </div>
 
             <div className="space-y-4">
-              {wardrobe?.map((item: WardrobeItem) => {
-                const analysis = generateMockAnalysis(item);
-                const currentDecision = declutterDecisions[item.id] || analysis.recommendation;
+              {wardrobeItems.map((item: WardrobeItem) => {
+                const analysis = item.aiAnalysis;
+                const currentDecision = declutterDecisions[item.id] || analysis?.recommendation?.toLowerCase() || 'keep';
                 
                 return (
                   <Card key={item.id}>
@@ -765,7 +777,7 @@ export default function DigitalWardrobe() {
                         <div className="flex-1">
                           <h3 className="font-semibold">{item.itemName}</h3>
                           <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{item.category} • {item.color}</p>
-                          <p className="text-sm text-slate-700 dark:text-slate-300">{analysis.reason}</p>
+                          <p className="text-sm text-slate-700 dark:text-slate-300">{analysis?.reason || "AI analysis recommendations"}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button
