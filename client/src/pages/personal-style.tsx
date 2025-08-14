@@ -67,7 +67,11 @@ export default function PersonalStyle() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const queryClient = useQueryClient();
-  const userId = 1; // Get from auth context
+  // Get authenticated user
+  const { data: authUser } = useQuery({
+    queryKey: ['/api/auth/user'],
+  });
+  const userId = (authUser as any)?.id; // Get from auth context
 
   const createProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {

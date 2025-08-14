@@ -17,7 +17,11 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("wardrobe");
   const [, setLocation] = useLocation();
 
-  const userId = 1; // Demo user ID
+  // Get authenticated user
+  const { data: authUser } = useQuery({
+    queryKey: ['/api/auth/user'],
+  });
+  const userId = (authUser as any)?.id;
 
   // Type definitions
   interface User {

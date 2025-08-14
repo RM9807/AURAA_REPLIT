@@ -41,10 +41,15 @@ function calculateCompletionScore(profile?: UserProfile, analytics?: UserAnalyti
 
 export default function ProfileDiagnosis() {
   const [, setLocation] = useLocation();
-  const userId = 1;
+  // Get authenticated user
+  const { data: authUser } = useQuery({
+    queryKey: ['/api/auth/user'],
+  });
+  const userId = (authUser as any)?.id;
 
   const { data: profile } = useQuery<UserProfile>({
     queryKey: ['/api/users', userId, 'profile'],
+    enabled: !!userId,
   });
 
   const { data: analytics } = useQuery<UserAnalytics>({

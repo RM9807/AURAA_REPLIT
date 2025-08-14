@@ -83,11 +83,16 @@ export default function OutfitCombinationAI() {
   });
   const [isGenerating, setIsGenerating] = useState(false);
   
-  const userId = 1;
+  // Get authenticated user
+  const { data: authUser } = useQuery({
+    queryKey: ['/api/auth/user'],
+  });
+  const userId = (authUser as any)?.id;
   const queryClient = useQueryClient();
 
   const { data: outfitSuggestions, isLoading: suggestionsLoading } = useQuery<OutfitSuggestion[]>({
     queryKey: ['/api/users', userId, 'outfit-suggestions'],
+    enabled: !!userId,
   });
 
   const { data: wardrobe } = useQuery({

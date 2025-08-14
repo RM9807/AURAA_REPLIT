@@ -232,7 +232,7 @@ export default function PersonalStyleDiagnosis() {
         const base64Image = await base64Promise;
         
         // Analyze photo for color recommendations
-        const photoAnalysisResponse = await fetch(`/api/users/1/analyze-photos`, {
+        const photoAnalysisResponse = await fetch(`/api/users/${userId}/analyze-photos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ imageData: base64Image })
@@ -247,7 +247,7 @@ export default function PersonalStyleDiagnosis() {
       }
 
       // Call OpenAI Style Analysis API
-      const analysisResponse = await fetch(`/api/users/1/analyze-style`, {
+      const analysisResponse = await fetch(`/api/users/${userId}/analyze-style`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(analysisInput)

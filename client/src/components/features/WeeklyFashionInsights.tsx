@@ -27,11 +27,16 @@ interface FashionInsight {
 }
 
 export default function WeeklyFashionInsights() {
-  const userId = 1;
+  // Get authenticated user
+  const { data: authUser } = useQuery({
+    queryKey: ['/api/auth/user'],
+  });
+  const userId = (authUser as any)?.id;
   const queryClient = useQueryClient();
 
   const { data: insights } = useQuery({
     queryKey: ['/api/users', userId, 'fashion-insights'],
+    enabled: !!userId,
   });
 
   const generateInsightsMutation = useMutation({
