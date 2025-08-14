@@ -323,6 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/users/:id/wardrobe/analyze', async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
+      const { itemIds } = req.body; // Optional: specific item IDs to analyze
       
       // Get user's wardrobe and profile
       const wardrobe = await storage.getUserWardrobe(userId);
@@ -338,6 +339,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ 
           message: "Please add items to your wardrobe before analyzing." 
         });
+      }
+
+      // Filter items to analyze (only unanalyzed items if itemIds provided)
+      let itemsToAnalyze = wardrobe;
+      if (itemIds && Array.isArray(itemIds)) {
+        itemsToAnalyze = wardrobe.filter(item => itemIds.includes(item.id));
+      }
+
+      if (itemsToAnalyze.length === 0) {
+        // Return existing analysis results for already analyzed items
+        const existingAnalysis = wardrobe
+          .filter(item => item.aiAnalysis)
+          .map(item => ({
+            id: item.id,
+            itemName: item.itemName,
+            category: item.category,
+            color: item.color,
+            recommendation: item.aiAnalysis?.recommendation || 'keep',
+            reason: item.aiAnalysis?.reason || 'Previously analyzed',
+            styleAlignment: item.aiAnalysis?.styleAlignment || 85
+          }));
+        
+        return res.json({ itemAnalysis: existingAnalysis });
       }
 
       // Convert profile to the format expected by AI analysis
@@ -364,8 +388,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import AI analysis function
       const { analyzeWardrobe } = await import('./ai-analysis.js');
       
-      // Run AI analysis
-      const analysisResult = await analyzeWardrobe(wardrobe, styleInput);
+      // Run AI analysis on specific items
+      const analysisResult = await analyzeWardrobe(itemsToAnalyze, styleInput);
+      
+      // Update wardrobe items with AI analysis results in database
+      if (analysisResult.itemAnalysis) {
+        for (const analysis of analysisResult.itemAnalysis) {
+          await storage.updateWardrobeItem(analysis.id, {
+            aiAnalysis: {
+              styleAlignment: analysis.styleAlignment,
+              colorMatch: analysis.colorMatch || 85,
+              fitAssessment: analysis.fitAssessment || 'Good',
+              recommendation: analysis.recommendation,
+              reason: analysis.reason
+            }
+          });
+        }
+      }
       
       res.json(analysisResult);
     } catch (error) {

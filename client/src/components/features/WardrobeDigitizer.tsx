@@ -166,26 +166,56 @@ export default function WardrobeDigitizer() {
       culturalBackground?: string; 
       region?: string; 
     } = {}) => {
-      setIsAnalyzing(true);
+      // Filter out items that already have AI analysis
+      const unanalyzedItems = wardrobeItems?.filter((item: WardrobeItem) => !item.aiAnalysis) || [];
       
-      // Call the real AI analysis endpoint with cultural context
+      if (unanalyzedItems.length === 0) {
+        // If all items are already analyzed, just return existing results
+        const alreadyAnalyzed = wardrobeItems?.filter((item: WardrobeItem) => item.aiAnalysis) || [];
+        setAnalysisResults(alreadyAnalyzed.map(item => ({
+          id: item.id,
+          itemName: item.itemName,
+          category: item.category,
+          color: item.color,
+          recommendation: item.aiAnalysis?.recommendation || 'keep',
+          reason: item.aiAnalysis?.reason || 'Previously analyzed',
+          styleAlignment: item.aiAnalysis?.styleAlignment || 85
+        })));
+        return { itemAnalysis: analysisResults };
+      }
+
+      // Call the real AI analysis endpoint with cultural context for unanalyzed items only
       const response = await apiRequest(`/api/users/${userId}/wardrobe/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ethnicity: ethnicity || '',
           culturalBackground: culturalBackground || '',
-          region: region || ''
+          region: region || '',
+          itemIds: unanalyzedItems.map((item: WardrobeItem) => item.id) // Only analyze new items
         }),
       });
       
-      setAnalysisResults(response.itemAnalysis || []);
-      setIsAnalyzing(false);
-      return response;
+      // Combine existing analyzed items with new analysis
+      const existingAnalyzed = wardrobeItems?.filter((item: WardrobeItem) => item.aiAnalysis).map(item => ({
+        id: item.id,
+        itemName: item.itemName,
+        category: item.category,
+        color: item.color,
+        recommendation: item.aiAnalysis?.recommendation || 'keep',
+        reason: item.aiAnalysis?.reason || 'Previously analyzed',
+        styleAlignment: item.aiAnalysis?.styleAlignment || 85
+      })) || [];
+
+      const allResults = [...existingAnalyzed, ...(response.itemAnalysis || [])];
+      setAnalysisResults(allResults);
+      return { itemAnalysis: allResults };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'wardrobe'] });
     },
     onError: (error) => {
       console.error('AI analysis failed:', error);
-      setIsAnalyzing(false);
     }
   });
   
@@ -413,14 +443,26 @@ export default function WardrobeDigitizer() {
             <TabsContent value="inventory" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Your Digital Closet</h3>
-                <Badge variant="outline">
-                  {wardrobe?.length || 0} items
-                </Badge>
+                <div className="flex gap-2">
+                  <Badge variant="outline">
+                    {wardrobeItems?.length || 0} items
+                  </Badge>
+                  {wardrobeItems?.some(item => item.aiAnalysis) && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      {wardrobeItems?.filter(item => item.aiAnalysis).length} analyzed
+                    </Badge>
+                  )}
+                </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {wardrobeItems?.map((item: WardrobeItem) => (
-                  <Card key={item.id} className="overflow-hidden">
+                  <Card key={item.id} className="overflow-hidden relative">
+                    {item.aiAnalysis && (
+                      <div className={`absolute top-2 right-2 z-10 p-1 rounded-full ${getRecommendationColor(item.aiAnalysis.recommendation)}`}>
+                        {getRecommendationIcon(item.aiAnalysis.recommendation)}
+                      </div>
+                    )}
                     <div className="aspect-square bg-gray-100 flex items-center justify-center">
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt={item.itemName} className="w-full h-full object-cover" />
@@ -437,7 +479,19 @@ export default function WardrobeDigitizer() {
                         <Badge variant="secondary">{item.category}</Badge>
                         <Badge variant="outline">{item.color}</Badge>
                         {item.brand && <Badge variant="outline">{item.brand}</Badge>}
+                        {item.aiAnalysis && (
+                          <Badge className={`text-xs ${getRecommendationColor(item.aiAnalysis.recommendation)}`}>
+                            AI: {item.aiAnalysis.recommendation}
+                          </Badge>
+                        )}
                       </div>
+                      {item.aiAnalysis && (
+                        <div className="text-xs text-gray-600 mb-2 bg-gray-50 p-2 rounded">
+                          <p className="font-medium">AI Analysis:</p>
+                          <p>{item.aiAnalysis.styleAlignment}% style match</p>
+                          <p className="italic">"{item.aiAnalysis.reason}"</p>
+                        </div>
+                      )}
                       <div className="text-sm text-gray-600">
                         <p>Worn {item.wearCount || 0} times</p>
                         {item.lastWorn && (
@@ -449,7 +503,7 @@ export default function WardrobeDigitizer() {
                 ))}
               </div>
               
-              {(!wardrobe || wardrobe.length === 0) && (
+              {(!wardrobeItems || wardrobeItems.length === 0) && (
                 <div className="text-center py-12">
                   <Camera className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -541,17 +595,26 @@ export default function WardrobeDigitizer() {
                       
                       <Button 
                         onClick={() => handleAnalyzeWardrobe(culturalContext)}
-                        disabled={analyzeWardrobeMutation.isPending || isAnalyzing}
+                        disabled={analyzeWardrobeMutation.isPending}
                         className="w-full bg-gradient-purple-pink text-white"
                       >
                         <Sparkles className="h-4 w-4 mr-2" />
-                        {analyzeWardrobeMutation.isPending || isAnalyzing ? 'Analyzing Wardrobe...' : 'Start AI Analysis'}
+                        {analyzeWardrobeMutation.isPending 
+                          ? 'Analyzing Wardrobe...' 
+                          : wardrobeItems?.some(item => !item.aiAnalysis) 
+                            ? 'Analyze New Items' 
+                            : 'View Analysis Results'
+                        }
                       </Button>
                       
-                      {isAnalyzing && (
+                      {analyzeWardrobeMutation.isPending && (
                         <div className="text-center py-8">
                           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
                           <p className="text-gray-600">AI is analyzing your wardrobe...</p>
+                          <div className="mt-4 bg-gray-200 rounded-full h-2 max-w-xs mx-auto">
+                            <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full animate-pulse" style={{ width: '75%' }}></div>
+                          </div>
+                          <p className="text-sm text-gray-500 mt-2">This usually takes 10-15 seconds</p>
                         </div>
                       )}
                       
