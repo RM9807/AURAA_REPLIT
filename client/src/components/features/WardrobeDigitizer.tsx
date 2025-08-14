@@ -596,25 +596,66 @@ export default function WardrobeDigitizer() {
                       <Button 
                         onClick={() => handleAnalyzeWardrobe(culturalContext)}
                         disabled={analyzeWardrobeMutation.isPending}
-                        className="w-full bg-gradient-purple-pink text-white"
+                        className="w-full bg-gradient-purple-pink text-white disabled:opacity-75"
                       >
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        {analyzeWardrobeMutation.isPending 
-                          ? 'Analyzing Wardrobe...' 
-                          : wardrobeItems?.some(item => !item.aiAnalysis) 
-                            ? 'Analyze New Items' 
-                            : 'View Analysis Results'
-                        }
+                        {analyzeWardrobeMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Processing Analysis...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            {wardrobeItems?.some(item => !item.aiAnalysis) 
+                              ? 'Begin Analysis' 
+                              : 'View Analysis Results'
+                            }
+                          </>
+                        )}
                       </Button>
                       
                       {analyzeWardrobeMutation.isPending && (
                         <div className="text-center py-8">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                          <p className="text-gray-600">AI is analyzing your wardrobe...</p>
-                          <div className="mt-4 bg-gray-200 rounded-full h-2 max-w-xs mx-auto">
-                            <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full animate-pulse" style={{ width: '75%' }}></div>
+                          <div className="relative">
+                            <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mx-auto mb-6"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Sparkles className="h-6 w-6 text-purple-600 animate-pulse" />
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-500 mt-2">This usually takes 10-15 seconds</p>
+                          
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-gray-900">AI Cross-References with Your Style Profile</h3>
+                            <p className="text-gray-600">Analyzing color harmony, style alignment, and fit compatibility with your profile.</p>
+                            
+                            <div className="max-w-md mx-auto bg-gray-100 rounded-lg p-4 space-y-3">
+                              <div className="flex justify-between items-center text-sm">
+                                <span>Analysis Progress</span>
+                                <span className="font-medium">Processing...</span>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-4 h-4 rounded-full bg-purple-600 animate-pulse"></div>
+                                  <span className="text-sm">Color harmony analysis</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-4 h-4 rounded-full bg-purple-600 animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                                  <span className="text-sm">Style alignment scoring</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-4 h-4 rounded-full bg-purple-600 animate-pulse" style={{ animationDelay: '1s' }}></div>
+                                  <span className="text-sm">Fit assessment</span>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-4 bg-gray-200 rounded-full h-2">
+                                <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full animate-pulse transition-all duration-1000" 
+                                     style={{ width: '85%', animation: 'pulse 2s ease-in-out infinite' }}></div>
+                              </div>
+                            </div>
+                            
+                            <p className="text-sm text-gray-500">This usually takes 15-20 seconds</p>
+                          </div>
                         </div>
                       )}
                       
