@@ -176,14 +176,21 @@ export default function DigitalWardrobe() {
   // AI Analysis mutation
   const analyzeMutation = useMutation({
     mutationFn: async () => {
+      if (!userId) throw new Error('User not authenticated');
+      
+      setIsAnalyzing(true);
+      setAnalysisProgress(0);
+
       return await apiRequest(`/api/users/${userId}/wardrobe/analyze`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
     },
     onSuccess: (response) => {
-      const analysisResult = response.json();
       // Update wardrobe items with AI analysis results
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'wardrobe'] });
+      setIsAnalyzing(false);
+      setAnalysisProgress(100);
       toast({
         title: "Analysis Complete",
         description: "Your wardrobe has been analyzed with AI recommendations.",
@@ -191,6 +198,8 @@ export default function DigitalWardrobe() {
       setCurrentStep(3);
     },
     onError: (error: any) => {
+      setIsAnalyzing(false);
+      setAnalysisProgress(0);
       toast({
         title: "Analysis Failed",
         description: error.message || "Failed to analyze wardrobe. Please try again.",
@@ -208,6 +217,23 @@ export default function DigitalWardrobe() {
       });
       return;
     }
+    
+    // Start progress simulation
+    setIsAnalyzing(true);
+    setAnalysisProgress(10);
+    
+    // Simulate progress updates
+    const progressInterval = setInterval(() => {
+      setAnalysisProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return prev;
+        }
+        return prev + Math.random() * 10;
+      });
+    }, 2000);
+    
+    // Start actual analysis
     analyzeMutation.mutate();
   };
 
@@ -500,7 +526,7 @@ export default function DigitalWardrobe() {
                         ))}
                       </div>
                       
-                      {wardrobeItems.length >= 3 && (
+                      {wardrobeItems.length >= 1 && (
                         <Button
                           onClick={() => setCurrentStep(2)}
                           className="w-full bg-violet-500 hover:bg-violet-600"
@@ -510,10 +536,10 @@ export default function DigitalWardrobe() {
                         </Button>
                       )}
                       
-                      {wardrobeItems.length < 3 && (
+                      {wardrobeItems.length === 0 && (
                         <div className="text-center py-4">
                           <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Add {3 - wardrobeItems.length} more items to start AI analysis
+                            Add at least 1 item to start AI analysis
                           </p>
                         </div>
                       )}
@@ -576,9 +602,19 @@ export default function DigitalWardrobe() {
                     <Button
                       onClick={handleAnalyzeWardrobe}
                       className="w-full bg-violet-500 hover:bg-violet-600"
+                      disabled={analyzeMutation.isPending}
                     >
                       Begin Analysis
                     </Button>
+                  )}
+                  
+                  {isAnalyzing && (
+                    <div className="text-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-violet-500 mx-auto mb-2" />
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Analyzing your wardrobe with AI...
+                      </p>
+                    </div>
                   )}
                 </div>
               </CardContent>
