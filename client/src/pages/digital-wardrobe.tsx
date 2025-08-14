@@ -87,11 +87,16 @@ export default function DigitalWardrobe() {
   // Declutter state
   const [declutterDecisions, setDeclutterDecisions] = useState<{[key: number]: 'keep' | 'alter' | 'donate'}>({});
 
-  const userId = user?.id || 1;
+  // Get authenticated user
+  const { data: authUser } = useQuery({
+    queryKey: ['/api/auth/user'],
+  });
+  const userId = (authUser as any)?.id;
 
   // Fetch wardrobe data
   const { data: wardrobe, isLoading: wardrobeLoading } = useQuery({
     queryKey: ['/api/users', userId, 'wardrobe'],
+    enabled: !!userId,
   });
 
   // Type the wardrobe data properly
@@ -100,6 +105,8 @@ export default function DigitalWardrobe() {
   // Upload mutation - Fixed to send JSON instead of FormData
   const uploadMutation = useMutation({
     mutationFn: async (data: typeof currentUpload) => {
+      if (!userId) throw new Error('User not authenticated');
+
       const uploadData = {
         itemName: data.itemName,
         category: data.category,
