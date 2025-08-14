@@ -87,7 +87,7 @@ export default function WardrobeDigitizer() {
   const { data: authUser } = useQuery({
     queryKey: ['/api/auth/user'],
   });
-  const userId = authUser?.id;
+  const userId = (authUser as any)?.id;
   const queryClient = useQueryClient();
 
   const { data: wardrobe, isLoading } = useQuery({
@@ -95,8 +95,14 @@ export default function WardrobeDigitizer() {
     enabled: !!userId,
   });
 
-  // Type the wardrobe data properly
+  // Type the wardrobe data properly and add debugging
   const wardrobeItems = (wardrobe as WardrobeItem[]) || [];
+  
+  // Debug logging
+  console.log('Auth user:', authUser);
+  console.log('User ID:', userId);
+  console.log('Wardrobe data:', wardrobe);
+  console.log('Wardrobe items:', wardrobeItems);
 
   const { data: profile } = useQuery({
     queryKey: ['/api/users', userId, 'profile'],
@@ -144,10 +150,10 @@ export default function WardrobeDigitizer() {
     };
   };
 
-  const handleImageUploadComplete = async (result: UploadResult) => {
+  const handleImageUploadComplete = async (result: UploadResult<any, any>) => {
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
-      const imageURL = uploadedFile.uploadURL;
+      const imageURL = (uploadedFile as any).uploadURL;
       
       // Process the uploaded image URL
       try {
@@ -160,7 +166,7 @@ export default function WardrobeDigitizer() {
         // Update the form with the processed image path
         setUploadForm(prev => ({
           ...prev,
-          imageUrl: response.objectPath
+          imageUrl: (response as any).objectPath
         }));
       } catch (error) {
         console.error('Error processing uploaded image:', error);
@@ -215,7 +221,7 @@ export default function WardrobeDigitizer() {
         styleAlignment: item.aiAnalysis?.styleAlignment || 85
       })) || [];
 
-      const allResults = [...existingAnalyzed, ...(response.itemAnalysis || [])];
+      const allResults = [...existingAnalyzed, ...((response as any).itemAnalysis || [])];
       setAnalysisResults(allResults);
       return { itemAnalysis: allResults };
     },
@@ -481,8 +487,16 @@ export default function WardrobeDigitizer() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {wardrobeItems?.map((item: WardrobeItem) => (
+              {isLoading && (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-purple-600" />
+                  <p className="text-gray-600">Loading your wardrobe...</p>
+                </div>
+              )}
+              
+              {!isLoading && wardrobeItems && wardrobeItems.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {wardrobeItems.map((item: WardrobeItem) => (
                   <Card key={item.id} className="overflow-hidden relative">
                     {item.aiAnalysis && (
                       <div className={`absolute top-2 right-2 z-10 p-1 rounded-full ${getRecommendationColor(item.aiAnalysis.recommendation)}`}>
@@ -526,8 +540,25 @@ export default function WardrobeDigitizer() {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
+              
+              {!isLoading && (!wardrobeItems || wardrobeItems.length === 0) && (
+                <div className="text-center py-12">
+                  <Camera className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Your digital closet is empty
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Start building your digital wardrobe by uploading photos of your clothes
+                  </p>
+                  <Button onClick={() => setActiveTab('upload')} className="bg-gradient-purple-pink text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Item
+                  </Button>
+                </div>
+              )}
               
               {(!wardrobeItems || wardrobeItems.length === 0) && (
                 <div className="text-center py-12">
