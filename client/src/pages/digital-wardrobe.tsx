@@ -12,6 +12,8 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from '@uppy/core';
 import { 
   Upload, 
   Scan, 
@@ -82,6 +84,7 @@ export default function DigitalWardrobe() {
     season: "",
     notes: "",
     imageFile: null as File | null,
+    imageUrl: "", // Add imageUrl to store object path
   });
 
   // Declutter state
@@ -116,7 +119,7 @@ export default function DigitalWardrobe() {
         brand: data.brand || "",
         season: data.season || "",
         notes: data.notes || "",
-        imageUrl: data.imageFile ? `uploaded-${data.imageFile.name}` : "",
+        imageUrl: data.imageUrl || "",
         userId
       };
 
@@ -138,6 +141,7 @@ export default function DigitalWardrobe() {
         season: "",
         notes: "",
         imageFile: null,
+        imageUrl: "",
       });
       toast({
         title: "Item Added",
@@ -195,6 +199,51 @@ export default function DigitalWardrobe() {
     }
     
     uploadMutation.mutate(currentUpload);
+  };
+
+  // Object storage handlers
+  const handleGetUploadParameters = async () => {
+    const response = await apiRequest('/api/objects/upload', {
+      method: 'POST',
+    });
+    return {
+      method: 'PUT' as const,
+      url: response.uploadURL,
+    };
+  };
+
+  const handleImageUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful.length > 0) {
+      const uploadURL = result.successful[0].uploadURL;
+      
+      // Process the uploaded image URL to get the object path
+      apiRequest(`/api/wardrobe-images`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageURL: uploadURL }),
+      }).then((response) => {
+        const objectPath = response.objectPath;
+        
+        // Update upload form with the object path for the wardrobe item
+        setCurrentUpload(prev => ({ 
+          ...prev, 
+          imageFile: null,
+          imageUrl: objectPath, // Store the object path instead of file
+        }));
+        
+        toast({
+          title: "Image Uploaded",
+          description: "Your image has been uploaded successfully.",
+        });
+      }).catch((error) => {
+        console.error('Failed to process uploaded image:', error);
+        toast({
+          title: "Upload Error",
+          description: "Failed to process uploaded image.",
+          variant: "destructive",
+        });
+      });
+    }
   };
 
   // AI Analysis mutation
@@ -445,32 +494,33 @@ export default function DigitalWardrobe() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Photo Upload */}
-                  <div 
-                    className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-violet-400 transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {currentUpload.imageFile ? (
-                      <div className="space-y-2">
-                        <FileImage className="h-8 w-8 text-violet-500 mx-auto" />
-                        <p className="text-sm font-medium">{currentUpload.imageFile.name}</p>
-                        <p className="text-xs text-slate-500">Click to change</p>
-                      </div>
-                    ) : (
+                  {/* Photo Upload using Object Storage */}
+                  <div className="space-y-4">
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={10485760}
+                      onGetUploadParameters={handleGetUploadParameters}
+                      onComplete={handleImageUploadComplete}
+                      buttonClassName="w-full border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-violet-400 transition-colors bg-transparent"
+                    >
                       <div className="space-y-2">
                         <Upload className="h-8 w-8 text-slate-400 mx-auto" />
                         <p className="text-slate-600 dark:text-slate-400">Upload photo</p>
                         <p className="text-xs text-slate-500">PNG, JPG up to 10MB</p>
                       </div>
+                    </ObjectUploader>
+                    
+                    {/* Show preview if image uploaded */}
+                    {currentUpload.imageUrl && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm text-green-600 font-medium">Image uploaded successfully</span>
+                        </div>
+                        <p className="text-xs text-green-500 mt-1">Ready to add to wardrobe</p>
+                      </div>
                     )}
                   </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
 
                   {/* Required Fields */}
                   <div className="grid grid-cols-2 gap-4">
@@ -1028,9 +1078,30 @@ export default function DigitalWardrobe() {
                   </button>
                   
                   <div className="aspect-square bg-gray-100 flex items-center justify-center cursor-pointer relative overflow-hidden">
-                    {item.imageUrl ? (
+                    {item.imageUrl && !item.imageUrl.startsWith('uploaded-') ? (
                       <>
-                        <img src={item.imageUrl} alt={item.itemName} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                        <img 
+                          src={`/objects${item.imageUrl}`}
+                          alt={item.itemName} 
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          onError={(e) => {
+                            // Show fallback for broken images
+                            const target = e.currentTarget;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="flex flex-col items-center text-gray-400">
+                                  <svg class="h-12 w-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                  </svg>
+                                  <span class="text-sm">Image unavailable</span>
+                                </div>
+                              `;
+                            }
+                          }}
+                        />
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
                           <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
@@ -1038,7 +1109,10 @@ export default function DigitalWardrobe() {
                     ) : (
                       <div className="flex flex-col items-center text-gray-400">
                         <Camera className="h-12 w-12 mb-2" />
-                        <span className="text-sm">No image</span>
+                        <span className="text-sm text-center px-2">
+                          {item.imageUrl?.startsWith('uploaded-') ? 'Needs re-upload with object storage' : 'No image'}
+                        </span>
+                        <span className="text-xs text-gray-500 mt-1">Upload new image</span>
                       </div>
                     )}
                   </div>
