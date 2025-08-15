@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Calendar, Sun, Shirt, Heart, TrendingUp, Zap } from "lucide-react";
+import { Sparkles, Calendar, Sun, Shirt, Heart, TrendingUp, Zap, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface GeneratedOutfit {
@@ -211,56 +211,116 @@ export default function OutfitGenerator() {
   // Get recently generated outfits
   const recentOutfits = Array.isArray(existingOutfits) ? existingOutfits.slice(0, 6) : [];
 
-  const renderOutfitCard = (outfit: GeneratedOutfit) => (
-    <Card key={outfit.id} className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Shirt className="h-5 w-5 text-purple-600" />
-          {outfit.name}
-        </CardTitle>
-        <CardDescription className="text-sm">
-          {outfit.description}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex flex-wrap gap-2 mb-3">
-          <Badge variant="outline" className="text-xs">
-            {outfit.occasion}
-          </Badge>
-          {outfit.season && (
-            <Badge variant="secondary" className="text-xs">
-              {outfit.season}
-            </Badge>
-          )}
-          {outfit.mood && (
-            <Badge variant="secondary" className="text-xs">
-              {outfit.mood}
-            </Badge>
-          )}
-        </div>
-        
-        <div className="text-sm text-muted-foreground mb-2">
-          Items: {outfit.items.length} pieces from your wardrobe
-        </div>
+  const renderOutfitCard = (outfit: GeneratedOutfit) => {
+    // Get wardrobe items that match the outfit items
+    const outfitWardrobeItems = Array.isArray(wardrobeItems) 
+      ? wardrobeItems.filter(item => outfit.items.includes(item.id))
+      : [];
 
-        {outfit.reasoning && (
-          <div className="text-sm bg-muted p-3 rounded-lg mt-3">
-            <strong>Style Reasoning:</strong> {outfit.reasoning}
-          </div>
-        )}
-
-        {outfit.tags && outfit.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-3">
-            {outfit.tags.map((tag, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {tag}
+    return (
+      <Card key={outfit.id} className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Shirt className="h-5 w-5 text-purple-600" />
+            {outfit.name}
+          </CardTitle>
+          <CardDescription className="text-sm">
+            {outfit.description}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Badge variant="outline" className="text-xs">
+              {outfit.occasion}
+            </Badge>
+            {outfit.season && (
+              <Badge variant="secondary" className="text-xs">
+                {outfit.season}
               </Badge>
-            ))}
+            )}
+            {outfit.mood && (
+              <Badge variant="secondary" className="text-xs">
+                {outfit.mood}
+              </Badge>
+            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+          
+          {/* Display outfit items with images */}
+          <div className="mb-4">
+            <h4 className="font-medium text-sm mb-3">Outfit Items ({outfitWardrobeItems.length} pieces):</h4>
+            {outfitWardrobeItems.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {outfitWardrobeItems.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors">
+                    {item.imagePath ? (
+                      <div className="relative group">
+                        <img 
+                          src={item.imagePath} 
+                          alt={item.itemName}
+                          className="w-16 h-16 object-cover rounded-md cursor-pointer hover:scale-105 transition-transform"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                          }}
+                          onClick={() => {
+                            // Create larger preview modal
+                            const modal = document.createElement('div');
+                            modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 cursor-pointer';
+                            modal.innerHTML = `
+                              <div class="relative max-w-lg max-h-lg">
+                                <img src="${item.imagePath}" alt="${item.itemName}" class="max-w-full max-h-full object-contain rounded-lg" />
+                                <button class="absolute top-2 right-2 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70">×</button>
+                              </div>
+                            `;
+                            modal.onclick = () => document.body.removeChild(modal);
+                            document.body.appendChild(modal);
+                          }}
+                        />
+                        <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center" style={{display: 'none'}}>
+                          <Shirt className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center">
+                        <Shirt className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.itemName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{item.category || 'Clothing'}</p>
+                      {item.color && (
+                        <p className="text-xs text-purple-600 truncate">Color: {item.color}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Items: {outfit.items.length} pieces from your wardrobe
+              </p>
+            )}
+          </div>
+
+          {outfit.reasoning && (
+            <div className="text-sm bg-muted p-3 rounded-lg mb-3">
+              <strong>Style Reasoning:</strong> {outfit.reasoning}
+            </div>
+          )}
+
+          {outfit.tags && outfit.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {outfit.tags.map((tag, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (!user) {
     return (
@@ -470,6 +530,45 @@ export default function OutfitGenerator() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Display Generated Outfits Immediately */}
+            {recentOutfits.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-600" />
+                    Your Generated Outfits
+                  </CardTitle>
+                  <CardDescription>
+                    AI-powered outfit suggestions based on your wardrobe and Style DNA
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                    {recentOutfits.slice(0, 3).map(renderOutfitCard)}
+                  </div>
+                  
+                  <div className="text-center space-y-4">
+                    {recentOutfits.length > 3 && (
+                      <Button 
+                        onClick={() => setActiveTab("recent")}
+                        variant="outline"
+                        className="mr-4"
+                      >
+                        View All {recentOutfits.length} Outfits
+                      </Button>
+                    )}
+                    <Button 
+                      onClick={() => { window.location.href = '/dashboard'; }}
+                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back to Dashboard
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="weekly" className="space-y-6">
@@ -572,9 +671,25 @@ export default function OutfitGenerator() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {recentOutfits.map(renderOutfitCard)}
-              </div>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {recentOutfits.map(renderOutfitCard)}
+                </div>
+                
+                {/* Back to Dashboard Button */}
+                <div className="text-center mt-8 pt-6 border-t">
+                  <p className="text-muted-foreground mb-4">
+                    Ready to explore more features or manage your style profile?
+                  </p>
+                  <Button 
+                    onClick={() => { window.location.href = '/dashboard'; }}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    size="lg"
+                  >
+                    Back to Dashboard
+                  </Button>
+                </div>
+              </>
             )}
           </TabsContent>
         </Tabs>
