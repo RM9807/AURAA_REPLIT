@@ -287,19 +287,47 @@ export default function Outfits() {
                             e.currentTarget.nextElementSibling.style.display = 'flex';
                           }}
                           onClick={() => {
-                            // Create larger preview modal
+                            // Create larger preview modal using safe DOM methods
                             const modal = document.createElement('div');
                             modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 cursor-pointer';
-                            modal.innerHTML = `
-                              <div class="relative max-w-lg max-h-lg p-4">
-                                <img src="${item.imageUrl || item.imagePath}" alt="${item.itemName}" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
-                                <button class="absolute top-2 right-2 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors text-xl font-bold">×</button>
-                                <div class="absolute bottom-2 left-2 right-2 bg-black/50 text-white p-2 rounded text-center">
-                                  <p class="font-medium">${item.itemName}</p>
-                                  <p class="text-sm opacity-90">${item.category || 'Clothing'}</p>
-                                </div>
-                              </div>
-                            `;
+                            
+                            // Create modal content container
+                            const modalContent = document.createElement('div');
+                            modalContent.className = 'relative max-w-lg max-h-lg p-4';
+                            
+                            // Create image element
+                            const modalImage = document.createElement('img');
+                            modalImage.src = item.imageUrl || item.imagePath;
+                            modalImage.alt = item.itemName; // Safe: alt attribute automatically escapes content
+                            modalImage.className = 'max-w-full max-h-full object-contain rounded-lg shadow-2xl';
+                            
+                            // Create close button
+                            const closeButton = document.createElement('button');
+                            closeButton.className = 'absolute top-2 right-2 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors text-xl font-bold';
+                            closeButton.textContent = '×';
+                            
+                            // Create info container
+                            const infoContainer = document.createElement('div');
+                            infoContainer.className = 'absolute bottom-2 left-2 right-2 bg-black/50 text-white p-2 rounded text-center';
+                            
+                            // Create item name paragraph (safe: textContent prevents XSS)
+                            const itemNameP = document.createElement('p');
+                            itemNameP.className = 'font-medium';
+                            itemNameP.textContent = item.itemName;
+                            
+                            // Create category paragraph (safe: textContent prevents XSS)
+                            const categoryP = document.createElement('p');
+                            categoryP.className = 'text-sm opacity-90';
+                            categoryP.textContent = item.category || 'Clothing';
+                            
+                            // Assemble the modal
+                            infoContainer.appendChild(itemNameP);
+                            infoContainer.appendChild(categoryP);
+                            modalContent.appendChild(modalImage);
+                            modalContent.appendChild(closeButton);
+                            modalContent.appendChild(infoContainer);
+                            modal.appendChild(modalContent);
+                            
                             modal.onclick = (e) => {
                               if (e.target === modal) document.body.removeChild(modal);
                             };
