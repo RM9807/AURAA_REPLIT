@@ -34,8 +34,8 @@ const steps = [
       "Virtual try-on with AR",
       "Shop suggestions & styling tips"
     ],
-    image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-    alt: "Woman using fashion styling app on smartphone"
+    image: "/images/style-boutique.png",
+    alt: "Confident woman in stylish outfit posing in a luxury boutique with curated clothing collections"
   }
 ];
 
