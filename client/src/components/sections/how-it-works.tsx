@@ -10,7 +10,7 @@ const steps = [
       "Input body measurements",
       "Set style preferences & budget"
     ],
-    image: "@assets/Screenshot 2025-08-15 at 11.23.29 PM_1755280473878.png",
+    image: "/images/style-dna-profile.svg",
     alt: "Your Style DNA Profile showing personalized style analysis"
   },
   {

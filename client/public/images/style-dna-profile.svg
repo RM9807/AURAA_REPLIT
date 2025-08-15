@@ -1,0 +1,86 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="tealGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06B6D4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="600" height="400" fill="#F8FAFC"/>
+  
+  <!-- Header -->
+  <text x="300" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="url(#purpleGradient)">Your Style DNA Profile</text>
+  <text x="300" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#64748B">Your personalized style analysis is complete</text>
+  
+  <!-- Profile Cards -->
+  <!-- Body Type Card -->
+  <rect x="30" y="90" width="160" height="80" rx="12" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1"/>
+  <circle cx="55" cy="115" r="12" fill="url(#blueGradient)"/>
+  <path d="M49 111 L53 115 L61 107" stroke="white" stroke-width="2" fill="none"/>
+  <text x="75" y="115" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E293B">Body Type</text>
+  <text x="40" y="135" font-family="Arial, sans-serif" font-size="12" fill="#475569">Hourglass</text>
+  
+  <!-- Style Preference Card -->
+  <rect x="220" y="90" width="160" height="80" rx="12" fill="#FDF4FF" stroke="#EC4899" stroke-width="1"/>
+  <circle cx="245" cy="115" r="12" fill="url(#purpleGradient)"/>
+  <path d="M239 111 L243 115 L251 107" stroke="white" stroke-width="2" fill="none"/>
+  <text x="265" y="115" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E293B">Style Preference</text>
+  <text x="230" y="135" font-family="Arial, sans-serif" font-size="12" fill="#475569">Trendy</text>
+  
+  <!-- Lifestyle Card -->
+  <rect x="410" y="90" width="160" height="80" rx="12" fill="#F0FDFA" stroke="#06B6D4" stroke-width="1"/>
+  <circle cx="435" cy="115" r="12" fill="url(#tealGradient)"/>
+  <path d="M429 111 L433 115 L441 107" stroke="white" stroke-width="2" fill="none"/>
+  <text x="455" y="115" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E293B">Lifestyle</text>
+  <text x="420" y="135" font-family="Arial, sans-serif" font-size="12" fill="#475569">Business-Professional</text>
+  
+  <!-- AI Style DNA Analysis Section -->
+  <text x="300" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1E293B">✨ AI Style DNA Analysis</text>
+  <text x="300" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#64748B">Your personalized style insights powered by AI</text>
+  
+  <!-- Signature Style Card -->
+  <rect x="30" y="260" width="260" height="110" rx="12" fill="#FDF2F8" stroke="#EC4899" stroke-width="1"/>
+  <circle cx="55" cy="285" r="12" fill="url(#purpleGradient)"/>
+  <path d="M49 281 L53 285 L61 277" stroke="white" stroke-width="2" fill="none"/>
+  <text x="75" y="285" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E293B">Your Signature Style ✨</text>
+  <text x="40" y="305" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1E293B">Business-Chic</text>
+  <text x="40" y="325" font-family="Arial, sans-serif" font-size="11" fill="#475569">Your style beautifully marries the polished appeal</text>
+  <text x="40" y="340" font-family="Arial, sans-serif" font-size="11" fill="#475569">of business-chic with the fresh vibes of current</text>
+  <text x="40" y="355" font-family="Arial, sans-serif" font-size="11" fill="#475569">trends. This balance allows you to feel both</text>
+  
+  <!-- Colors Card -->
+  <rect x="310" y="260" width="260" height="110" rx="12" fill="#F0F9FF" stroke="#06B6D4" stroke-width="1"/>
+  <circle cx="335" cy="285" r="12" fill="url(#tealGradient)"/>
+  <path d="M329 281 L333 285 L341 277" stroke="white" stroke-width="2" fill="none"/>
+  <text x="355" y="285" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E293B">Colors That Make You Glow 🎨</text>
+  
+  <!-- Color Palette -->
+  <circle cx="330" cy="315" r="12" fill="#8B4513"/>
+  <circle cx="355" cy="315" r="12" fill="#5F4B32"/>
+  <circle cx="380" cy="315" r="12" fill="#3B302F"/>
+  <circle cx="405" cy="315" r="12" fill="#4A3C31"/>
+  <circle cx="430" cy="315" r="12" fill="#654321"/>
+  <circle cx="455" cy="315" r="12" fill="#8B7D6B"/>
+  
+  <text x="320" y="340" font-family="Arial, sans-serif" font-size="10" fill="#475569">#8B4513</text>
+  <text x="345" y="340" font-family="Arial, sans-serif" font-size="10" fill="#475569">#5F4B32</text>
+  <text x="370" y="340" font-family="Arial, sans-serif" font-size="10" fill="#475569">#3B302F</text>
+  <text x="395" y="340" font-family="Arial, sans-serif" font-size="10" fill="#475569">#4A3C31</text>
+  <text x="420" y="340" font-family="Arial, sans-serif" font-size="10" fill="#475569">#654321</text>
+  <text x="445" y="340" font-family="Arial, sans-serif" font-size="10" fill="#475569">#8B7D6B</text>
+  
+  <circle cx="350" cy="355" r="12" fill="#DEB887"/>
+  <circle cx="400" cy="355" r="12" fill="#2F2F2F"/>
+  
+  <text x="340" y="375" font-family="Arial, sans-serif" font-size="10" fill="#475569">#DEB887</text>
+  <text x="390" y="375" font-family="Arial, sans-serif" font-size="10" fill="#475569">#2F2F2F</text>
+</svg>
