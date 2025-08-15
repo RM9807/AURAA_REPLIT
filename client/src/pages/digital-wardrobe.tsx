@@ -153,6 +153,30 @@ export default function DigitalWardrobe() {
     }
   });
 
+  // Delete item mutation
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: number) => {
+      await apiRequest(`/api/wardrobe/${itemId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'wardrobe'] });
+      toast({
+        title: "Item Deleted",
+        description: "The item has been removed from your wardrobe.",
+      });
+    },
+    onError: (error) => {
+      console.error('Delete failed:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete item. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -406,6 +430,19 @@ export default function DigitalWardrobe() {
                     <Camera className="h-5 w-5 text-violet-500" />
                     Add New Item
                   </CardTitle>
+                  <CardDescription>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentStep(6)} // Show inventory
+                        className="text-violet-600 border-violet-200 hover:bg-violet-50"
+                      >
+                        <ShoppingBag className="h-4 w-4 mr-2" />
+                        View My Inventory ({wardrobeItems.length} items)
+                      </Button>
+                    </div>
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Photo Upload */}
@@ -915,6 +952,156 @@ export default function DigitalWardrobe() {
               </Button>
               <Button className="bg-violet-500 hover:bg-violet-600">
                 Share Your Curated Wardrobe
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 6: Inventory Management */}
+        {currentStep === 6 && (
+          <div className="space-y-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                  My Inventory
+                </h2>
+                <p className="text-lg text-slate-600 dark:text-slate-400">
+                  View and manage your wardrobe items
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep(1)}
+                  className="text-violet-600 border-violet-200 hover:bg-violet-50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Items
+                </Button>
+                <div className="flex gap-2">
+                  <Badge variant="outline">
+                    {wardrobeItems?.length || 0} items
+                  </Badge>
+                  {wardrobeItems?.some(item => item.aiAnalysis) && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      {wardrobeItems?.filter(item => item.aiAnalysis).length} analyzed
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {wardrobeLoading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+                <p className="text-slate-600 dark:text-slate-400 ml-3">Loading your wardrobe...</p>
+              </div>
+            )}
+            
+            {!wardrobeLoading && wardrobeItems && wardrobeItems.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {wardrobeItems.map((item: WardrobeItem) => (
+                <Card key={item.id} className="overflow-hidden relative group">
+                  {item.aiAnalysis && (
+                    <div className={`absolute top-2 right-2 z-10 p-1 rounded-full ${
+                      item.aiAnalysis.recommendation === 'keep' ? 'bg-green-100 text-green-800' :
+                      item.aiAnalysis.recommendation === 'alter' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {item.aiAnalysis.recommendation === 'keep' ? <CheckCircle className="h-4 w-4 text-green-600" /> :
+                       item.aiAnalysis.recommendation === 'alter' ? <Scissors className="h-4 w-4 text-yellow-600" /> :
+                       <XCircle className="h-4 w-4 text-red-600" />}
+                    </div>
+                  )}
+                  
+                  {/* Delete button - appears on hover */}
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this item from your wardrobe?')) {
+                        deleteItemMutation.mutate(item.id);
+                      }
+                    }}
+                    className="absolute top-2 left-2 z-10 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    title="Delete item"
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </button>
+                  
+                  <div className="aspect-square bg-gray-100 flex items-center justify-center cursor-pointer relative overflow-hidden">
+                    {item.imageUrl ? (
+                      <>
+                        <img src={item.imageUrl} alt={item.itemName} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
+                          <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center text-gray-400">
+                        <Camera className="h-12 w-12 mb-2" />
+                        <span className="text-sm">No image</span>
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold">{item.itemName}</h4>
+                      {item.favorite && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      <Badge variant="secondary">{item.category}</Badge>
+                      <Badge variant="outline">{item.color}</Badge>
+                      {item.brand && <Badge variant="outline">{item.brand}</Badge>}
+                      {item.aiAnalysis && (
+                        <Badge className={`text-xs ${
+                          item.aiAnalysis.recommendation === 'keep' ? 'bg-green-100 text-green-800' :
+                          item.aiAnalysis.recommendation === 'alter' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          AI: {item.aiAnalysis.recommendation}
+                        </Badge>
+                      )}
+                    </div>
+                    {item.aiAnalysis && (
+                      <p className="text-xs text-gray-600 mt-2">
+                        {item.aiAnalysis.reason}
+                      </p>
+                    )}
+                    {item.notes && (
+                      <p className="text-xs text-gray-500 mt-1 italic">
+                        {item.notes}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+                ))}
+              </div>
+            )}
+
+            {!wardrobeLoading && (!wardrobeItems || wardrobeItems.length === 0) && (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <ShoppingBag className="h-8 w-8 text-slate-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No items in your wardrobe</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-6">Start building your digital closet by adding your first item</p>
+                <Button
+                  onClick={() => setCurrentStep(1)}
+                  className="bg-violet-500 hover:bg-violet-600"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Item
+                </Button>
+              </div>
+            )}
+
+            <div className="text-center">
+              <Button
+                onClick={() => setCurrentStep(2)}
+                className="bg-violet-500 hover:bg-violet-600 px-8"
+                disabled={!wardrobeItems || wardrobeItems.length === 0}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Analyze Wardrobe with AI
               </Button>
             </div>
           </div>
