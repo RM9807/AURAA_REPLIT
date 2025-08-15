@@ -39,17 +39,32 @@ export class OutfitGenerator {
     }
 
     // Prepare wardrobe data for AI analysis
-    const wardrobeData = wardrobeItems.map(item => ({
-      id: item.id,
-      name: item.itemName,
-      category: item.category,
-      color: item.color,
-      pattern: item.pattern,
-      material: item.material,
-      brand: item.brand,
-      condition: item.condition,
-      aiAnalysis: item.aiAnalysis ? JSON.parse(item.aiAnalysis as string) : null
-    }));
+    const wardrobeData = wardrobeItems.map(item => {
+      let aiAnalysis = null;
+      if (item.aiAnalysis) {
+        try {
+          // Handle both string and object formats
+          aiAnalysis = typeof item.aiAnalysis === 'string' 
+            ? JSON.parse(item.aiAnalysis) 
+            : item.aiAnalysis;
+        } catch (error) {
+          console.log(`Failed to parse AI analysis for item ${item.id}:`, error);
+          aiAnalysis = null;
+        }
+      }
+      
+      return {
+        id: item.id,
+        name: item.itemName,
+        category: item.category,
+        color: item.color,
+        pattern: item.pattern,
+        material: item.material,
+        brand: item.brand,
+        condition: item.condition,
+        aiAnalysis
+      };
+    });
 
     // Create comprehensive prompt for outfit generation
     const prompt = this.buildOutfitGenerationPrompt(
