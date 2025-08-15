@@ -93,6 +93,10 @@ export default function OutfitGenerator() {
         title: "Outfits Generated!",
         description: `Successfully created ${data.outfits.length} new outfit suggestions.`
       });
+      // Switch to the Recent tab to show generated outfits
+      setActiveTab("recent");
+      // Switch to the Recent tab to show generated outfits
+      setActiveTab("recent");
     },
     onError: (error: any) => {
       toast({
@@ -127,6 +131,10 @@ export default function OutfitGenerator() {
         title: "Weekly Plan Created!",
         description: `Generated ${data.outfits.length} outfits for your week.`
       });
+      // Switch to the Recent tab to show generated outfits
+      setActiveTab("recent");
+      // Switch to the Recent tab to show generated outfits
+      setActiveTab("recent");
     },
     onError: (error: any) => {
       toast({
@@ -161,6 +169,10 @@ export default function OutfitGenerator() {
         title: "Seasonal Collection Created!",
         description: `Generated ${data.outfits.length} outfits for ${data.season}.`
       });
+      // Switch to the Recent tab to show generated outfits
+      setActiveTab("recent");
+      // Switch to the Recent tab to show generated outfits
+      setActiveTab("recent");
     },
     onError: (error: any) => {
       toast({
