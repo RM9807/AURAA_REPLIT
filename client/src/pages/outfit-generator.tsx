@@ -140,7 +140,7 @@ export default function OutfitGenerator() {
   });
 
   const handleGenerate = () => {
-    if (!formData.occasion) {
+    if (!formData.occasion || formData.occasion.trim() === "") {
       toast({
         title: "Occasion Required",
         description: "Please specify an occasion for your outfit.",
@@ -149,6 +149,9 @@ export default function OutfitGenerator() {
       return;
     }
 
+    // Log the form data being sent
+    console.log("Generating outfits with data:", formData);
+    
     generateOutfitsMutation.mutate(formData);
   };
 
@@ -299,7 +302,13 @@ export default function OutfitGenerator() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="occasion">Occasion *</Label>
-                    <Select value={formData.occasion} onValueChange={(value) => setFormData({...formData, occasion: value})}>
+                    <Select 
+                      value={formData.occasion} 
+                      onValueChange={(value) => {
+                        console.log("Occasion selected:", value);
+                        setFormData({...formData, occasion: value});
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select occasion" />
                       </SelectTrigger>
@@ -319,7 +328,10 @@ export default function OutfitGenerator() {
 
                   <div>
                     <Label htmlFor="weather">Weather</Label>
-                    <Select value={formData.weather} onValueChange={(value) => setFormData({...formData, weather: value})}>
+                    <Select 
+                      value={formData.weather} 
+                      onValueChange={(value) => setFormData({...formData, weather: value})}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select weather" />
                       </SelectTrigger>
@@ -336,7 +348,10 @@ export default function OutfitGenerator() {
 
                   <div>
                     <Label htmlFor="mood">Mood</Label>
-                    <Select value={formData.mood} onValueChange={(value) => setFormData({...formData, mood: value})}>
+                    <Select 
+                      value={formData.mood} 
+                      onValueChange={(value) => setFormData({...formData, mood: value})}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select mood" />
                       </SelectTrigger>
@@ -354,7 +369,10 @@ export default function OutfitGenerator() {
 
                   <div>
                     <Label htmlFor="season">Season</Label>
-                    <Select value={formData.season} onValueChange={(value) => setFormData({...formData, season: value})}>
+                    <Select 
+                      value={formData.season} 
+                      onValueChange={(value) => setFormData({...formData, season: value})}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select season" />
                       </SelectTrigger>

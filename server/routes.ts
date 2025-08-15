@@ -522,16 +522,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate the outfit generation request
       const requestSchema = z.object({
-        occasion: z.string().min(1, "Occasion is required"),
-        weather: z.string().optional(),
-        mood: z.string().optional(), 
-        season: z.string().optional(),
-        preferences: z.string().optional(),
+        occasion: z.string().min(1, "Occasion is required").refine(val => val.trim().length > 0, {
+          message: "Occasion cannot be empty"
+        }),
+        weather: z.string().optional().transform(val => val && val.trim() !== '' ? val : undefined),
+        mood: z.string().optional().transform(val => val && val.trim() !== '' ? val : undefined), 
+        season: z.string().optional().transform(val => val && val.trim() !== '' ? val : undefined),
+        preferences: z.string().optional().transform(val => val && val.trim() !== '' ? val : undefined),
         numberOfOutfits: z.number().min(1).max(10).default(3)
       });
 
+      // Log the request body for debugging
+      console.log("Outfit generation request body:", req.body);
+      
       const validation = requestSchema.safeParse(req.body);
       if (!validation.success) {
+        console.log("Validation errors:", validation.error.flatten().fieldErrors);
         return res.status(400).json({
           message: "Validation failed",
           errors: validation.error.flatten().fieldErrors
