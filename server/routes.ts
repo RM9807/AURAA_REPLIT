@@ -19,6 +19,7 @@ import {
   generateStyleRecommendations,
   type StyleAnalysisInput 
 } from "./ai-analysis";
+import { outfitGenerator, type OutfitGenerationRequest } from "./outfit-generator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware
@@ -511,6 +512,241 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating outfit:", error);
       res.status(400).json({ message: "Failed to update outfit" });
+    }
+  });
+
+  // NEW: Outfit Generation Routes - AI-powered outfit suggestions
+  app.post('/api/users/:id/outfits/generate', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Validate the outfit generation request
+      const requestSchema = z.object({
+        occasion: z.string().min(1, "Occasion is required"),
+        weather: z.string().optional(),
+        mood: z.string().optional(), 
+        season: z.string().optional(),
+        preferences: z.string().optional(),
+        numberOfOutfits: z.number().min(1).max(10).default(3)
+      });
+
+      const validation = requestSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: validation.error.flatten().fieldErrors
+        });
+      }
+
+      const request: OutfitGenerationRequest = validation.data;
+
+      // Get user's wardrobe items
+      const wardrobeItems = await storage.getUserWardrobe(userId);
+      if (!wardrobeItems || wardrobeItems.length === 0) {
+        return res.status(400).json({
+          message: "No wardrobe items found. Please add items to your digital wardrobe first."
+        });
+      }
+
+      // Get user profile for Style DNA analysis
+      const userProfile = await storage.getUserProfile(userId);
+      if (!userProfile) {
+        return res.status(400).json({
+          message: "User profile not found. Please complete your style profile first."
+        });
+      }
+
+      // Generate AI-powered outfit suggestions
+      const generatedOutfits = await outfitGenerator.generateOutfits(
+        wardrobeItems,
+        userProfile,
+        request,
+        validation.data.numberOfOutfits
+      );
+
+      // Save generated outfits to database
+      const savedOutfits = [];
+      for (const generatedOutfit of generatedOutfits) {
+        try {
+          const outfitData = insertOutfitSchema.parse({
+            userId,
+            name: generatedOutfit.name,
+            description: generatedOutfit.description,
+            occasion: generatedOutfit.occasion,
+            season: generatedOutfit.season,
+            mood: generatedOutfit.mood,
+            weatherConditions: generatedOutfit.weatherConditions,
+            items: generatedOutfit.items, // Array of wardrobe item IDs
+            tags: generatedOutfit.tags
+          });
+
+          const savedOutfit = await storage.createOutfit(outfitData);
+          savedOutfits.push({
+            ...savedOutfit,
+            reasoning: generatedOutfit.reasoning
+          });
+        } catch (error) {
+          console.error("Error saving generated outfit:", error);
+          // Continue with other outfits even if one fails
+        }
+      }
+
+      res.json({
+        message: `Generated ${savedOutfits.length} outfit suggestions`,
+        outfits: savedOutfits,
+        request: request
+      });
+
+    } catch (error) {
+      console.error("Error generating outfits:", error);
+      res.status(500).json({
+        message: "Failed to generate outfit suggestions. Please ensure you have completed your Style DNA analysis and have items in your wardrobe.",
+        error: error.message
+      });
+    }
+  });
+
+  // Generate weekly outfit planner
+  app.post('/api/users/:id/outfits/weekly', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { occasions = ['Work', 'Casual', 'Weekend', 'Date night'] } = req.body;
+
+      // Get user's wardrobe and profile
+      const [wardrobeItems, userProfile] = await Promise.all([
+        storage.getUserWardrobe(userId),
+        storage.getUserProfile(userId)
+      ]);
+
+      if (!wardrobeItems?.length) {
+        return res.status(400).json({
+          message: "No wardrobe items found. Please add items to your digital wardrobe first."
+        });
+      }
+
+      if (!userProfile) {
+        return res.status(400).json({
+          message: "User profile not found. Please complete your style profile first."
+        });
+      }
+
+      // Generate weekly outfit suggestions
+      const weeklyOutfits = await outfitGenerator.generateWeeklyOutfits(
+        wardrobeItems,
+        userProfile,
+        occasions
+      );
+
+      // Save outfits to database
+      const savedOutfits = [];
+      for (const outfit of weeklyOutfits) {
+        try {
+          const outfitData = insertOutfitSchema.parse({
+            userId,
+            name: outfit.name,
+            description: outfit.description,
+            occasion: outfit.occasion,
+            season: outfit.season,
+            mood: outfit.mood,
+            weatherConditions: outfit.weatherConditions,
+            items: outfit.items,
+            tags: [...(outfit.tags || []), 'weekly-planner']
+          });
+
+          const savedOutfit = await storage.createOutfit(outfitData);
+          savedOutfits.push({
+            ...savedOutfit,
+            reasoning: outfit.reasoning
+          });
+        } catch (error) {
+          console.error("Error saving weekly outfit:", error);
+        }
+      }
+
+      res.json({
+        message: `Generated ${savedOutfits.length} weekly outfit suggestions`,
+        outfits: savedOutfits,
+        occasions
+      });
+
+    } catch (error) {
+      console.error("Error generating weekly outfits:", error);
+      res.status(500).json({
+        message: "Failed to generate weekly outfit plan.",
+        error: error.message
+      });
+    }
+  });
+
+  // Generate seasonal outfit suggestions
+  app.post('/api/users/:id/outfits/seasonal', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { season } = req.body;
+
+      if (!season) {
+        return res.status(400).json({
+          message: "Season is required (spring, summer, fall, winter)"
+        });
+      }
+
+      // Get user's wardrobe and profile
+      const [wardrobeItems, userProfile] = await Promise.all([
+        storage.getUserWardrobe(userId),
+        storage.getUserProfile(userId)
+      ]);
+
+      if (!wardrobeItems?.length || !userProfile) {
+        return res.status(400).json({
+          message: "Please complete your style profile and add wardrobe items first."
+        });
+      }
+
+      // Generate seasonal outfit suggestions
+      const seasonalOutfits = await outfitGenerator.generateSeasonalOutfits(
+        wardrobeItems,
+        userProfile,
+        season
+      );
+
+      // Save outfits to database
+      const savedOutfits = [];
+      for (const outfit of seasonalOutfits) {
+        try {
+          const outfitData = insertOutfitSchema.parse({
+            userId,
+            name: outfit.name,
+            description: outfit.description,
+            occasion: outfit.occasion,
+            season: outfit.season,
+            mood: outfit.mood,
+            weatherConditions: outfit.weatherConditions,
+            items: outfit.items,
+            tags: [...(outfit.tags || []), `${season}-collection`]
+          });
+
+          const savedOutfit = await storage.createOutfit(outfitData);
+          savedOutfits.push({
+            ...savedOutfit,
+            reasoning: outfit.reasoning
+          });
+        } catch (error) {
+          console.error("Error saving seasonal outfit:", error);
+        }
+      }
+
+      res.json({
+        message: `Generated ${savedOutfits.length} ${season} outfit suggestions`,
+        outfits: savedOutfits,
+        season
+      });
+
+    } catch (error) {
+      console.error("Error generating seasonal outfits:", error);
+      res.status(500).json({
+        message: "Failed to generate seasonal outfit suggestions.",
+        error: error.message
+      });
     }
   });
 

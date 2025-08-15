@@ -479,10 +479,10 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <Button
-                  onClick={() => setLocation('/outfit-builder')}
+                  onClick={() => setLocation('/outfit-generator')}
                   className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                 >
-                  {hasOutfits ? 'Create New Outfit' : 'Start Building'}
+                  {hasOutfits ? 'Generate New Outfits' : 'Start Generating'}
                 </Button>
               </CardContent>
             </Card>

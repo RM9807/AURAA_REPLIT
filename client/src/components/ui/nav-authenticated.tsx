@@ -33,6 +33,9 @@ export default function AuthenticatedNav() {
             <a href="/digital-wardrobe" className="text-slate hover:text-navy transition-colors font-medium">
               Wardrobe
             </a>
+            <a href="/outfit-generator" className="text-slate hover:text-navy transition-colors font-medium">
+              Outfit Generator
+            </a>
             <a href="/dashboard" className="text-slate hover:text-navy transition-colors font-medium">
               Outfits
             </a>

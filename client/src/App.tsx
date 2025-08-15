@@ -13,6 +13,7 @@ import PersonalStyle from "@/pages/personal-style";
 import PersonalStyleDiagnosis from "@/pages/personal-style-diagnosis";
 import DigitalWardrobe from "@/pages/digital-wardrobe";
 import OutfitBuilder from "@/pages/outfit-builder";
+import OutfitGenerator from "@/pages/outfit-generator";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import NotFound from "@/pages/not-found";
 
@@ -31,6 +32,7 @@ function Router() {
         <Route path="/personal-style-diagnosis" component={PersonalStyleDiagnosis} />
         <Route path="/digital-wardrobe" component={DigitalWardrobe} />
         <Route path="/outfit-builder" component={OutfitBuilder} />
+        <Route path="/outfit-generator" component={OutfitGenerator} />
         <Route component={NotFound} />
       </Switch>
     </OnboardingRouter>

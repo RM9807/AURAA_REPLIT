@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a React-based landing page for AURAA, a personal AI stylist application. It aims to provide users with an AI-powered platform for fashion and styling, featuring a modern, responsive design with smooth animations and interactive components. The business vision is to offer personalized styling advice, wardrobe management, and outfit recommendations, leveraging AI to enhance the user's fashion experience.
+This project is a React-based full-stack application for AURAA, a personal AI stylist platform. It provides users with comprehensive AI-powered fashion tools including style analysis, digital wardrobe management, and intelligent outfit generation. The platform leverages OpenAI to deliver personalized styling advice, automated outfit suggestions based on wardrobe inventory and Style DNA analysis, and culturally-aware fashion recommendations. The application features modern, responsive design with smooth animations and interactive components.
 
 ## User Preferences
 
@@ -45,6 +45,7 @@ The design emphasizes a modern, clean aesthetic with smooth animations and inter
   - **Goal-Oriented Recommendations**: Psychology-based advice prioritizing goal achievement over preferences
   - **Strategic Wardrobe Planning**: Gap analysis, cost-per-wear optimization, and outfit multiplication strategies
   - **Professional Photo Analysis**: Advanced color analysis from facial photos with confidence scoring
+  - **Intelligent Outfit Generation**: AI-powered outfit suggestions using OpenAI API, analyzing wardrobe inventory and Style DNA to create personalized outfit combinations for specific occasions, weather conditions, and user preferences
 
 ## External Dependencies
 
