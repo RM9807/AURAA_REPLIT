@@ -206,17 +206,27 @@ export default function DigitalWardrobe() {
   // Object storage handlers
   const handleGetUploadParameters = async () => {
     try {
-      const response = await apiRequest('/api/objects/upload', {
+      const response = await fetch('/api/objects/upload', {
         method: 'POST',
-      }) as { uploadURL: string };
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
       
-      if (!response.uploadURL) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.uploadURL) {
         throw new Error('No upload URL received from server');
       }
       
       return {
         method: 'PUT' as const,
-        url: response.uploadURL,
+        url: data.uploadURL,
       };
     } catch (error) {
       console.error('Failed to get upload parameters:', error);
@@ -234,10 +244,14 @@ export default function DigitalWardrobe() {
       const uploadURL = result.successful[0].uploadURL;
       
       // Process the uploaded image URL to get the object path
-      apiRequest(`/api/wardrobe-images`, {
+      fetch('/api/wardrobe-images', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ imageURL: uploadURL }),
+      }).then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
       }).then((response: { objectPath: string }) => {
         const objectPath = response.objectPath;
         
