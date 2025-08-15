@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import { useAuthModal } from "@/components/auth/AuthProvider";
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { showAuthModal } = useAuthModal();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,7 +54,7 @@ export default function Navigation() {
               FAQ
             </button>
             <Button 
-              onClick={() => window.location.href = '/api/login'}
+              onClick={showAuthModal}
               className="px-6 py-2 bg-gradient-to-r from-blue-600 to-teal-500 text-white rounded-lg hover:scale-105 transition-transform"
             >
               Get Started
@@ -90,7 +92,10 @@ export default function Navigation() {
               >
                 FAQ
               </button>
-              <Button className="px-6 py-2 bg-gradient-blue-teal text-white rounded-lg w-fit">
+              <Button 
+                onClick={showAuthModal}
+                className="px-6 py-2 bg-gradient-blue-teal text-white rounded-lg w-fit"
+              >
                 Get Started
               </Button>
             </div>
