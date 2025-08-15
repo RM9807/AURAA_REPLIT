@@ -10,8 +10,8 @@ const steps = [
       "Input body measurements",
       "Set style preferences & budget"
     ],
-    image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-    alt: "Woman analyzing style with smartphone"
+    image: "@assets/Screenshot 2025-08-15 at 11.23.29 PM_1755280473878.png",
+    alt: "Your Style DNA Profile showing personalized style analysis"
   },
   {
     number: 2,
