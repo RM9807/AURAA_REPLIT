@@ -140,19 +140,49 @@ export default function Outfits() {
                               alt={item.itemName}
                               className="w-8 h-8 object-cover rounded-full border-2 border-white cursor-pointer hover:scale-110 transition-transform"
                               onClick={() => {
-                                // Create larger preview modal
+                                // Create larger preview modal using safe DOM methods
                                 const modal = document.createElement('div');
                                 modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 cursor-pointer';
-                                modal.innerHTML = `
-                                  <div class="relative max-w-lg max-h-lg p-4">
-                                    <img src="${item.imageUrl || item.imagePath}" alt="${item.itemName}" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
-                                    <button class="absolute top-2 right-2 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors text-xl font-bold">×</button>
-                                    <div class="absolute bottom-2 left-2 right-2 bg-black/50 text-white p-2 rounded text-center">
-                                      <p class="font-medium">${item.itemName}</p>
-                                      <p class="text-sm opacity-90">${item.category || 'Clothing'}</p>
-                                    </div>
-                                  </div>
-                                `;
+                                
+                                // Create container div
+                                const container = document.createElement('div');
+                                container.className = 'relative max-w-lg max-h-lg p-4';
+                                
+                                // Create image element
+                                const img = document.createElement('img');
+                                img.src = item.imageUrl || item.imagePath || '';
+                                img.alt = item.itemName || '';
+                                img.className = 'max-w-full max-h-full object-contain rounded-lg shadow-2xl';
+                                
+                                // Create close button
+                                const closeBtn = document.createElement('button');
+                                closeBtn.className = 'absolute top-2 right-2 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors text-xl font-bold';
+                                closeBtn.textContent = '×';
+                                closeBtn.onclick = (e) => {
+                                  e.stopPropagation();
+                                  document.body.removeChild(modal);
+                                };
+                                
+                                // Create info overlay
+                                const infoDiv = document.createElement('div');
+                                infoDiv.className = 'absolute bottom-2 left-2 right-2 bg-black/50 text-white p-2 rounded text-center';
+                                
+                                const itemNameP = document.createElement('p');
+                                itemNameP.className = 'font-medium';
+                                itemNameP.textContent = item.itemName || '';
+                                
+                                const categoryP = document.createElement('p');
+                                categoryP.className = 'text-sm opacity-90';
+                                categoryP.textContent = item.category || 'Clothing';
+                                
+                                // Assemble modal
+                                infoDiv.appendChild(itemNameP);
+                                infoDiv.appendChild(categoryP);
+                                container.appendChild(img);
+                                container.appendChild(closeBtn);
+                                container.appendChild(infoDiv);
+                                modal.appendChild(container);
+                                
                                 modal.onclick = (e) => {
                                   if (e.target === modal) document.body.removeChild(modal);
                                 };
