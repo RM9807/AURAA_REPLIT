@@ -10,8 +10,8 @@ const steps = [
       "Input body measurements",
       "Set style preferences & budget"
     ],
-    image: "/images/style-analysis-professional.svg",
-    alt: "Your Style DNA Profile showing personalized style analysis"
+    image: "/images/analyze-measurements.png",
+    alt: "Professional tailor's mannequin with measuring tape representing body analysis and measurements"
   },
   {
     number: 2,
