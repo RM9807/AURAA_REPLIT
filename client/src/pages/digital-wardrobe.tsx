@@ -85,6 +85,7 @@ export default function DigitalWardrobe() {
     notes: "",
     imageFile: null as File | null,
     imageUrl: "", // Add imageUrl to store object path
+    imagePreviewUrl: "", // Add preview URL for immediate display
   });
 
   // Declutter state
@@ -142,6 +143,7 @@ export default function DigitalWardrobe() {
         notes: "",
         imageFile: null,
         imageUrl: "",
+        imagePreviewUrl: "",
       });
       toast({
         title: "Item Added",
@@ -224,11 +226,12 @@ export default function DigitalWardrobe() {
       }).then((response) => {
         const objectPath = response.objectPath;
         
-        // Update upload form with the object path for the wardrobe item
+        // Update upload form with both object path and preview URL
         setCurrentUpload(prev => ({ 
           ...prev, 
           imageFile: null,
           imageUrl: objectPath, // Store the object path for wardrobe item
+          imagePreviewUrl: objectPath, // Store for immediate preview
         }));
         
         toast({
@@ -496,28 +499,48 @@ export default function DigitalWardrobe() {
                 <CardContent className="space-y-4">
                   {/* Photo Upload using Object Storage */}
                   <div className="space-y-4">
-                    <ObjectUploader
-                      maxNumberOfFiles={1}
-                      maxFileSize={10485760}
-                      onGetUploadParameters={handleGetUploadParameters}
-                      onComplete={handleImageUploadComplete}
-                      buttonClassName="w-full border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-violet-400 transition-colors bg-transparent"
-                    >
-                      <div className="space-y-2">
-                        <Upload className="h-8 w-8 text-slate-400 mx-auto" />
-                        <p className="text-slate-600 dark:text-slate-400">Upload photo</p>
-                        <p className="text-xs text-slate-500">PNG, JPG up to 10MB</p>
-                      </div>
-                    </ObjectUploader>
-                    
-                    {/* Show preview if image uploaded */}
-                    {currentUpload.imageUrl && (
-                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span className="text-sm text-green-600 font-medium">Image uploaded successfully</span>
+                    {!currentUpload.imagePreviewUrl ? (
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={10485760}
+                        onGetUploadParameters={handleGetUploadParameters}
+                        onComplete={handleImageUploadComplete}
+                        buttonClassName="w-full border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-violet-400 transition-colors bg-transparent"
+                      >
+                        <div className="space-y-2">
+                          <Upload className="h-8 w-8 text-slate-400 mx-auto" />
+                          <p className="text-slate-600 dark:text-slate-400">Upload photo</p>
+                          <p className="text-xs text-slate-500">PNG, JPG up to 10MB</p>
                         </div>
-                        <p className="text-xs text-green-500 mt-1">Ready to add to wardrobe</p>
+                      </ObjectUploader>
+                    ) : (
+                      <div className="space-y-3">
+                        {/* Image Preview */}
+                        <div className="relative">
+                          <img 
+                            src={`/objects${currentUpload.imagePreviewUrl}`}
+                            alt="Uploaded item preview" 
+                            className="w-full h-64 object-cover rounded-lg border-2 border-green-200"
+                          />
+                          <div className="absolute top-2 right-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            Uploaded
+                          </div>
+                        </div>
+                        
+                        {/* Upload different image button */}
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={10485760}
+                          onGetUploadParameters={handleGetUploadParameters}
+                          onComplete={handleImageUploadComplete}
+                          buttonClassName="w-full py-2 px-4 border border-violet-300 text-violet-600 rounded-lg hover:bg-violet-50 transition-colors text-sm"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <Upload className="h-4 w-4" />
+                            <span>Upload different image</span>
+                          </div>
+                        </ObjectUploader>
                       </div>
                     )}
                   </div>
