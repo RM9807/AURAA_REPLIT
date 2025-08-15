@@ -369,27 +369,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Filter items to analyze (only unanalyzed items if itemIds provided)
-      let itemsToAnalyze = wardrobe;
+      // Filter items to analyze - only get items that haven't been analyzed yet
+      let itemsToAnalyze = wardrobe.filter(item => !item.aiAnalysis);
+      
+      // If specific item IDs are provided, filter further
       if (itemIds && Array.isArray(itemIds)) {
-        itemsToAnalyze = wardrobe.filter(item => itemIds.includes(item.id));
+        itemsToAnalyze = itemsToAnalyze.filter(item => itemIds.includes(item.id));
       }
 
+      // Always include already analyzed items in response but don't re-analyze
+      const alreadyAnalyzed = wardrobe
+        .filter(item => item.aiAnalysis)
+        .map(item => ({
+          id: item.id,
+          itemName: item.itemName,
+          category: item.category,
+          color: item.color,
+          recommendation: item.aiAnalysis?.recommendation || 'keep',
+          reason: item.aiAnalysis?.reason || 'Previously analyzed',
+          styleAlignment: item.aiAnalysis?.styleAlignment || 85
+        }));
+
+      // If no new items to analyze, return existing analysis
       if (itemsToAnalyze.length === 0) {
-        // Return existing analysis results for already analyzed items
-        const existingAnalysis = wardrobe
-          .filter(item => item.aiAnalysis)
-          .map(item => ({
-            id: item.id,
-            itemName: item.itemName,
-            category: item.category,
-            color: item.color,
-            recommendation: item.aiAnalysis?.recommendation || 'keep',
-            reason: item.aiAnalysis?.reason || 'Previously analyzed',
-            styleAlignment: item.aiAnalysis?.styleAlignment || 85
-          }));
-        
-        return res.json({ itemAnalysis: existingAnalysis });
+        return res.json({ 
+          itemAnalysis: alreadyAnalyzed,
+          message: alreadyAnalyzed.length > 0 ? 'All items have been analyzed' : 'No items to analyze'
+        });
       }
 
       // Convert profile to the format expected by AI analysis, with Style DNA integration
@@ -436,7 +442,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      res.json(analysisResult);
+      // Combine new analysis with already analyzed items
+      const combinedAnalysis = [
+        ...alreadyAnalyzed,
+        ...(analysisResult.itemAnalysis || [])
+      ];
+      
+      res.json({
+        ...analysisResult,
+        itemAnalysis: combinedAnalysis,
+        message: `Analysis complete. ${itemsToAnalyze.length} new items analyzed, ${alreadyAnalyzed.length} previously analyzed.`
+      });
     } catch (error) {
       console.error("Error analyzing wardrobe:", error);
       res.status(500).json({ 

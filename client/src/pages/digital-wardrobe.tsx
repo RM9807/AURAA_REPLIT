@@ -302,9 +302,12 @@ export default function DigitalWardrobe() {
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'wardrobe'] });
       setIsAnalyzing(false);
       setAnalysisProgress(100);
+      
+      // Show different messages based on whether new items were analyzed or all were already analyzed
+      const message = response.message || "Your wardrobe has been analyzed with AI recommendations.";
       toast({
         title: "Analysis Complete",
-        description: "Your wardrobe has been analyzed with AI recommendations.",
+        description: message,
       });
       setCurrentStep(3);
     },
