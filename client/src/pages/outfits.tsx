@@ -28,8 +28,8 @@ export default function Outfits() {
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterOccasion, setFilterOccasion] = useState("");
-  const [filterSeason, setFilterSeason] = useState("");
+  const [filterOccasion, setFilterOccasion] = useState("all");
+  const [filterSeason, setFilterSeason] = useState("all");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -46,7 +46,7 @@ export default function Outfits() {
   });
 
   // Get user's outfits
-  const { data: outfits = [], isLoading: outfitsLoading } = useQuery({
+  const { data: outfits = [], isLoading: outfitsLoading } = useQuery<GeneratedOutfit[]>({
     queryKey: [`/api/users/${user?.id}/outfits`],
     enabled: !!user?.id
   });
@@ -80,15 +80,15 @@ export default function Outfits() {
                          outfit.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          outfit.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesOccasion = !filterOccasion || outfit.occasion === filterOccasion;
-    const matchesSeason = !filterSeason || outfit.season === filterSeason;
+    const matchesOccasion = !filterOccasion || filterOccasion === "all" || outfit.occasion === filterOccasion;
+    const matchesSeason = !filterSeason || filterSeason === "all" || outfit.season === filterSeason;
     
     return matchesSearch && matchesOccasion && matchesSeason;
   });
 
   // Get unique occasions and seasons for filters
-  const uniqueOccasions = [...new Set(outfits.map((outfit: GeneratedOutfit) => outfit.occasion))].filter(Boolean);
-  const uniqueSeasons = [...new Set(outfits.map((outfit: GeneratedOutfit) => outfit.season))].filter(Boolean);
+  const uniqueOccasions = Array.from(new Set(outfits.map((outfit: GeneratedOutfit) => outfit.occasion))).filter(Boolean);
+  const uniqueSeasons = Array.from(new Set(outfits.map((outfit: GeneratedOutfit) => outfit.season))).filter(Boolean);
 
   // Get outfits by category
   const recentOutfits = filteredOutfits.slice(0, 6);
@@ -283,7 +283,7 @@ export default function Outfits() {
                   <SelectValue placeholder="Occasion" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Occasions</SelectItem>
+                  <SelectItem value="all">All Occasions</SelectItem>
                   {uniqueOccasions.map((occasion) => (
                     <SelectItem key={occasion} value={occasion}>
                       {occasion}
@@ -296,7 +296,7 @@ export default function Outfits() {
                   <SelectValue placeholder="Season" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Seasons</SelectItem>
+                  <SelectItem value="all">All Seasons</SelectItem>
                   {uniqueSeasons.map((season) => (
                     <SelectItem key={season} value={season}>
                       {season}
