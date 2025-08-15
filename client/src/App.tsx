@@ -15,6 +15,7 @@ import DigitalWardrobe from "@/pages/digital-wardrobe";
 import OutfitBuilder from "@/pages/outfit-builder";
 import OutfitGenerator from "@/pages/outfit-generator";
 import Outfits from "@/pages/outfits";
+import Recommendations from "@/pages/recommendations";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import NotFound from "@/pages/not-found";
 
@@ -35,6 +36,7 @@ function Router() {
         <Route path="/outfit-builder" component={OutfitBuilder} />
         <Route path="/outfit-generator" component={OutfitGenerator} />
         <Route path="/outfits" component={Outfits} />
+        <Route path="/recommendations" component={Recommendations} />
         <Route component={NotFound} />
       </Switch>
     </OnboardingRouter>
