@@ -20,6 +20,7 @@ import {
   type StyleAnalysisInput 
 } from "./ai-analysis";
 import { outfitGenerator, type OutfitGenerationRequest } from "./outfit-generator";
+import { generateComprehensiveRecommendations, generateWardrrobeDeclutterRecommendations } from "./ai-recommendations";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication middleware
@@ -808,6 +809,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating recommendation:", error);
       res.status(400).json({ message: "Failed to create recommendation" });
+    }
+  });
+
+  // NEW: AI-Powered Comprehensive Recommendations
+  app.post('/api/users/:id/recommendations/generate', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+
+      // Generate comprehensive AI recommendations
+      const aiRecommendations = await generateComprehensiveRecommendations({
+        userId,
+        includeStyleDNA: true,
+        includeWardrobeAnalysis: true,
+        includeOutfitSuggestions: true,
+        includeDeclutterAdvice: true
+      });
+
+      // Store recommendations in database
+      const savedRecommendations = [];
+      for (const rec of aiRecommendations) {
+        const recommendationData = {
+          userId,
+          type: rec.type,
+          title: rec.title,
+          description: rec.description,
+          priority: rec.priority,
+          tags: rec.tags,
+          reasoning: rec.reasoning
+        };
+
+        try {
+          const savedRec = await storage.createRecommendation(recommendationData);
+          savedRecommendations.push(savedRec);
+        } catch (error) {
+          console.error("Error saving individual recommendation:", error);
+          // Continue with other recommendations
+        }
+      }
+
+      res.json({
+        message: `Generated ${savedRecommendations.length} personalized recommendations`,
+        recommendations: savedRecommendations,
+        totalGenerated: aiRecommendations.length
+      });
+
+    } catch (error) {
+      console.error("Error generating comprehensive recommendations:", error);
+      res.status(500).json({ 
+        message: "Failed to generate recommendations. Please ensure your style profile is complete." 
+      });
+    }
+  });
+
+  // NEW: AI-Powered Wardrobe Declutter Recommendations
+  app.post('/api/users/:id/recommendations/declutter', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+
+      // Generate wardrobe declutter recommendations
+      const declutterRecommendations = await generateWardrrobeDeclutterRecommendations(userId);
+
+      // Store recommendations in database
+      const savedRecommendations = [];
+      for (const rec of declutterRecommendations) {
+        const recommendationData = {
+          userId,
+          type: rec.type,
+          title: rec.title,
+          description: rec.description,
+          priority: rec.priority,
+          tags: rec.tags,
+          reasoning: rec.reasoning
+        };
+
+        try {
+          const savedRec = await storage.createRecommendation(recommendationData);
+          savedRecommendations.push(savedRec);
+        } catch (error) {
+          console.error("Error saving declutter recommendation:", error);
+        }
+      }
+
+      res.json({
+        message: `Generated ${savedRecommendations.length} wardrobe declutter recommendations`,
+        recommendations: savedRecommendations
+      });
+
+    } catch (error) {
+      console.error("Error generating declutter recommendations:", error);
+      res.status(500).json({ 
+        message: "Failed to generate declutter recommendations. Please ensure you have wardrobe items." 
+      });
     }
   });
 

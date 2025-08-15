@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Star, ShoppingBag, Palette, TrendingUp, Search, Loader2, Heart, RefreshCw } from "lucide-react";
+import { Sparkles, Star, ShoppingBag, Palette, TrendingUp, Search, Loader2, Heart, RefreshCw, Home, Brain, Scissors } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -28,6 +29,7 @@ export default function Recommendations() {
   const [filterPriority, setFilterPriority] = useState("all");
 
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Get current user
   const { data: user } = useQuery({
@@ -38,6 +40,52 @@ export default function Recommendations() {
   const { data: recommendations = [], isLoading: recommendationsLoading, refetch } = useQuery<StyleRecommendation[]>({
     queryKey: [`/api/users/${user?.id}/recommendations`],
     enabled: !!user?.id
+  });
+
+  // Generate comprehensive AI recommendations
+  const generateRecommendationsMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest(`/api/users/${user?.id}/recommendations/generate`, {
+        method: "POST"
+      });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/recommendations`] });
+      toast({
+        title: "Recommendations Generated!",
+        description: `Generated ${data.totalGenerated} personalized recommendations based on your Style DNA and wardrobe.`
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Failed to generate recommendations. Please ensure your profile is complete.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Generate wardrobe declutter recommendations
+  const generateDeclutterMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest(`/api/users/${user?.id}/recommendations/declutter`, {
+        method: "POST"
+      });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/recommendations`] });
+      toast({
+        title: "Declutter Recommendations Generated!",
+        description: `Generated ${data.recommendations.length} wardrobe optimization suggestions.`
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Failed to generate declutter recommendations. Please add wardrobe items first.",
+        variant: "destructive"
+      });
+    }
   });
 
   // Filter recommendations based on search and filters
@@ -159,17 +207,95 @@ export default function Recommendations() {
                 Style Recommendations
               </h1>
               <p className="text-muted-foreground">
-                Personalized AI-powered style advice tailored to your preferences and goals
+                AI-powered style advice based on your Style DNA, wardrobe, and fashion goals
               </p>
             </div>
-            <Button 
-              onClick={() => refetch()}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => window.location.href = '/dashboard'}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Home className="h-4 w-4" />
+                Dashboard
+              </Button>
+              <Button 
+                onClick={() => refetch()}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* AI Generation Actions */}
+        <div className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Brain className="h-5 w-5 text-purple-600" />
+                  Comprehensive Style Analysis
+                </CardTitle>
+                <CardDescription>
+                  Generate personalized recommendations using your Style DNA, wardrobe analysis, and fashion goals
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => generateRecommendationsMutation.mutate()}
+                  disabled={generateRecommendationsMutation.isPending}
+                  className="w-full"
+                >
+                  {generateRecommendationsMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generate AI Recommendations
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200 bg-gradient-to-br from-green-50 to-blue-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Scissors className="h-5 w-5 text-green-600" />
+                  Wardrobe Declutter Assistant
+                </CardTitle>
+                <CardDescription>
+                  Get specific advice on what to keep, donate, or replace in your current wardrobe
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => generateDeclutterMutation.mutate()}
+                  disabled={generateDeclutterMutation.isPending}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  {generateDeclutterMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Scissors className="h-4 w-4 mr-2" />
+                      Generate Declutter Plan
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
