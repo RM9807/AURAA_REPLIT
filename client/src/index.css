@@ -92,6 +92,11 @@
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
+  border: 2px dashed hsl(215, 16%, 75%) !important;
+  border-radius: 8px !important;
+  margin: 1rem !important;
+  background: hsl(0, 0%, 99%) !important;
+  position: relative !important;
 }
 
 .uppy-DashboardAddFiles-title {
@@ -104,6 +109,15 @@
 .uppy-DashboardAddFiles-info {
   color: hsl(215, 16%, 65%) !important;
   font-size: 0.875rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.uppy-DashboardAddFiles-info::after {
+  content: " • PNG, JPG up to 10MB" !important;
+  display: block !important;
+  margin-top: 0.25rem !important;
+  font-size: 0.75rem !important;
+  color: hsl(215, 16%, 75%) !important;
 }
 
 .uppy-DashboardAddFiles-browse {
@@ -113,6 +127,21 @@
 
 .uppy-u-reset.uppy-DashboardAddFiles-browse:hover {
   text-decoration: underline !important;
+}
+
+/* Hide the default note that appears outside */
+.uppy-Dashboard-note {
+  display: none !important;
+}
+
+/* Center the drag and drop area properly */
+.uppy-Dashboard-AddFiles {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 @layer utilities {

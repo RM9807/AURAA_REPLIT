@@ -91,7 +91,6 @@ export function ObjectUploader({
         proudlyDisplayPoweredByUppy={false}
         showProgressDetails
         theme="light"
-        note="Images only, up to 10MB"
       />
     </div>
   );
