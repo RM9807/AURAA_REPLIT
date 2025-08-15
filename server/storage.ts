@@ -48,6 +48,7 @@ export interface IStorage {
   createOutfit(insertOutfit: InsertOutfit): Promise<Outfit>;
   getOutfit(id: number): Promise<Outfit | undefined>;
   updateOutfit(id: number, updates: Partial<InsertOutfit>): Promise<Outfit>;
+  deleteOutfit(id: number): Promise<void>;
 
   // Style recommendations
   getUserRecommendations(userId: number): Promise<StyleRecommendation[]>;
@@ -194,6 +195,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(outfits.id, id))
       .returning();
     return outfit;
+  }
+
+  async deleteOutfit(id: number): Promise<void> {
+    await db.delete(outfits).where(eq(outfits.id, id));
   }
 
   // Style recommendations

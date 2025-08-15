@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Calendar, Sun, Shirt, Heart, TrendingUp, Zap, ArrowLeft } from "lucide-react";
+import { Sparkles, Calendar, Sun, Shirt, Heart, TrendingUp, Zap, ArrowLeft, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface GeneratedOutfit {
@@ -102,6 +102,29 @@ export default function OutfitGenerator() {
       toast({
         title: "Generation Failed",
         description: error.message || "Failed to generate outfits. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete outfit mutation
+  const deleteOutfitMutation = useMutation({
+    mutationFn: async (outfitId: number) => {
+      return apiRequest(`/api/outfits/${outfitId}`, {
+        method: "DELETE"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/outfits`] });
+      toast({
+        title: "Outfit Deleted",
+        description: "The outfit has been successfully removed."
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete outfit. Please try again.",
         variant: "destructive"
       });
     }
@@ -317,7 +340,7 @@ export default function OutfitGenerator() {
           )}
 
           {outfit.tags && outfit.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 mb-4">
               {outfit.tags.map((tag, index) => (
                 <Badge key={index} variant="outline" className="text-xs">
                   {tag}
@@ -325,6 +348,28 @@ export default function OutfitGenerator() {
               ))}
             </div>
           )}
+
+          {/* Delete button */}
+          <div className="flex justify-end pt-2 border-t border-muted">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (window.confirm(`Are you sure you want to delete "${outfit.name}"? This action cannot be undone.`)) {
+                  deleteOutfitMutation.mutate(outfit.id);
+                }
+              }}
+              disabled={deleteOutfitMutation.isPending}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              {deleteOutfitMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              <span className="ml-2">Delete</span>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

@@ -474,6 +474,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete outfit endpoint
+  app.delete('/api/outfits/:id', isAuthenticated, async (req, res) => {
+    try {
+      const outfitId = parseInt(req.params.id);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Verify the outfit belongs to the user before deleting
+      const outfit = await storage.getOutfit(outfitId);
+      if (!outfit) {
+        return res.status(404).json({ message: "Outfit not found" });
+      }
+
+      if (outfit.userId !== userId) {
+        return res.status(403).json({ message: "Cannot delete outfit that doesn't belong to you" });
+      }
+
+      await storage.deleteOutfit(outfitId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting outfit:", error);
+      res.status(500).json({ message: "Failed to delete outfit" });
+    }
+  });
+
   app.post('/api/users/:id/outfits', async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
