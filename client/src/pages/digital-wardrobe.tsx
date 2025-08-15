@@ -228,12 +228,12 @@ export default function DigitalWardrobe() {
         setCurrentUpload(prev => ({ 
           ...prev, 
           imageFile: null,
-          imageUrl: objectPath, // Store the object path instead of file
+          imageUrl: objectPath, // Store the object path for wardrobe item
         }));
         
         toast({
           title: "Image Uploaded",
-          description: "Your image has been uploaded successfully.",
+          description: "Image ready to add to wardrobe.",
         });
       }).catch((error) => {
         console.error('Failed to process uploaded image:', error);
@@ -1081,7 +1081,7 @@ export default function DigitalWardrobe() {
                     {item.imageUrl && !item.imageUrl.startsWith('uploaded-') ? (
                       <>
                         <img 
-                          src={`/objects${item.imageUrl}`}
+                          src={item.imageUrl.startsWith('/') ? `/objects${item.imageUrl}` : item.imageUrl}
                           alt={item.itemName} 
                           className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           onError={(e) => {
