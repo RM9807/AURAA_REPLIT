@@ -58,6 +58,7 @@ export const userProfiles = pgTable("user_profiles", {
   styleInspirations: varchar("style_inspirations", { length: 200 }),
   budget: varchar("budget", { length: 100 }),
   specialRequirements: text("special_requirements"),
+  styleDNA: jsonb("style_dna"), // Store Style DNA analysis results
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -279,6 +279,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/wardrobe/:id', async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      await storage.deleteWardrobeItem(itemId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting wardrobe item:", error);
+      res.status(500).json({ message: "Failed to delete wardrobe item" });
+    }
+  });
+
   // Object storage routes for wardrobe images
   app.get('/objects/:objectPath(*)', async (req, res) => {
     const { ObjectStorageService, ObjectNotFoundError } = await import('./objectStorage.js');
@@ -364,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ itemAnalysis: existingAnalysis });
       }
 
-      // Convert profile to the format expected by AI analysis
+      // Convert profile to the format expected by AI analysis, with Style DNA integration
       const styleInput = {
         gender: (profile as any).gender || 'female',
         age: profile.age?.toString() || '25',
@@ -382,7 +393,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Add cultural context from request body or profile
         ethnicity: req.body.ethnicity || (profile as any).ethnicity,
         culturalBackground: req.body.culturalBackground || (profile as any).culturalBackground,
-        region: req.body.region || (profile as any).region
+        region: req.body.region || (profile as any).region,
+        // Include Style DNA for analysis
+        styleDNA: (profile as any).styleDNA
       };
 
       // Import AI analysis function

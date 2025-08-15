@@ -22,7 +22,9 @@ import {
   Heart,
   ShoppingBag,
   Image as ImageIcon,
-  Loader2
+  Loader2,
+  Search,
+  X
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -247,6 +249,31 @@ export default function WardrobeDigitizer() {
 
   // State for analysis results
   const [analysisResults, setAnalysisResults] = useState<any[]>([]);
+  
+  // State for image viewing modal
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  
+  // Delete item mutation
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: number) => {
+      await apiRequest(`/api/wardrobe/${itemId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userId, 'wardrobe'] });
+    },
+    onError: (error) => {
+      console.error('Delete failed:', error);
+    }
+  });
+
+  // Delete handler
+  const handleDeleteItem = (itemId: number) => {
+    if (window.confirm('Are you sure you want to delete this item from your wardrobe?')) {
+      deleteItemMutation.mutate(itemId);
+    }
+  };
   
   // Helper functions for recommendation styling
   const getRecommendationColor = (recommendation: string) => {
@@ -497,23 +524,44 @@ export default function WardrobeDigitizer() {
               {!isLoading && wardrobeItems && wardrobeItems.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {wardrobeItems.map((item: WardrobeItem) => (
-                  <Card key={item.id} className="overflow-hidden relative">
+                  <Card key={item.id} className="overflow-hidden relative group">
                     {item.aiAnalysis && (
                       <div className={`absolute top-2 right-2 z-10 p-1 rounded-full ${getRecommendationColor(item.aiAnalysis.recommendation)}`}>
                         {getRecommendationIcon(item.aiAnalysis.recommendation)}
                       </div>
                     )}
-                    <div className="aspect-square bg-gray-100 flex items-center justify-center">
+                    
+                    {/* Delete button - appears on hover */}
+                    <button
+                      onClick={() => handleDeleteItem(item.id)}
+                      className="absolute top-2 left-2 z-10 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      title="Delete item"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                    
+                    <div 
+                      className="aspect-square bg-gray-100 flex items-center justify-center cursor-pointer relative overflow-hidden"
+                      onClick={() => setSelectedImage(item.imageUrl)}
+                    >
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.itemName} className="w-full h-full object-cover" />
+                        <>
+                          <img src={item.imageUrl} alt={item.itemName} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
+                            <Search className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </>
                       ) : (
-                        <Camera className="h-12 w-12 text-gray-400" />
+                        <div className="flex flex-col items-center text-gray-400">
+                          <Camera className="h-12 w-12 mb-2" />
+                          <span className="text-sm">No image</span>
+                        </div>
                       )}
                     </div>
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-semibold">{item.itemName}</h4>
-                        {item.favorite && <Heart className="h-4 w-4 text-red-500 fill-current" />}
+                        {item.isFavorite && <Heart className="h-4 w-4 text-red-500 fill-current" />}
                       </div>
                       <div className="flex flex-wrap gap-1 mb-2">
                         <Badge variant="secondary">{item.category}</Badge>
@@ -791,6 +839,25 @@ export default function WardrobeDigitizer() {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Image viewing modal */}
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="relative max-w-4xl max-h-full">
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 p-2"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <img
+              src={selectedImage}
+              alt="Wardrobe item"
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

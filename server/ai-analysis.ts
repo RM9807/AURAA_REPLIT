@@ -168,7 +168,25 @@ CULTURAL CONTEXT:
 IMPORTANT: Consider cultural fashion preferences, traditional silhouettes, color significance, and appropriate styling for the user's cultural context. Respect cultural dress codes and traditional aesthetics while providing modern styling advice.`
       : '';
 
-    const prompt = `Expert international fashion stylist with 15+ years experience across diverse cultures and body types. Analyze this ${userProfile.gender}'s wardrobe with category-specific expertise and cultural awareness.
+    // Extract Style DNA information if available
+    const styleDNAContext = userProfile.styleDNA ? `
+
+STYLE DNA PROFILE (CRITICAL - Base ALL recommendations on this):
+- Primary Style: ${userProfile.styleDNA.styleDNA?.primaryStyle || 'Not analyzed'}
+- Secondary Style: ${userProfile.styleDNA.styleDNA?.secondaryStyle || 'Not analyzed'}
+- Style Description: ${userProfile.styleDNA.styleDNA?.styleDescription || 'Not analyzed'}
+- Seasonal Color Type: ${userProfile.styleDNA.colorPalette?.seasonalType || 'Not analyzed'}
+- Best Colors: ${userProfile.styleDNA.colorPalette?.bestColors?.join(', ') || 'Not analyzed'}
+- Colors to Avoid: ${userProfile.styleDNA.colorPalette?.colorsToAvoid?.join(', ') || 'Not analyzed'}
+- Best Silhouettes: ${userProfile.styleDNA.bodyAnalysis?.bestSilhouettes?.join(', ') || 'Not analyzed'}
+- Fit Guidance: ${userProfile.styleDNA.bodyAnalysis?.fitGuidance?.join(', ') || 'Not analyzed'}
+- Wardrobe Essentials: ${userProfile.styleDNA.personalizedTips?.wardrobeEssentials?.join(', ') || 'Not analyzed'}
+
+IMPORTANT: Use this Style DNA as the PRIMARY CRITERIA for all recommendations. Items that align with the user's Style DNA should be KEPT, items that don't align should be considered for ALTERATION or DONATION.` : `
+
+STYLE DNA PROFILE: Not completed yet. Recommend user completes their Style DNA analysis first for more personalized recommendations.`;
+
+    const prompt = `Expert international fashion stylist with 15+ years experience across diverse cultures and body types. Analyze this ${userProfile.gender}'s wardrobe with category-specific expertise, cultural awareness, and MOST IMPORTANTLY their personal Style DNA profile.
 
 USER PROFILE:
 - Gender: ${userProfile.gender}
@@ -180,7 +198,7 @@ USER PROFILE:
 - Style Goals: ${userProfile.goals.join(', ')}
 - Preferred Colors: ${userProfile.colorPreferences.join(', ')}
 - Color Avoidances: ${userProfile.colorAvoidances.join(', ')}
-- Occasions: ${userProfile.occasions.join(', ')}${culturalContext}
+- Occasions: ${userProfile.occasions.join(', ')}${culturalContext}${styleDNAContext}
 
 WARDROBE INVENTORY (${items.length} items):
 ${JSON.stringify(itemDescriptions, null, 2)}
@@ -189,7 +207,14 @@ CATEGORY-SPECIFIC ANALYSIS GUIDELINES:
 ${itemDescriptions.map(item => `${item.category.toUpperCase()}: ${getCategoryGuidelines(item.category)}`).join('\n')}
 
 CRITICAL ANALYSIS REQUIREMENTS:
-1. BE CATEGORY-SPECIFIC: Tailor recommendations to each clothing category
+1. STYLE DNA ALIGNMENT (MOST IMPORTANT): 
+   - Items that match the user's primary/secondary style should be KEPT
+   - Items that align with their best colors and seasonal type should be KEPT
+   - Items that follow their best silhouettes should be KEPT
+   - Items that contradict Style DNA should be considered for ALTERATION or DONATION
+   - Use Style DNA as the PRIMARY decision factor
+
+2. BE CATEGORY-SPECIFIC: Tailor recommendations to each clothing category
    - Tops: Focus on shoulder fit, neckline, torso flattery
    - Bottoms: Analyze waist fit, hip flattery, leg proportions, rise
    - Dresses: Consider overall silhouette and body shape harmony
@@ -197,9 +222,9 @@ CRITICAL ANALYSIS REQUIREMENTS:
    - Shoes: Consider heel height, leg line, occasion appropriateness
    - Accessories: Focus on face/body complement and style cohesion
 
-2. CULTURAL SENSITIVITY: Respect cultural preferences and traditional aesthetics
-3. ACCURATE FIT ASSESSMENT: Give realistic fit evaluations based on category
-4. PRACTICAL RECOMMENDATIONS: Provide actionable advice specific to each item type
+3. CULTURAL SENSITIVITY: Respect cultural preferences and traditional aesthetics
+4. ACCURATE FIT ASSESSMENT: Give realistic fit evaluations based on category
+5. PRACTICAL RECOMMENDATIONS: Provide actionable advice specific to each item type
 
 Score items 1-100 on style alignment, color match, versatility, and quality.
 Be culturally aware, category-specific, and goal-focused in recommendations.
