@@ -252,13 +252,15 @@ export default function OutfitGenerator() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {outfitWardrobeItems.map((item) => (
                   <div key={item.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors">
-                    {item.imagePath ? (
+                    {(item.imageUrl || item.imagePath) ? (
                       <div className="relative group">
                         <img 
-                          src={item.imagePath} 
+                          src={item.imageUrl || item.imagePath} 
                           alt={item.itemName}
-                          className="w-16 h-16 object-cover rounded-md cursor-pointer hover:scale-105 transition-transform"
+                          className="w-16 h-16 object-cover rounded-md cursor-pointer hover:scale-105 transition-transform border border-muted"
+                          onLoad={() => console.log(`Image loaded successfully: ${item.imageUrl || item.imagePath}`)}
                           onError={(e) => {
+                            console.error(`Failed to load image: ${item.imageUrl || item.imagePath}`);
                             e.currentTarget.style.display = 'none';
                             e.currentTarget.nextElementSibling.style.display = 'flex';
                           }}
@@ -267,16 +269,22 @@ export default function OutfitGenerator() {
                             const modal = document.createElement('div');
                             modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 cursor-pointer';
                             modal.innerHTML = `
-                              <div class="relative max-w-lg max-h-lg">
-                                <img src="${item.imagePath}" alt="${item.itemName}" class="max-w-full max-h-full object-contain rounded-lg" />
-                                <button class="absolute top-2 right-2 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70">×</button>
+                              <div class="relative max-w-lg max-h-lg p-4">
+                                <img src="${item.imageUrl || item.imagePath}" alt="${item.itemName}" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+                                <button class="absolute top-2 right-2 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors text-xl font-bold">×</button>
+                                <div class="absolute bottom-2 left-2 right-2 bg-black/50 text-white p-2 rounded text-center">
+                                  <p class="font-medium">${item.itemName}</p>
+                                  <p class="text-sm opacity-90">${item.category || 'Clothing'}</p>
+                                </div>
                               </div>
                             `;
-                            modal.onclick = () => document.body.removeChild(modal);
+                            modal.onclick = (e) => {
+                              if (e.target === modal) document.body.removeChild(modal);
+                            };
                             document.body.appendChild(modal);
                           }}
                         />
-                        <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center" style={{display: 'none'}}>
+                        <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center border border-muted" style={{display: 'none'}}>
                           <Shirt className="h-8 w-8 text-muted-foreground" />
                         </div>
                       </div>
