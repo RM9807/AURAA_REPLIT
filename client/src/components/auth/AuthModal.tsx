@@ -151,19 +151,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold text-navy">
-              {authMode === 'login' ? 'Welcome Back!' : 'Get Started'}
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-6 w-6 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-2xl font-bold text-navy">
+            {authMode === 'login' ? 'Welcome Back!' : 'Get Started'}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
