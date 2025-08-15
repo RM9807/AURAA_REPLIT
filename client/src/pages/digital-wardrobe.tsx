@@ -553,14 +553,16 @@ export default function DigitalWardrobe() {
                         {/* Image Preview */}
                         <div className="relative">
                           <img 
-                            src={`/objects${currentUpload.imagePreviewUrl}?cache=${Date.now()}`}
+                            src={`${currentUpload.imagePreviewUrl}?cache=${Date.now()}`}
                             alt="Uploaded item preview" 
                             className="w-full h-64 object-cover rounded-lg border-2 border-green-200"
                             onError={(e) => {
                               console.log('Image failed to load, retrying...');
                               // Retry loading the image after a delay with cache busting
                               setTimeout(() => {
-                                e.currentTarget.src = `/objects${currentUpload.imagePreviewUrl}?retry=${Date.now()}`;
+                                if (e.currentTarget && e.currentTarget.parentElement) {
+                                  e.currentTarget.src = `${currentUpload.imagePreviewUrl}?retry=${Date.now()}`;
+                                }
                               }, 3000);
                             }}
                             onLoad={() => {
@@ -1149,7 +1151,7 @@ export default function DigitalWardrobe() {
                     {item.imageUrl && !item.imageUrl.startsWith('uploaded-') ? (
                       <>
                         <img 
-                          src={item.imageUrl.startsWith('/') ? `/objects${item.imageUrl}` : item.imageUrl}
+                          src={item.imageUrl.startsWith('/objects') ? item.imageUrl : (item.imageUrl.startsWith('/') ? `/objects${item.imageUrl}` : item.imageUrl)}
                           alt={item.itemName} 
                           className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           onError={(e) => {
