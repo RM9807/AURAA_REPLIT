@@ -41,6 +41,7 @@ export interface IStorage {
   createWardrobeItem(insertItem: InsertWardrobeItem): Promise<WardrobeItem>;
   getWardrobeItem(id: number): Promise<WardrobeItem | undefined>;
   updateWardrobeItem(id: number, updates: Partial<InsertWardrobeItem>): Promise<WardrobeItem>;
+  deleteWardrobeItem(id: number): Promise<void>;
 
   // Outfit operations
   getUserOutfits(userId: number): Promise<Outfit[]>;
@@ -158,6 +159,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(wardrobe.id, id))
       .returning();
     return item;
+  }
+
+  async deleteWardrobeItem(id: number): Promise<void> {
+    await db.delete(wardrobe).where(eq(wardrobe.id, id));
   }
 
   // Outfit operations
