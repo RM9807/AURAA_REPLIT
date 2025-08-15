@@ -42,9 +42,9 @@ export default function Recommendations() {
 
   // Filter recommendations based on search and filters
   const filteredRecommendations = recommendations.filter((rec: StyleRecommendation) => {
-    const matchesSearch = rec.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         rec.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         rec.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = (rec.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (rec.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         rec.tags?.some(tag => (tag || '').toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesType = filterType === "all" || rec.type === filterType;
     const matchesPriority = filterPriority === "all" || rec.priority === filterPriority;
@@ -58,20 +58,20 @@ export default function Recommendations() {
 
   // Get recommendations by category
   const styleRecommendations = filteredRecommendations.filter((rec: StyleRecommendation) => 
-    rec.type.toLowerCase().includes('style') || rec.type.toLowerCase().includes('outfit')
+    (rec.type || '').toLowerCase().includes('style') || (rec.type || '').toLowerCase().includes('outfit')
   );
   const colorRecommendations = filteredRecommendations.filter((rec: StyleRecommendation) => 
-    rec.type.toLowerCase().includes('color') || rec.type.toLowerCase().includes('palette')
+    (rec.type || '').toLowerCase().includes('color') || (rec.type || '').toLowerCase().includes('palette')
   );
   const shoppingRecommendations = filteredRecommendations.filter((rec: StyleRecommendation) => 
-    rec.type.toLowerCase().includes('shopping') || rec.type.toLowerCase().includes('purchase')
+    (rec.type || '').toLowerCase().includes('shopping') || (rec.type || '').toLowerCase().includes('purchase')
   );
   const trendRecommendations = filteredRecommendations.filter((rec: StyleRecommendation) => 
-    rec.type.toLowerCase().includes('trend') || rec.type.toLowerCase().includes('seasonal')
+    (rec.type || '').toLowerCase().includes('trend') || (rec.type || '').toLowerCase().includes('seasonal')
   );
 
   const getPriorityColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
+    switch ((priority || '').toLowerCase()) {
       case 'high': return 'destructive';
       case 'medium': return 'default';
       case 'low': return 'secondary';
@@ -80,9 +80,10 @@ export default function Recommendations() {
   };
 
   const getTypeIcon = (type: string) => {
-    if (type.toLowerCase().includes('color')) return <Palette className="h-4 w-4" />;
-    if (type.toLowerCase().includes('shopping')) return <ShoppingBag className="h-4 w-4" />;
-    if (type.toLowerCase().includes('trend')) return <TrendingUp className="h-4 w-4" />;
+    const typeStr = (type || '').toLowerCase();
+    if (typeStr.includes('color')) return <Palette className="h-4 w-4" />;
+    if (typeStr.includes('shopping')) return <ShoppingBag className="h-4 w-4" />;
+    if (typeStr.includes('trend')) return <TrendingUp className="h-4 w-4" />;
     return <Sparkles className="h-4 w-4" />;
   };
 
