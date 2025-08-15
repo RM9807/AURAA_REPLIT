@@ -205,17 +205,32 @@ export default function DigitalWardrobe() {
 
   // Object storage handlers
   const handleGetUploadParameters = async () => {
-    const response = await apiRequest('/api/objects/upload', {
-      method: 'POST',
-    });
-    return {
-      method: 'PUT' as const,
-      url: response.uploadURL,
-    };
+    try {
+      const response = await apiRequest('/api/objects/upload', {
+        method: 'POST',
+      }) as { uploadURL: string };
+      
+      if (!response.uploadURL) {
+        throw new Error('No upload URL received from server');
+      }
+      
+      return {
+        method: 'PUT' as const,
+        url: response.uploadURL,
+      };
+    } catch (error) {
+      console.error('Failed to get upload parameters:', error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to get upload URL. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
   const handleImageUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful.length > 0) {
+    if (result.successful && result.successful.length > 0) {
       const uploadURL = result.successful[0].uploadURL;
       
       // Process the uploaded image URL to get the object path
@@ -223,7 +238,7 @@ export default function DigitalWardrobe() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageURL: uploadURL }),
-      }).then((response) => {
+      }).then((response: { objectPath: string }) => {
         const objectPath = response.objectPath;
         
         // Update upload form with both object path and preview URL
@@ -245,6 +260,12 @@ export default function DigitalWardrobe() {
           description: "Failed to process uploaded image.",
           variant: "destructive",
         });
+      });
+    } else {
+      toast({
+        title: "Upload Failed",
+        description: "No files were uploaded successfully.",
+        variant: "destructive",
       });
     }
   };
@@ -623,7 +644,7 @@ export default function DigitalWardrobe() {
                     Your Items
                   </CardTitle>
                   <CardDescription>
-                    {wardrobe?.length || 0} items uploaded
+                    {wardrobeItems?.length || 0} items uploaded
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
