@@ -126,11 +126,61 @@ export default function Outfits() {
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mb-2">{outfit.description}</p>
+                <p className="text-sm text-muted-foreground mb-3">{outfit.description}</p>
+                
+                {/* Outfit items preview in list view */}
+                {outfitWardrobeItems.length > 0 && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex -space-x-1">
+                      {outfitWardrobeItems.slice(0, 4).map((item, index) => (
+                        <div key={item.id} className="relative">
+                          {(item.imageUrl || item.imagePath) ? (
+                            <img 
+                              src={item.imageUrl || item.imagePath} 
+                              alt={item.itemName}
+                              className="w-8 h-8 object-cover rounded-full border-2 border-white cursor-pointer hover:scale-110 transition-transform"
+                              onClick={() => {
+                                // Create larger preview modal
+                                const modal = document.createElement('div');
+                                modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 cursor-pointer';
+                                modal.innerHTML = `
+                                  <div class="relative max-w-lg max-h-lg p-4">
+                                    <img src="${item.imageUrl || item.imagePath}" alt="${item.itemName}" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+                                    <button class="absolute top-2 right-2 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors text-xl font-bold">×</button>
+                                    <div class="absolute bottom-2 left-2 right-2 bg-black/50 text-white p-2 rounded text-center">
+                                      <p class="font-medium">${item.itemName}</p>
+                                      <p class="text-sm opacity-90">${item.category || 'Clothing'}</p>
+                                    </div>
+                                  </div>
+                                `;
+                                modal.onclick = (e) => {
+                                  if (e.target === modal) document.body.removeChild(modal);
+                                };
+                                document.body.appendChild(modal);
+                              }}
+                            />
+                          ) : (
+                            <div className="w-8 h-8 bg-muted rounded-full border-2 border-white flex items-center justify-center">
+                              <Shirt className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {outfitWardrobeItems.length > 4 && (
+                        <div className="w-8 h-8 bg-muted rounded-full border-2 border-white flex items-center justify-center">
+                          <span className="text-xs font-medium">+{outfitWardrobeItems.length - 4}</span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-sm text-muted-foreground ml-2">
+                      {outfitWardrobeItems.length} items
+                    </span>
+                  </div>
+                )}
+                
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{outfitWardrobeItems.length} items</span>
                   {outfit.createdAt && (
-                    <span>• Created {new Date(outfit.createdAt).toLocaleDateString()}</span>
+                    <span>Created {new Date(outfit.createdAt).toLocaleDateString()}</span>
                   )}
                 </div>
               </div>
@@ -187,11 +237,66 @@ export default function Outfits() {
             )}
           </div>
           
-          {/* Display outfit items count */}
+          {/* Display outfit items with images */}
           <div className="mb-4">
-            <p className="text-sm text-muted-foreground">
-              {outfitWardrobeItems.length} items from your wardrobe
-            </p>
+            <h4 className="font-medium text-sm mb-3">Outfit Items ({outfitWardrobeItems.length} pieces):</h4>
+            {outfitWardrobeItems.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {outfitWardrobeItems.map((item) => (
+                  <div key={item.id} className="flex flex-col items-center gap-2 p-2 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                    {(item.imageUrl || item.imagePath) ? (
+                      <div className="relative group">
+                        <img 
+                          src={item.imageUrl || item.imagePath} 
+                          alt={item.itemName}
+                          className="w-12 h-12 object-cover rounded-md cursor-pointer hover:scale-105 transition-transform border border-muted"
+                          onLoad={() => console.log(`Image loaded successfully: ${item.imageUrl || item.imagePath}`)}
+                          onError={(e) => {
+                            console.error(`Failed to load image: ${item.imageUrl || item.imagePath}`);
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                          }}
+                          onClick={() => {
+                            // Create larger preview modal
+                            const modal = document.createElement('div');
+                            modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 cursor-pointer';
+                            modal.innerHTML = `
+                              <div class="relative max-w-lg max-h-lg p-4">
+                                <img src="${item.imageUrl || item.imagePath}" alt="${item.itemName}" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+                                <button class="absolute top-2 right-2 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors text-xl font-bold">×</button>
+                                <div class="absolute bottom-2 left-2 right-2 bg-black/50 text-white p-2 rounded text-center">
+                                  <p class="font-medium">${item.itemName}</p>
+                                  <p class="text-sm opacity-90">${item.category || 'Clothing'}</p>
+                                </div>
+                              </div>
+                            `;
+                            modal.onclick = (e) => {
+                              if (e.target === modal) document.body.removeChild(modal);
+                            };
+                            document.body.appendChild(modal);
+                          }}
+                        />
+                        <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center border border-muted" style={{display: 'none'}}>
+                          <Shirt className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 bg-muted rounded-md flex items-center justify-center">
+                        <Shirt className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="text-center min-w-0 flex-1">
+                      <p className="text-xs font-medium truncate">{item.itemName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{item.category || 'Clothing'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Items: {outfit.items.length} pieces from your wardrobe
+              </p>
+            )}
           </div>
 
           {outfit.reasoning && (
