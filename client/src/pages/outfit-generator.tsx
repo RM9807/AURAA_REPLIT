@@ -70,10 +70,22 @@ export default function OutfitGenerator() {
   // Generate outfit mutation
   const generateOutfitsMutation = useMutation({
     mutationFn: async (data: OutfitGenerationForm) => {
-      return await apiRequest(`/api/users/${user?.id}/outfits/generate`, {
+      console.log("Sending API request with data:", data);
+      
+      const response = await fetch(`/api/users/${user?.id}/outfits/generate`, {
         method: "POST",
-        body: JSON.stringify(data)
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      return await response.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/outfits`] });
@@ -94,10 +106,20 @@ export default function OutfitGenerator() {
   // Weekly planner mutation
   const weeklyPlannerMutation = useMutation({
     mutationFn: async (occasions: string[]) => {
-      return await apiRequest(`/api/users/${user?.id}/outfits/weekly`, {
+      const response = await fetch(`/api/users/${user?.id}/outfits/weekly`, {
         method: "POST",
-        body: JSON.stringify({ occasions })
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ occasions }),
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      return await response.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/outfits`] });
@@ -118,10 +140,20 @@ export default function OutfitGenerator() {
   // Seasonal planner mutation
   const seasonalPlannerMutation = useMutation({
     mutationFn: async (season: string) => {
-      return await apiRequest(`/api/users/${user?.id}/outfits/seasonal`, {
+      const response = await fetch(`/api/users/${user?.id}/outfits/seasonal`, {
         method: "POST",
-        body: JSON.stringify({ season })
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ season }),
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      return await response.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/outfits`] });
