@@ -294,15 +294,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/objects/:objectPath(*)', async (req, res) => {
     const { ObjectStorageService, ObjectNotFoundError } = await import('./objectStorage.js');
     const objectStorageService = new ObjectStorageService();
-    try {
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error("Error accessing object:", error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.sendStatus(404);
+    
+    // Add retry logic for newly uploaded files
+    const maxRetries = 3;
+    let attempt = 0;
+    
+    while (attempt < maxRetries) {
+      try {
+        const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+        return objectStorageService.downloadObject(objectFile, res);
+      } catch (error) {
+        attempt++;
+        
+        if (error instanceof ObjectNotFoundError && attempt < maxRetries) {
+          // Wait a bit for the file to become available
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        
+        console.error(`Error accessing object (attempt ${attempt}):`, error);
+        console.error(`Requested path: ${req.path}`);
+        
+        if (error instanceof ObjectNotFoundError) {
+          return res.sendStatus(404);
+        }
+        return res.sendStatus(500);
       }
-      return res.sendStatus(500);
     }
   });
 

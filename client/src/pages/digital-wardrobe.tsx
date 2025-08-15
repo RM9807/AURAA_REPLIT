@@ -553,9 +553,19 @@ export default function DigitalWardrobe() {
                         {/* Image Preview */}
                         <div className="relative">
                           <img 
-                            src={`/objects${currentUpload.imagePreviewUrl}`}
+                            src={`/objects${currentUpload.imagePreviewUrl}?cache=${Date.now()}`}
                             alt="Uploaded item preview" 
                             className="w-full h-64 object-cover rounded-lg border-2 border-green-200"
+                            onError={(e) => {
+                              console.log('Image failed to load, retrying...');
+                              // Retry loading the image after a delay with cache busting
+                              setTimeout(() => {
+                                e.currentTarget.src = `/objects${currentUpload.imagePreviewUrl}?retry=${Date.now()}`;
+                              }, 3000);
+                            }}
+                            onLoad={() => {
+                              console.log('Image loaded successfully');
+                            }}
                           />
                           <div className="absolute top-2 right-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                             <CheckCircle className="h-3 w-3" />
